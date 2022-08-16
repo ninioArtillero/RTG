@@ -1,0 +1,253 @@
+--Tutorial
+-- Notas de referencia generales para el uso de Tidal Cycles
+
+-- Atom
+-- Evaluar línea con shift+enter
+-- Evaluar párrafo con ctrl+enter
+
+-- Emacs
+-- Iniciar intérprete C-c C-s
+-- Evaluar bloque con C-c C-e
+
+-- Callar todo interrumpiendo la generación de eventos con CTRL+. o la función
+hush
+
+-- Detener mensajes y sonido (incluidas las colas de reproducción):
+panic
+
+-- Para cambiar el tempo se una la función
+setcps 0.6
+
+-- que por defecto es
+setcps 0.5625
+
+--que equivale a
+setcps (135/60/4)
+-- donde 135 es el valor en BPM y 4 el número de beats por ciclo
+
+
+-- PATRONES Y REPRODUCCIÓN ------------------------------------------------------
+
+-- Patrones: mensajes que describen la subdivisión (estructura)
+-- y eventos (triggers) del ciclo
+-- Es el mensaje que recibe e interpreta SuperDirt cíclicamente.
+
+-- Ejemplos de patron
+
+"1 2 3"
+
+drawLine "a b*2 d"
+
+-- Para enviar a SuperDirt indicamos nombres de patron. Tradicionalemente se
+-- usan d1, d2, ..., d16
+
+-- a bass drum
+d1 $ s "bd ~ bd ~"
+
+-- high-hat pattern
+d2 $ s "[~ hh]*2"
+
+-- 1.. 1.. 1.. 1..
+d3 $ s "numbers:1"
+
+-- clap
+d4 $ s "cp cp cp"
+
+hush
+
+-- se puede designar un patrón por número
+p 1234 $ s "bd bd"
+
+p 4321 $ s "hh hh"
+
+-- o por nombre
+p "romeo" $ s "arp"
+
+p "juliet" $ s "battles"
+
+-- silenciar canales independientes
+p "juliet" silence
+
+p "romeo" $ silence
+
+p 1234 $ silence
+
+p 4321 $ silence
+
+-- únicamente reproducir una vez
+
+once $ s "trump"
+
+-- CONTROL PATTERNS Y PATTERN STRUCTURE -----------------------------------------
+
+-- Los patrones de control son patrones a los que se asigna un nombre
+-- correspondiente a un parámetro
+
+-- A continuación revisamos las diversas funciones para combinar patrones
+
+-- ADICIÓN BILATERAL
+d1 $ sound "drum blip" |+| n "1 2 3"
+
+-- =
+d1 $ sound "drum:1 [drum:2 blip:2] blip:3"
+
+--notación reducida
+d1 $ sound "drum blip" + n "1 2 3"
+
+-- ADICIÓN IZQUIERDA
+d1 $ sound "drum blip" |+ n "1 2 3"
+
+-- =
+d1 $ sound "drum:1 blip:2"
+
+-- ADICIÓN DERECHA
+d1 $ sound "drum blip" +| n "1 2 3"
+
+-- =
+d1 $ sound "drum:1 drum:2 blip:3"
+
+-- VALORES izquierda. ESTRUCTURA derecha
+d1 $ sound "drum blip" <| n "1 2 3"
+
+-- =
+d1 $ sound "drum:1 drum:2 blip:3"
+
+-- VALORES derecha. ESTRUCTURA izquierda
+d1 $ sound "drum blip" |> n "1 2 3"
+
+-- =
+d1 $ sound "drum:1 blip:2"
+
+-- notación reducida
+d1 $ sound "drum blip" # n "1 2 3"
+
+
+-- Resumen:
+-- Los operadores disponibles para combinar patrones son
+-- + , - , * , / , % (módulo) , <  (valores izq), > (valores der)
+-- con las posibles variaciones de tomar estructura derecha o izquierda
+
+
+d1 $ sound "drum" + n "0 2 2" |<| n "1 3*2 4 5"
+
+d1 $ sound "drum" + n "0 2 2" |>| n "1 3*2 4 5"
+
+-- |0       2       2       | patron izquierdo
+-- |1     3  3  4     5     | patron derecho
+-- |,     , ,,  ,   , ,     | estructura combinada
+-- |0     0 22  2   2 2     | valores izquierdos
+-- |1     3 33  4   4 5     | valores derechos
+
+
+-- EJERCICIO --------------------------------------------------------------------
+
+-- ¿Cuál es la equivalencia del siguiente patrón?
+d1 $ sound "drum" + n "2 3" + n "4 5 6" * n "7 8 9 10 11"
+
+-- La primera parte de la composición de patrones (lado derecho) es:
+d1 $ sound "drum" + n "4 5 6" * n "7 8 9 10 11"
+
+-- y equivale a
+d1 $ sound "drum" + n "28 . 32 ~ 40 . 45 . 50 60 ~ . 66"
+
+-- Sustituyendo la evaluación en el patrón inicial vemos su equivalencia:
+d1 $ sound "drum" + n "2 3" + n "28 . 32 ~ 40 . 45 . 50 60 ~ . 66"
+
+-- Que queda explicitado como:
+d1 $ sound "drum" + n "30 . 34 ~ 42 . 47 48 . 53 63 ~ . 69"
+
+-- Reemplazando valores módulo 6 (cantidad de samples en "drum")
+d1 $ sound "drum" + n "0 . 4 ~ 0 . 5 0 . 5 3 ~ . 3"
+
+
+-- MININOTATION Cheat Sheat ----------------------------------------------------
+
+-- La mininotation son las funciones embebidas en la sintaxis para patrones
+-- de control, identificados por estar entre comillas dobles.
+
+-- Silencio
+d1 $ s "~ hh"
+
+-- Agrupación
+d1 $ s "[bd sd] hh"
+
+d1 $ fastcat [s "bd sd", s "hh"]
+
+-- Atajo para agrupación
+d1 $ s "bd sd . hh hh hh"
+
+d1 $ s "[bd sd] [hh hh hh]"
+
+-- Patrones simultaneos
+d1 $ s "[bd sd, hh hh hh]"
+
+d1 $ stack [s "bd sd", s "hh hh hh"]
+
+-- Repetir patrón
+d1 $ s "bd*2 sd"
+
+d1 $ s "[bd bd] sd"
+
+-- Alentar patrón
+d1 $ s "bd/2"
+
+d1 $ s (slow 2 $ "bd")
+
+-- Elección aleatoria
+d1 $ s "[bd |cp |hh]"
+
+-- Alternar cada ciclo
+d1 $ s "bd <sd hh cp>"
+
+d1 $ slow 3 $ s "bd sd bd hh bd cp"
+
+-- Replicar patrón
+d1 $ s "bd!3 sd"
+
+d1 $ s "bd bd bd sd"
+
+-- Elongar patrón
+d1 $ s "bd _ _ ~ sd _"
+
+-- para comprenderlo, comparar
+"bd _ _ ~ sd _"
+
+"bd ~ ~ ~ sd ~"
+-- corresponde con elongar el lugar de un evento en el ciclo
+
+-- Atajo para elongar
+d1 $ s "superpiano@3 superpiano"
+
+d1 $ s "superpiano _ _ superpiano"
+
+-- Remover aleatoriamente
+d1 $ s "bd? sd"
+
+d1 $ fastcat [degradeBy 0.5 $ s "bd", s "sd"]
+
+--Selección aleatoria
+d1 $ s "[bd*4|hh*12|cp*2]"
+
+-- Elegir samples
+d1 $ s "bd:3"
+
+d1 $ s "bd" # n 3
+
+-- Secuencias euclidianas
+d1 $ s "bd(3,8)"
+
+d1 $ euclid 3 8 $ s "bd"
+
+d1 $ n "t(3,8)" # s "bd" -- ¿por qué funciona?
+
+-- Secuencias polimétricas
+d1 $ s "{bd bd bd bd, cp cp hh}"
+
+-- el segundo patrón se enrrolla, su primer vuelta es
+d1 $ stack [ s "bd*4", s "cp cp hh cp" ]
+
+-- Subdivisión de secuencia polimétrica
+d1 $ s "{bd cp hh}%8"
+
+-- el patron se enrrolla sobre la suddivisión elegida, su primer vuelta es
+d1 $ s "bd cp hh bd cp hh bd cp"

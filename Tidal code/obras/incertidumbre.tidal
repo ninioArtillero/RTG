@@ -1,0 +1,119 @@
+-- Código para la pieza "Principio de incertidumbre"
+-- Los sampleos "trane" y "cissy" son propios de mi biblioteca personal
+
+setcps (135/60/4)
+
+d1
+  $ loopAt 2
+  $ s "trane:3"
+  # speed 0.4771
+  # room 0.8
+  # size 0.8
+  # cutoff 600
+  # legato 1
+  # delay 0.5
+  # delayt 0.2
+  # delayfb 0.3
+  # gain 1
+
+hush
+
+
+d2
+  $ jux rev
+  $ slow 4
+  $ slice 4 "1*7"
+  $ s "trane:3"
+  # speed "0.5 0.75 0.33@3 0.75!2 0.25"
+  # room 0
+  # size 0.8
+  # legato 1
+  # octer (slow 8 $ tri)
+  # delaytime 0.2
+
+hush
+
+d1
+  $ every 4 (jux rev)
+  $ every 2 (slow 2)
+  $ splice 8 "0 1 [2 3] 4 5 6 [2 3] 7"
+  $ s "trane:3"
+  # speed "0.5"
+  # room 0.1
+  # size 0.4
+  # cutoff 500
+  # legato 1
+
+d2
+  $ every 3 rev
+  $ loopAt 0.5
+  $ s "trane:3"
+  # speed "0.5"
+  # room 0.1
+  # size 0.4
+  # cutoff 500
+  # legato 1
+
+d3
+  $ every 2 rev
+  $ slow 2
+  $ slice 8 "7 6 5 4 3 2 1 0"
+  $ s "trane:3"
+  # speed 1
+  # room 0.1
+  # size 0.4
+  # cutoff 500
+
+
+d4
+  $ slow 2
+  $ slice 8 "1 2 1 2 3 4"
+  $ s "break:2"
+
+
+d6
+  $ loopAt 4
+  $ striate  16
+  $ struct "<t*2 t*3 t*4>"
+  $ s "cissy"
+  # gain 0.7
+
+
+hush
+
+d1
+  $ speed (struct "t(7,12)" $ range 0.5 2 saw)
+  # s "trane:3"
+  # cut 1
+  # gain (slow 2 $ range 0.7 0.83 sine)
+
+d5
+  $ speed (struct "<t(7,12) t(8,12) t(12,12)>" $ range 2 4 sine)
+  # s "trane:3"
+  # cut 1
+  # gain (slow 4 $ range 0.5 0.75 tri)
+
+  hush
+
+d5
+  $ speed (struct "t(3,8)" $ range 0.25 0.5 saw)
+  # s "trane:3"
+  # cut 1
+  # gain (slow 3 $ range 0.75 0.9 tri)
+
+
+d5
+  $ slow 4
+  $ splice 4 "0 1"
+  $ s "trane:4"
+  # legato 1
+  # speed (iter 3 $ slow "2 3" $ range 0.5 1 sine)
+  # cutoff 4000
+
+hush
+
+d6
+  $ hurry 1
+  $ splice 8 "1 2 0 4 4 5  6 7"
+  $ s "trane:2"
+  # legato 1--(fast 2 $ range 0.25 1 sine)

@@ -1,0 +1,44 @@
+-- # Del capítulo 7 de Toussaint (2020): "Six Distinguished Rhythm Timelines".
+
+-- Estos son ritmos son usados como "lineas de tiempo" en diversas tradiciones;
+
+-- constan de 5 ataques en 16 pulsos.
+
+-- La cantidad total de ritmos con estos parámetros es:
+--          16! / (16-5)! 5! = 4368
+
+setcps 0.6
+
+-- Ritmos distinguidos
+shiko = "0 ~ ~ ~ 1 ~ 1 ~ ~ ~ 1 ~ 1 ~ ~ ~"
+clave = "0 ~ ~ 1 ~ ~ 1 ~ ~ ~ 1 ~ 1 ~ ~ ~"
+soukous = "0 ~ ~ 1 ~ ~ 1 ~ ~ ~ 1 1 ~ ~ ~ ~"
+rumba = "0 ~ ~ 1 ~ ~ ~ 1 ~ ~ 1 ~ 1 ~ ~ ~"
+bossa = "0 ~ ~ 1 ~ ~ 1 ~ ~ ~ 1 ~ ~ 1 ~ ~"
+gahu = "0 ~ ~ 1 ~ ~ 1 ~ ~ ~ 1 ~ ~ ~ 1 ~"
+
+
+d1 $ n shiko # s "cp"
+
+d1 $ n clave # s "cp"
+
+d1 $ n soukous # s "cp"
+
+d1 $ n rumba # s "cp"
+
+d1 $ n bossa # s "cp"
+
+d1 $ n gahu # s "cp"
+
+hush
+
+-- Ejemplo: Superposición de ritmos distinguidos
+
+d1 $ stack [
+  slow 2 $ n gahu # s "clap",
+  n bossa # s "snare",
+  n rumba # s "low",
+  slow 2 $ n clave # s "hi"
+  ]
+
+hush
