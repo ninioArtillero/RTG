@@ -16,7 +16,7 @@ Estructura de canon en que las voces siguen pulsos diferentes.
 Para este estudio utilizo la función fast, que permite acelerar la velocidad
 del ciclo de un patrón por el factor especificado. Esta aceleración es,
 geométricamente, una dilatación o contracción del tiempo.
-De manera similar se puede usar la funciónslow,
+De manera similar se puede usar la función slow,
 que es recíproca a la función fast. Es decir:
 
 x :: Int

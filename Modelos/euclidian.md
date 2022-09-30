@@ -1,8 +1,8 @@
 # 1. El algoritmo de Euclides
 
-En términos generales el algoritmo de Euclides es un proceso para calcular el máximo común divisor de una pareja de números enteros ($\mathbb{Z}$);
-el planteamiento no tiene una significación directa para los números racionales ($\mathbb{Q}$)
-o reales ($\mathbb{R}$), donde contamos con una resolución infinita que permite dividir de manera exacta cualquier pareja de números.
+En términos generales el algoritmo de Euclides es un proceso para calcular el máximo común divisor de una pareja de números enteros ( $\mathbb{Z}$ );
+el planteamiento no tiene una significación directa para los números racionales ( $\mathbb{Q}$ )
+o reales ( $\mathbb{R}$ ), donde contamos con una resolución infinita que permite dividir de manera exacta cualquier pareja de números.
 
 Este es uno de los algoritmos documentados más antiguos; aparece en las primeras dos proposiciones del libro VII de "Los Elementos" de Euclides, escrito alrededor del 300 a.C.
 
@@ -206,7 +206,7 @@ Euclides
 # 4. Ritmos Euclidianos
 
 Los ritmos euclidianos fueron definidos por [Toussaint (2005)](zotero://open-pdf/library/items/AAJJ3G3T) como una familia de patrones rítmicos (representados por vectores binarios) generados por el algoritmo de Björklund (matemáticamente equivalente al algoritmo de Euclides).
-Este algoritmo distribuye de la forma más pareja posible un determinado número de ventos en un universo discreto, finito y homogéneo, mismo que es representado como un subconjunto del círculo ($\mathbb{S}^1$).
+Este algoritmo distribuye de la forma más pareja posible un determinado número de ventos en un universo discreto, finito y homogéneo, mismo que es representado como un subconjunto del círculo ( $\mathbb{S}^1$ ).
 Esto equivale a determinar una cuantización del tiempo, seleccionando un número finito de posiciones temporales, en las que se distribuyen lo más "parejamente posible" un determinado número de eventos sonoros.
 La investigación de Toussaint muestra una sorprendente ubicuidad de este modelo en la música tradicional alrededor del mundo.
 

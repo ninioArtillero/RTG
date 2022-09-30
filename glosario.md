@@ -23,7 +23,7 @@ De acuerdo al programa de Erlangen de Felix Klein, se trata del conjunto de inva
 Geometría que se deriva de los cinco postulados en "Los Elementos" de Euclides.
 Esta geometría fue formalizada por David Hilbert a finales del siglo XIX, considerando un conjunto extendido de axiomas y definiciones.
 
-Comprende el estudio del espacio plano n-dimensional con la métrica dada por la generalización del teorema de pitágoras.
+Comprende el estudio del espacio plano n-dimensional con la métrica dada por la generalización del teorema de Pitágoras.
 
 ## Grupo
 
