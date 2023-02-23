@@ -2,14 +2,17 @@
 
 Una investigación doctoral en tecnología musical que explora las relaciones entre la programación funcional, el pensamiento geométrico y los patrones rítmicos.
 
-Se toma el lenguaje [Tidal Cycles](https://github.com/tidalcycles/Tidal) como caso de estudio.
+Se toma como objeto de estudio un conjunto de lenguajes para la programación musical embebidos en Haskell.
 
-En este repositorio se recopilan notas, fuentes y fichas de investigación;
-secciones que comprenderán el texto de la tesis doctoral y código para la creación de piezas musicales experimentales y/o módulos para extender Tidal.
+En repositorio tiene el propósito de documentar el proceso de investigación
+y servir de plataforma para el desarrollo de la librería **ritmoTG**.
 
-## Aporte y productos finales (componentes de la tesis):
+## Metas
 
-1. Programación de una aplicación o librería implementando parámetros estructurales para patrones circulares.
-2. Exponer las relaciones entre la expresividad de un lenguaje funcional para la generación de patrones rítmicos, así como su relación con el pensamiento geométrico.
-3. Reflexión matemática sobre el ritmo y los ritmos.
-4. Obras en código, para programación al vuelo, como prueba de concepto.
+1. Crear un lenguaje para programación musical, basado en la noción de transformación geométrica, para la generación de patrones rítmicos. 
+   1. Especificarlo denotacionalmente. 
+   2. Implementarlo en una librería de Haskell.
+2. Proponer una definición musicológica adecuada de la _expresividad_ del código para el ámbito de la programación al vuelo (live coding).
+   1. Exponer las relaciones entre la _expresividad_ de un lenguaje funcional y la _performatividad_ del código en live coding.
+3. Explorar el potencial expresivo de las estructuras geométricas en una API para la manipulación de material musical.
+4. Diseñar un sistema que permita la transformación simultánea de varios niveles estructurales de la música.
