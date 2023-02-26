@@ -1,0 +1,6 @@
+# Auxiliary GHC compile files
+*.o
+*.hi
+
+# Extension-less files (executables)
+!*.*
