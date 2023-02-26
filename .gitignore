@@ -1,6 +1,10 @@
 # mac DS Store files
 .DS_Store
 
+# GHC aux files:
+*.o
+*.hi
+
 # Git ignore para trabajar con archivos LaTex
 # Fuente -> https://github.com/github/gitignore/blob/master/TeX.gitignore
 
