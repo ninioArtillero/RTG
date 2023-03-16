@@ -36,21 +36,22 @@ eventDurationMs cps pulses = round ( milliSecondsPerCycle / cyclePartition )
 
 euclideanPattern :: Int -> Int -> [Int]
 euclideanPattern onsets pulses = concat $ bjorklund front back
-  where front = take onsets $ repeat [1]
-        back = take (pulses - onsets) $ repeat [0]
+  where front = replicate onsets [1]
+        back = replicate (pulses - onsets) [0]
 
 bjorklund :: [[Int]] -> [[Int]] -> [[Int]]
-bjorklund front back
-  | (length back) > 1 = bjorklund newFront newBack
-  | otherwise = front ++ back
-    where
-      newFront = zipWith (++) front back
-      newBack = diffList front back
+bjorklund front back =
+  if (length back) > 1
+    then bjorklund newFront newBack
+    else front ++ back
+  where newFront = zipWith (++) front back
+        newBack = diffList front back
 
 -- función auxiliar para bjorklund
 diffList :: [a] -> [a] -> [a]
-diffList xs ys
-  | lx > ly  = drop ly xs
-  | otherwise = drop lx ys
-    where lx = length xs
-          ly = length ys
+diffList xs ys =
+  if lx > ly
+    then drop ly xs
+    else drop lx ys
+  where lx = length xs
+        ly = length ys
