@@ -2,10 +2,11 @@
 
 ## Objeto de estudio
 
-La tesis abordará un estudio comparativo de las siguientes librerías (_lenguajes de dominio específico_) para la creación musical:
+La tesis abordará un estudio de las siguientes librerías de Haskell para la creación musical:
 
-* [Tidal Cycles](https://tidalcycles.org/) : Librería de Haskell diseñada por Alex McLean y colaboradores. Concepto de _patrón algorítmico_ como semántica de las expresiones.
-* [Euterpea](https://www.euterpea.com/): Librería de Haskell diseñada por Paul Hudak y Donya Quick, basada en los conceptos centrales de la música occidental y los principios de la programación funcional. Esta librería es acompalante del libro [The Haskell School of Music](https://www.cs.yale.edu/homes/hudak/Papers/HSoM.pdf) 
+* [Tidal Cycles](https://tidalcycles.org/) : Creada por Alex McLean y desarrollada por un amplio grupo de colaboradores. Tiene el concepto de _patrón algorítmico_ como semántica de las expresiones.
+* [Euterpea](https://www.euterpea.com/): Librería de Haskell diseñada por Paul Hudak y Donya Quick, basada en los conceptos centrales de la música occidental y los principios de la programación funcional. Esta librería es acompañante del libro [The Haskell School of Music](https://www.cs.yale.edu/homes/hudak/Papers/HSoM.pdf) 
+* [Conductive](https://hackage.haskell.org/package/conductive-base): Escrita por Renick Bell, utiliza la metáfora de un conductor de orquesta. Recientemente fue traducida a una librería de JavaScript llamada [Konduktiva](http://konduktiva.org/).
 
 La elección de los lenguajes es fruto de mi investigación reciente y obedece a los siguientes motivos: 
 
