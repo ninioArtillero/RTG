@@ -9,11 +9,14 @@
 	+ Patrones algoritmicos y el paradigma funcional
 	+ Bucle creación-investigación en el uso del código
 3. RTG: Ritmo, tiempo y geometría
-	1. Cambio de coordenadas musicales
-	2. Implicaciones
+	1. Coordenadas musicales
+	2. Diseño de la librería
+		1. Tipos de datos
+		2. Funciones básicas
+		3. Funciones auxiliares
 4. Live Coding y composición
 	1. Referencias a compositores
-	2. Ejemplo de obra
+	2. Ejemplo de obra con la librería
 5. Anexos
 	1. Glosario
 	2. Matemáticas
