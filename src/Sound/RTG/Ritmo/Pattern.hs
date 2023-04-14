@@ -2,20 +2,19 @@
 -- con una librería de patrones predeterminados.
 module Pattern where
 
-import           Data.List   (nub, sort)
-import           RatioDecons (modOne)
+import Data.List (nub, sort)
+import RatioDecons (modOne)
+
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.
 type Time = Rational
 
 type Pattern a = [a]
 
-
 -- | La forma estandar de un patron de tiempo:
 -- Valores en [0,1), ordenado ascendemente y sin elementos repetidos.
 stdForm :: Pattern Time -> Pattern Time
 stdForm = sort . nub . map modOne
-
 
 -- | Patrones predeterminados.
 
@@ -48,6 +47,12 @@ bossa = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 13 / 16]
 
 gahu :: Pattern Time
 gahu = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 14 / 16]
+
+-- | Esta patrón es el único perfectamente balanceado,
+-- en un universo cromático de 30 vertices, que no se obtiene como la
+-- suma de polígonos disjuntos.
+amiotScale :: Pattern Time
+amiotScale = [0 / 30, 6 / 30, 7 / 30, 13 / 30, 17 / 30, 23 / 30, 24 / 30]
 
 -- | Para pruebas
 firstQuart :: Pattern Time
