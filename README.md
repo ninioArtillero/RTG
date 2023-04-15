@@ -1,4 +1,4 @@
-# Ritmo, tiempo y geometría
+# Ritmo, Tiempo y Geometría
 
 Una investigación que explora la relación entre la programación funcional, el pensamiento geométrico y los patrones rítmicos.
 
