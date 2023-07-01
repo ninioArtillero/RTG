@@ -1,22 +1,40 @@
-# Índice tentativo
+# Índice
 
+0. Introducción (_pre-examen_)
+1. Temática y preguntas de investigación
 1. Antecedentes y Marco teórico
-	+ Relaciones entre música, matemáticas y lenguajes de programación
-	+ La multidimensionalidad de la música: representaciones y modelos
-	+ El concepto patrón algorítmico y los grupos de transformaciones
-	+ Tidal Cycles como interfaz de creación musical
-2. Programación y creación musical
-	+ Patrones algoritmicos y el paradigma funcional
-	+ Bucle creación-investigación en el uso del código
-3. RTG: Ritmo, tiempo y geometría
-	1. Coordenadas musicales
-	2. Diseño de la librería
-		1. Tipos de datos
-		2. Funciones básicas
-		3. Funciones auxiliares
-4. Live Coding y composición
-	1. Referencias a compositores
-	2. Ejemplo de obra con la librería
-5. Anexos
-	1. Glosario
-	2. Matemáticas
+   1. Genealogía (_antecedentes_)
+	  1. Patrón algorítmico
+	  1. Programación reactiva funcional
+	  1. Haskell: eDSLs para programación multimedia
+   1. Abstracción y Expresividad (_marco teórico_)
+	  1. Musical vs computacional
+		  * Expresividad de un lenguaje de programación
+	  1. Ejemplo: Problema "FizzBuzz" (_¿se queda?_)
+	  1. Ejemplo: RTG
+1. Programación funcional de música (_estado de la cuestión_)
+   1. Programación funcional
+   1. Lenguajes para música en Haskell
+	  1. La multidimensionalidad de la música: representaciones y modelos
+	  1. Código y pensamiento (en live coding y composición algorítmica)
+	  1. eDSLs
+		  1. Tidal Cycles
+		  1. Euterpea
+		  1. Conductive
+		  1. RTG
+1. RTG: Ritmo, tiempo y geometría (_aporte tecnológico_)
+   1. Concepto
+	  * Patrones como transformaciones geométricas
+   1. Diseño
+	  1. Tipos de datos
+	  1. Funciones básicas
+	  1. Funciones auxiliares
+   1. Implementación
+   1. API
+   1. _Live coding_ y composición algorítmica
+1. Estudio matemático-geométrico (_aporte teórico-artístico_)
+   1. Programa de Erlangen
+1. Conclusiones (_pre-candidatura_)
+1. Anexos
+   1. Glosario
+   2. Matemáticas
