@@ -1,8 +1,9 @@
 # Índice
 
-0. Introducción (_pre-examen_)
-1. Temática y preguntas de investigación
-1. Antecedentes y Marco teórico
+* Introducción (_pre-examen_)
+   * Temática y preguntas de investigación
+
+0. Antecedentes y Marco teórico
    1. Genealogía (_antecedentes_)
 	  1. Patrón algorítmico
 	  1. Programación reactiva funcional
@@ -34,7 +35,11 @@
    1. _Live coding_ y composición algorítmica
 1. Estudio matemático-geométrico (_aporte teórico-artístico_)
    1. Programa de Erlangen
-1. Conclusiones (_pre-candidatura_)
-1. Anexos
-   1. Glosario
-   2. Matemáticas
+
+* Conclusiones (_pre-candidatura_)
+* Anexos
+  * Grupos de transformaciones
+  * Teoría de lenguajes de programación
+* Bibliografía
+* Índice analítico
+* Glosario
