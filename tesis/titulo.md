@@ -6,3 +6,4 @@ Hacia la implementación computacional de un modelo geométrico original para la
 
 Interfaces geométricas en lenguajes funcionales para la generación de patrones rítmicos (2022-2)
 
+El ritmo teje tiempo y geometría: Expresividad funcional en una librería geométrica para live coding (2023-2)
