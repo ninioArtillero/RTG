@@ -1,9 +1,28 @@
+# Markdown como fuente
+
+Esta tesis está escrita utilizando [Pandoc-Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown),
+la cual cuenta con una gran cantidad de extensiones de sintaxis que permiten traducir la misma fuente a formatos como
+HTML, XML, DOCX, EPUB, ODT, LaTeX y PDF.
+
+
+## Build
+
+Las instrucciones en `Makefile` automatizan la llamada a Pandoc para
+producir el texto en formato ODT (para revisión con control de cambios y comentarios) y PDF (para impresión)
+a partir de los archivos de texto en _markdown_.
+
+Para ello basta con ejecutar el comando `make` desde esta ubicación.[^1]
+Es necesario [instalar Pandoc](https://pandoc.org/installing.html).
+
+[^1]: https://www.gnu.org/software/make/
+
+
 # Índice
 
 * Introducción (_pre-examen_)
    * Temática y preguntas de investigación
 
-0. Antecedentes y Marco teórico
+1. Antecedentes y Marco teórico
    1. Genealogía (_antecedentes_)
 	  1. Patrón algorítmico
 	  1. Programación reactiva funcional
@@ -40,6 +59,6 @@
 * Anexos
   * Grupos de transformaciones
   * Teoría de lenguajes de programación
-* Bibliografía
-* Índice analítico
+* Índice analítico (pendiente)
 * Glosario
+* Bibliografía

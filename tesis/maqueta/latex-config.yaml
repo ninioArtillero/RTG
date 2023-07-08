@@ -1,0 +1,59 @@
+---
+# Maqueta de documento
+
+# Opciones (metadatos) para pandoc que corresponden a opciones para paquetes de LaTex.
+# Referencia
+# https://pandoc.org/MANUAL.html#variables-for-latex
+
+lang: es-MX
+
+documentclass: book
+
+classoption:
+- onecolumn
+- 12pt
+#- notitlepage
+
+# geometry:
+# - width=129mm
+# - top=25mm
+# - bottom=25mm
+# - headheight=15pt
+
+# Table of contents
+toc: true
+
+# Figures and tables
+lof: true
+lot: true
+
+thanks: "Apoyado por CONAHCYT través del programa de becas nacionales."
+
+hyperrefoptions:
+- breaklinks=true
+
+link-citations: true
+linkcolor: black
+urlcolor: blue
+citecolor: red
+toccolor: black
+urlstyle: tt
+links-as-notes: true
+
+indent: true
+
+papersize: letterpaper
+
+biblatexoptions:
+- backend=biber
+- sorting=nyt
+
+biblio-style: authoryear
+
+biblio-title: Bibliografía
+
+# Este valor se introduce en la Makefile
+# utilisando la flag --bibliography y la variable BIBLIO
+#blioliography: source.bib
+
+...

@@ -1,0 +1,38 @@
+---
+# Defaults para llamada a pandoc
+
+# Opciones generales para el procesamiento de pandoc
+
+standalone: true
+
+verbosity: INFO
+
+citeproc: true
+
+number-sections: true
+
+reference-links: true
+
+list-tables: true
+
+top-level-division: chapter
+
+# Este valor se introduce en la Makefile
+# utilizando la flag --csl y la variable CITATIONSTYLE
+#metadata:
+#  csl: ${.}/chicago-author-date.csl
+
+metadata-files:
+  - ${.}/metadata.yaml
+  - ${.}/latex-config.yaml
+
+# Alternativamente algunas opciones de pueden añadir
+# directamente al templete de pandoc para latex:
+#include-in-header:
+#  - head.tex
+
+#pdf-engine-opts:
+#  # Para utilizar paquete minted.
+#  - '-shell-escape'
+
+...
