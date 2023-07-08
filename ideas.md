@@ -7,9 +7,6 @@
    1. El algoritmo de Euclídes, implementado en los ritmos euclidianos, permite la generación de una rica familia de ritmos a partir del uso de 3 parámetros.
    2. Los ritmos euclidianos son un caso particular de ritmos "bien formados". El concepto de "buena forma" y "balance perfecto" son implementados por Milne et al. en la aplicación de escritorio Xronomorph.
 
-
-
-
 ## Inspiración
 
     El ritmo es el efecto perceptual y la causa de los fenómenos cíclicos. 
