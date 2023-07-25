@@ -31,13 +31,13 @@ PANDOC=pandoc \
 			 $(SOURCE)
 
 
-# create docx
+# create odt
 $(OUTPUT).odt: $(SOURCE) $(METADATA)
 	$(PANDOC) --output=$(OUTPUT).odt
 
 # create pdf
 $(OUTPUT).pdf: $(SOURCE) $(METADATA)
-	$(PANDOC) --to=pdf --output=$(OUTPUT).pdf
+	$(PANDOC) --output=$(OUTPUT).pdf
 
 
 all: $(TARGET)
