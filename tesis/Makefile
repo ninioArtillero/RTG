@@ -11,7 +11,11 @@
 
 OUTPUT=out
 
-SOURCE=dedicatoria.md intro/intro.md cap*/*.md glosario.md bibliografia.md
+SOURCE=dedicatoria.md \
+	   intro/intro.md \
+	   cap*/*.md \
+	   glosario.md \
+	   bibliografia.md
 
 CITATIONSTYLE=maqueta/chicago-author-date.csl
 
