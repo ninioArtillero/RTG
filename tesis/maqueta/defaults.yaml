@@ -1,6 +1,5 @@
 ---
 # Defaults para llamada a pandoc
-
 # Opciones generales para el procesamiento de pandoc
 
 standalone: true

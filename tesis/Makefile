@@ -14,6 +14,7 @@ OUTPUT=out
 SOURCE=dedicatoria.md \
 	   intro/intro.md \
 	   cap*/*.md \
+	   conclusiones.md \
 	   glosario.md \
 	   bibliografia.md
 
@@ -29,7 +30,7 @@ TARGET=$(OUTPUT).odt $(OUTPUT).pdf
 
 PANDOC=pandoc \
 			 --from=markdown+rebase_relative_paths \
-			 -s --bibliography $(BIBLIO) \
+			 --standalone --bibliography $(BIBLIO) \
 			 --csl=$(CITATIONSTYLE) \
 			 --defaults $(DEFAULTS) \
 			 $(SOURCE)

@@ -16,4 +16,6 @@ keywords:
 
 date: Julio 2023
 
+# Aplica cuando no es llamada la bibliografía explícitamente
+#reference-section-title: Bibliografía
 ...
