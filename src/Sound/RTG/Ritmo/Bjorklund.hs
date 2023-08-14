@@ -1,57 +1,53 @@
-import           Control.Concurrent
-import           Control.Monad      (forever)
-import           System.Environment (getArgs)
-
--- Este programa ejecuta con tres argumentos:
--- cps :: Float, onsets :: Int, pulsos :: Int
-
--- Utiliza MVar, una implementación de variables mutables que
--- permite sincronizar procesos concurrentes.
-
-main :: IO ()
-main = do
-  (c:k:n:_) <- getArgs
-  let cps = read c :: Float
-      onsets = read k :: Int
-      pulses = read n :: Int
-      dur = eventDurationMs cps pulses
-      pttrn = cycle ( euclideanPattern onsets pulses )
-  container <- newEmptyMVar
-  index <- newMVar 0
-  forkIO . forever $ do
-    i <- takeMVar index
-    putMVar container ( pttrn !! i )
-    putMVar index ( i + 1 )
-    threadDelay dur
-  forever $ do
-    val <- takeMVar container
-    print val
-
-
--- Calcula la duración de cada pulso del ritmo euclidiano
-eventDurationMs :: Float -> Int -> Int
-eventDurationMs cps pulses = round ( milliSecondsPerCycle / cyclePartition )
-      where milliSecondsPerCycle = (1/cps) * 10^6
-            cyclePartition = fromIntegral pulses
+module Bjorklund (euclideanPattern) where
 
 euclideanPattern :: Int -> Int -> [Int]
-euclideanPattern onsets pulses = concat $ bjorklund front back
+euclideanPattern onsets pulses = bjorklund front back
   where front = replicate onsets [1]
         back = replicate (pulses - onsets) [0]
 
-bjorklund :: [[Int]] -> [[Int]] -> [[Int]]
-bjorklund front back =
+-- Las siguientes implementaciones difieren en
+-- su tratamiento de valores negativos.
+
+euclideanPattern' :: Int -> Int -> [Int]
+euclideanPattern' onsets pulses =
+  case (compare onsets pulses) of
+    LT -> bjorklund front back
+    GT -> replicate pulses 1
+    EQ -> replicate onsets 1
+  where front = replicate onsets [1]
+        back = replicate (pulses - onsets) [0]
+
+euclideanPattern'' :: Int -> Int -> [Int]
+euclideanPattern'' onsets pulses =
+  if orientation > 0
+   then bjorklund front back
+   else reverse $ bjorklund front back
+  where orientation =  signum pulses
+        onsets' = if onsets /= pulses then onsets `rem` pulses else abs onsets
+        front = replicate onsets' [1]
+        back = replicate (abs $ pulses - onsets') [0]
+
+bjorklund :: [[Int]] -> [[Int]] -> [Int]
+bjorklund front back
+  | (not . null) front && length back > 1 = bjorklund newFront newBack
+  | otherwise = concat (front ++ back)
+    where
+      newFront = zipWith (++) front back
+      newBack = diffList front back
+
+-- Versión previa, sin concat
+bjorklund' :: [[Int]] -> [[Int]] -> [[Int]]
+bjorklund' front back =
   if (length back) > 1
-    then bjorklund newFront newBack
+    then bjorklund' newFront newBack
     else front ++ back
   where newFront = zipWith (++) front back
         newBack = diffList front back
 
--- función auxiliar para bjorklund
+-- Función auxiliar para bjorklund
 diffList :: [a] -> [a] -> [a]
-diffList xs ys =
-  if lx > ly
-    then drop ly xs
-    else drop lx ys
-  where lx = length xs
-        ly = length ys
+diffList xs ys
+  | lx > ly  = drop ly xs
+  | otherwise = drop lx ys
+    where lx = length xs
+          ly = length ys
