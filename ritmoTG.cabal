@@ -70,8 +70,10 @@ library
     other-extensions: PatternSynonyms ViewPatterns
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.14.3.0
-                      groups ^>=0.5.3.0
+    build-depends:
+        , base ^>=4.14.3.0
+        , group-theory ^>=0.2.2
+        , hosc ^>=0.19.1
 
     -- Directories containing source files.
     hs-source-dirs:   src
