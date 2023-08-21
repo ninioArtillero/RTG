@@ -1,3 +1,4 @@
+module Sound.RTG.Ritmo.PatronRegular where
 -- Ritmos euclideanos utilizando un redondeo modular
 -- Esta aproximación es una adaptación del trabajo final con Mauricio Rodriguez
 

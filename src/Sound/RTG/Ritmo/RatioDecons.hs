@@ -6,7 +6,7 @@
 -- Referencias:
 -- https://gitlab.haskell.org/ghc/ghc/-/wikis/view-patterns
 -- https://gitlab.haskell.org/ghc/ghc/-/wikis/pattern-synonyms
-module RatioDecons (modOne) where
+module Sound.RTG.Ritmo.RatioDecons (modOne) where
 
 import Data.Ratio (Ratio, denominator, numerator, (%))
 

@@ -1,9 +1,9 @@
 -- | Definición del concepto de Patrón
 -- con una librería de patrones predeterminados.
-module Pattern where
+module Sound.RTG.Ritmo.Pattern where
 
 import Data.List (nub, sort)
-import RatioDecons (modOne)
+import Sound.RTG.Ritmo.RatioDecons (modOne)
 
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.

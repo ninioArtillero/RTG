@@ -5,11 +5,11 @@
 -- Basado en Milne et. al. 2015
 -- "Perfect Balance: A Novel Principle for the Construction of
 -- Musical Scales and Meters".
-module PerfectBalance (evenness, balance) where
+module Sound.RTG.Ritmo.PerfectBalance (evenness, balance) where
 
 import Data.Complex (Complex (..), magnitude)
 import Data.Ratio (denominator, numerator, (%))
-import Pattern
+import Sound.RTG.Ritmo.Pattern
 
 gcdRational :: Rational -> Rational -> Rational
 gcdRational x y =
