@@ -1,5 +1,5 @@
-# Ignore extensionless files #
-##############################
+# Ignore extensionless files (for compiled executables) #
+#########################################################
 # Ignore all
 *
 # Unignore all with extensions
@@ -7,9 +7,11 @@
 # Unignore all dirs
 !*/
 
-# Test directories and files #
-##############################
+# Test sub-directories and files other that test suite #
+########################################################
 test*
+!/test/
+!/test/*
 
 ## Common options
 ## Source https://gist.github.com/octocat/9257657
