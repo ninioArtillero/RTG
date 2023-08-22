@@ -1,40 +1,47 @@
 module Sound.RTG.Geometria.Euclidean (Euclidean, (<+>)) where
 
-type Euclidean =
-  ( Int, -- event number
-    Int, -- pulse granularity
-    Int -- rotation
-  )
+data Euclidean = Euclidean Int Int Int deriving (Ord)
 
--- | Produces an Euclidean representation such that
--- the Euclidean rhythms are the set
+-- | Implements an equivalence relation for euclidean rhythms
+-- at the type level
+instance Eq Euclidean where
+  Euclidean k n p == Euclidean k' n' p' = stdForm (k, n, p) == stdForm (k', n', p')
+
+instance Show Euclidean where
+  show (Euclidean k n p) = show $ stdForm (k, n, p)
+
+-- | Euclidean rhythms in "standard form" are elements of
 -- \(\{ (x,y,z) | x,y,z >= 0 , y >= z \}\).
-reduce :: Euclidean -> Euclidean
-reduce (x, y, z) = (x', y', z')
+stdForm :: (Int, Int, Int) -> (Int, Int, Int)
+stdForm (k, n, p) = (k', n', p')
   where
-    x'
-      | x == 0 = 0
-      | x `mod` y' == 0 = y'
-      | otherwise = x `mod` y'
-    y' = abs y
-    z' = z `mod` y'
+    k'
+      | k == 0 = 0
+      | k `mod` n' == 0 = n'
+      | otherwise = k `mod` n'
+    n'
+      | k == 0 && p == 0 = 1
+      | otherwise = abs n
+    p' = p `mod` n'
 
 -- Isochronous rhythms have an infinite number
 -- of different representations that sound the same:
--- (3,3), (3,6), (3,9), ...
--- (5,5), (5,10), (5,15), ...
--- This families are not reduced to a single element
+-- (3,3,0), (3,6,0), (3,9,0), ...
+-- (5,5,1), (5,10,1), (5,15,1), ...
+-- This elements are distinguished
 -- to preserve granularity.
+-- The exception is (0,n,0), which is the identity element
+-- for every n.
 
 -- | Combines two euclidean rhythms using modular arithmetic
 -- on the least common multiple of pulse granularity.
-(<+>) :: Euclidean -> Euclidean -> Euclidean -- type declaration
-r1 <+> r2
-  | (y /= 0) && (b /= 0) = ((x + a) `mod` w, w, (z' + c') `mod` w)
+(<+>) :: Euclidean -> Euclidean -> Euclidean
+Euclidean k n p <+> Euclidean k' n' p'
+  | (n /= 0) && (n' /= 0) = Euclidean ((k + k') `mod` m) m ((position + position') `mod` m)
   | otherwise = error "Zero pulse argument not specified"
   where
-    (a, b, c) = reduce r1
-    (x, y, z) = reduce r2
-    w = lcm y b
-    z' = z * div w y
-    c' = c * div w b
+    m = lcm n n'
+    position = p * div m n
+    position' = p' * div m n'
+
+infixl 5 <+>
