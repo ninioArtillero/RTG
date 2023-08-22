@@ -1,5 +1,7 @@
 module Sound.RTG.Geometria.Euclidean (Euclidean, (<+>)) where
 
+import Data.Group
+
 data Euclidean = Euclidean Int Int Int deriving (Ord)
 
 -- | Implements an equivalence relation for euclidean rhythms
@@ -45,3 +47,12 @@ Euclidean k n p <+> Euclidean k' n' p'
     position' = p' * div m n'
 
 infixl 5 <+>
+
+instance Semigroup Euclidean where
+  a <> b = a <+> b
+
+instance Monoid Euclidean where
+  mempty = Euclidean 0 1 0
+
+instance Group Euclidean where
+  invert (Euclidean a b c) = Euclidean (- a) b (- c)
