@@ -1,4 +1,4 @@
-module Sound.RTG.Ritmo.OscOut where
+module Sound.RTG.Tiempo.OscOut where
 
 import Control.Concurrent
 import Control.Monad (forM_, forever)
