@@ -3,35 +3,28 @@ module Sound.RTG.Tiempo.OscOut where
 import Control.Concurrent
 import Control.Monad (forM_, forever)
 import Sound.OSC.FD
-import Sound.RTG.Ritmo.Bjorklund (euclideanPattern)
+import Sound.RTG.Ritmo.Bjorklund
 import System.Environment (getArgs)
 
--- Este programa ejecuta con tres argumentos:
--- cps :: Float, onsets :: Int, pulsos :: Int
+type CPS = Rational
 
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
-main :: IO ()
-main = do
-  (c : k : n : _) <- getArgs
-  -- argument parsing
-  let cps = read c :: Float
-      onsets = read k :: Int
-      pulses = read n :: Int
-      dur = eventDurationS cps pulses
-      pttrn = cycle (euclideanPattern onsets pulses)
+play :: CPS -> [Int] -> IO ()
+play cps pttrn = do
+  let cyclicPattern = cycle pttrn
+      dur = eventDurationS cps (length pttrn)
   -- initialize variables
+  port <- openUDP "127.0.0.1" 57120 :: IO UDP
   container <- newEmptyMVar
   index <- newMVar 0
   -- write loop
   forkIO . forever $ do
     i <- takeMVar index
-    putMVar container (pttrn !! i)
+    putMVar container (cyclicPattern !! i)
     putMVar index (i + 1)
-  --threadDelay dur
   -- open connection
-  port <- openUDP "127.0.0.1" 57120 :: IO UDP
   -- output loop
   forever $ do
     x <- takeMVar container
@@ -39,29 +32,6 @@ main = do
         message = messageGen x
     send message
     pauseThread dur
-
---tcp_send_packet t message
-
-{- Versión para enviar a terminal
-main :: IO ()
-main = do
-  (c:k:n:_) <- getArgs
-  let cps = read c :: Float
-      onsets = read k :: Int
-      pulses = read n :: Int
-      dur = eventDurationMs cps pulses
-      pttrn = cycle ( euclideanPattern onsets pulses )
-  container <- newEmptyMVar
-  index <- newMVar 0
-  forkIO . forever $ do
-    i <- takeMVar index
-    putMVar container ( pttrn !! i )
-    putMVar index ( i + 1 )
-    threadDelay dur
-  forever $ do
-    val <- takeMVar container
-    print val
--}
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
@@ -95,30 +65,14 @@ messageGen x =
           ASCII_String $ ascii "tok"
         ]
 
-eventDurationMs :: Float -> Int -> Int
+eventDurationMs :: Rational -> Int -> Int
 eventDurationMs cps pulses = round (microSecondsPerCycle / cyclePartition)
   where
     microSecondsPerCycle = (1 / cps) * 10 ^ 6
     cyclePartition = fromIntegral pulses
 
-eventDurationS :: Float -> Int -> Float
+eventDurationS :: Rational -> Int -> Rational
 eventDurationS cps pulses = secondsPerCycle / cyclePartition
   where
     secondsPerCycle = 1 / cps
     cyclePartition = fromIntegral pulses
-
-eUnitTest :: (Int -> Int -> [Int]) -> String
-eUnitTest f =
-  if and
-    [ f 8 8 == [1, 1, 1, 1, 1, 1, 1, 1],
-      f 3 8 == [1, 0, 0, 1, 0, 0, 1, 0],
-      f 3 (-8) == [0, 1, 0, 0, 1, 0, 0, 1],
-      f (-3) 8 == [],
-      f (-3) (-8) == [],
-      f 11 8 == [1, 1, 1, 1, 1, 1, 1, 1],
-      f 11 (-8) == [],
-      f (-11) 8 == [],
-      f (-11) (-8) == []
-    ]
-    then "Rifo"
-    else "Chafio"
