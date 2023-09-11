@@ -1,14 +1,13 @@
--- |
+# Representación Musical en Mazzola 2021
 
-{-
-Esta librería está basada en el modelo de Mazzola para
-una arquitectura conceptual de la música.
+El modelo de Mazzola para una arquitectura conceptual de la música.
 
-Ver
-  Mazzola 2021 : A Computational Music Thery of Everything (artículo)
-  Mazzola 2002 : The Topos of Music (libro)
--}
+Referencias:
+  
+* Mazzola 2021 : A Computational Music Thery of Everything (artículo)
+* Mazzola 2002 : The Topos of Music (libro)
 
+```haskell
 module Denotators where
 
 
@@ -40,3 +39,4 @@ type Orchestra = [Instrument]
 -- con un único espacio de coordenadas dado (Int, Float...)
 -- Por ejemplo un acorde:
 type Chord = [Note]
+```
