@@ -12,6 +12,7 @@ documentclass: book
 classoption:
 - onecolumn
 - 12pt
+- oneside
 #- notitlepage
 
 # geometry:
@@ -31,18 +32,22 @@ thanks: "Apoyado por CONAHCYT través del programa de becas nacionales."
 
 hyperrefoptions:
 - breaklinks=true
+#- linktoc=all
+#- pdfwindowui
+#- pdfpagemode=FullScreen
 
 link-citations: true
-linkcolor: black
-urlcolor: blue
-citecolor: red
+linkcolor: magenta
+urlcolor: cyan
+citecolor: yellow
 toccolor: black
 urlstyle: tt
 links-as-notes: true
 
 indent: true
-
+#pagestyle: plain
 papersize: letterpaper
+#secnumdepth: 3
 
 biblatexoptions:
 - backend=biber
