@@ -54,16 +54,17 @@ extra-source-files:
 library
     -- Modules exported by the library.
     exposed-modules:
+        Sound.RTG.Context
         Sound.RTG.Geometria.Euclidean
         Sound.RTG.Ritmo.Bjorklund
         Sound.RTG.Ritmo.PatronRegular
         Sound.RTG.Ritmo.Pattern
         Sound.RTG.Ritmo.PerfectBalance
-        Sound.RTG.Ritmo.RatioDecons
         Sound.RTG.Tiempo.OscOut
 
     -- Modules included in this library but not exported.
-    -- other-modules:
+    other-modules:
+        Sound.RTG.Ritmo.RatioDecons
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: PatternSynonyms ViewPatterns

@@ -3,7 +3,6 @@ module Sound.RTG.Tiempo.OscOut where
 import Control.Concurrent
 import Control.Monad (forM_, forever)
 import Sound.OSC.FD
-import Sound.RTG.Ritmo.Bjorklund
 import System.Environment (getArgs)
 
 type CPS = Rational

@@ -5,7 +5,7 @@
 -- Basado en Milne et. al. 2015
 -- "Perfect Balance: A Novel Principle for the Construction of
 -- Musical Scales and Meters".
-module Sound.RTG.Ritmo.PerfectBalance (evenness, balance) where
+module Sound.RTG.Ritmo.PerfectBalance (evenness, balance, indicatorVector, polygon, rotateLeft, rotateRight, polygonSum) where
 
 import Data.Complex (Complex (..), magnitude)
 import Data.Ratio (denominator, numerator, (%))
