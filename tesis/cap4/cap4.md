@@ -1,4 +1,36 @@
-# Marco teórico
+# Ritmo, tiempo y geometría
+
+En este capítulo se discutirá el aspecto matemático-geométrico de RTG. Ahondaremos en el programa de Erlangen y posibles rutas de investigación futura.
+
+
+## Espacio de los ritmos
+
+El RTG intenta ser un instrumento expresivo para live coding, así como una herramienta para explorar el espacio de ritmos a través de la geometría. Aquí aludimos a la noción de exploración de un espacio conceptual dado por @Wiggins2017marco.
+
+## Ritmo y Geometría
+
+Los "ritmos euclidianos" son ejemplo que considero clave para la perspectiva y marco teórico de este trabajo de tesis. @Toussaint2005Euclidean describe una implementación del algoritmo de Euclides que permite generar una familia de patrones, en la que se incluyen ritmos de diversas tradiciones como casos particulares. Estos ritmos son ejemplos de lo que Toussaint denomina como "timelines": estructuras rítmicas, típicamente tocadas por instrumentos de percusión, que caracterizan algunos estilos de música popular y tradicional. Este ejemplo muestra como un modelo matemático-computacional puede ayudar a organizar datos musicológicos y, al ser implementado, producir una herramienta para la creación musical. Este algoritmo está implementado en varios contextos, por ejemplo: en la sintaxis de patrones en Tidal, en algunos plugins de secuenciamiento y en el [paquete Bjorklund](https://github.com/redFrik/Bjorklund) para el lenguaje de programación SuperCollider.
+
+## Tiempo y Geometría
+
+Como vimos en el primer capítulo, Tidal Cycles los patrones están  implementados como funciones del tiempo. La manipulación de estas funciones de tiempo se da a su vez a través de otras funciones que los transforman. Esta caracterización permite abordar el espacio de estas funciones y sus transformaciones como una geometría. Aquí "geometría" es entendida en el sentido del [programa de Erlangen](https://en.wikipedia.org/wiki/Erlangen_program) como el conjunto de invariantes bajo un grupo de transformaciones. Esta conceptualización permite extender la noción de geometría más allá del estudio de figuras planas o sólidas en el espacio euclidiano. En este documento no abordaré la definición formal de "grupo de transformaciones", mismo que fue un concepto central en mi [tesis de licenciatura](https://repositorio.unam.mx/contenidos/ficha/328736). Por el momento me limitaré a mencionar que la relevancia de este concepto es que posibilita hacer un estudio abstracto de estos lenguajes como entornos geométricos, de los que se desprende la siguiente pregunta:
+> ¿Cómo describir la geometría implícita en los lenguajes tipo Tidal? Y ¿qué implica esta estructura geométrica respecto al diseño y uso de estos lenguajes?
+
+Esta pregunta apunta directamente a la hipótesis de trabajo que menciono en la siguiente sección: la existencia de un vínculo entre el pensamiento matemático-geométrico y la creación musical en el contexto del Live Coding. En el caso particular de Tidal Cycles me interesa hacer un estudio geométrico que describa a nivel formal las estructuras que produce y un estudio computacional (*i.e.* desde la ciencia de la computación) de las abstracciones que le permiten ejecutar ideas musicales. Este estudio empieza necesariamente por las características de Haskell, en el cual Tidal está embebido, de las cual interesan principalmente dos:
+
+
+1. Es un lenguaje de *programación funcional pura*, la cual es un paradigma de programación basado en el [*cálculo lambda*](https://en.wikipedia.org/wiki/Lambda_calculus): una abstracción de los procesos computacionales a través del lenguaje de las funciones y su composición en que las estructuras de datos no son modificadas. En la práctica esto implica que el código de programas funcionales no lleva la cuenta de estados, sino que se trata de una concatenación de trasformaciones.
+2. Tiene *evaluación floja* que permite, por ejemplo, definir estructuras de datos infinitas sobre las que la solicitud de una función permite un cálculo finito (al que están sujetos todos los algoritmos computacionales para considerarse efectivos). La evaluación floja significa que no se realiza ninguna operación hasta que se pide un resultado explícitamente.
+
+Sobre esta línea, el estudio de la implementación de lenguajes tipo Tidal parte de las siguientes preguntas:
+
+> ¿Qué características tiene la representación de patrones rítmicos o temporales en la programación funcional? ¿De qué depende?
+
+> ¿Qué ventajas supone este paradigma de programación en el diseño de lenguajes? ¿Cuáles son sus peculiaridades en el Live Coding?
+
+
+
+
 Aún no se encuentra apropiadamente delimitado. Sin embargo presento algunos referentes que utilizaré para su construcción. Recordemos que los ritmos tienen maneras generativas de ser producidos [ver @Toussaint2005Euclidean, cap. 1; @Elliott1997Functional].
 
 Esta investigación tiene las siguientes ramificaciones sobre el estudio de estos lenguajes de programación de patrones rítmicos:

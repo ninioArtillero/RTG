@@ -1,12 +1,16 @@
 # Introducción {.unnumbered}
 
-La presente investigación surge de los intersticios entre mi práctica 
-musical, mi pensamiento matemático y mi interés por los sistemas computacionales
-y el software libre.
+La presente investigación está influenciada por el descubrimiento del _live coding_ durante mis estudios de maestría. 
+En esta práctica encontré un convivencia armoniosa de mis intereses e inclinaciones. 
+Mi pensamiento matemático encuentra satisfacción en la retroalimentación entre la escritura de código,
+la creación de estructuras abstractas y la generación de sonido. 
+Además, he disfrutado enormemente el encontrar nuevos problemas por resolver involucrado con el uso
+de herramientas que no esconden los principios de su funcionamiento: los conejos blancos saltan por doquier felices. 
+Resuena con mi inclinación política el hecho de que la comunidad del _live coding_ lleva en su seno los principios del software libre y de código abierto: en resonancia con la búsqueda de conocimiento como una práctica liberadora y esencialmente cooperativa.
 
 Durante mis estudios de maestría en tecnología musical, como resultado de la introspección y
 el diálogo con mi tutor el Dr. Jorge David García, decidí abordar aspectos políticos y poéticos de mi práctica como productor musical utilizando los conceptos de remix y sampleo. 
-Estos me llevaron a tratar aspectos políticos y poéticos derivados de consideraciones
+Estos me llevaron a tratar aspectos derivados de consideraciones
 tecnológicas relacionadas con la grabación (pensada como escritura) y el medio digital.
 
 Simultáneamente elaboré, para mis adentros, una representación _naive_ del fenómeno musical en
@@ -43,43 +47,51 @@ Empero, espero que mi visión aporte una luz intersticial.
 
 Esta investigación tiene como objetivo indagar el papel del pensamiento matemático en el diseño de lenguajes para programación musical.
 
-El objeto de estudio es un conjunto de lenguajes implementados como librerías de Haskell: Tidal Cycles, Conductive, Euterpea y ritmoTG. Cada lenguaje partiendo de una conceptualización diferente
-del fenómeno musical enraizado en su diseño. Mi interés está en las estrategias de diseño
-de estos lenguajes y su relación con el uso que agencian como herramientas para la creación musical.
+El objeto de estudio de este proyecto está en la intersección de dos aspectos de un conjunto de lenguajes de dominio específico (DSL por sus siglas en inglés) orientados a la generación de patrones rítmicos musicales. Estos aspectos son:
 
-## Preguntas
+1. Las características de su implementación computacional.
+2. Sus cualidades y ofrecimientos como herramientas de creación musical.
+
+En otras palabras, **el objeto de estudio es el vínculo entre el diseño de estos lenguajes y las formas de creación que posibilitan**.
+
+Como casos de estudio present un conjunto de lenguajes implementados como librerías de Haskell: Tidal Cycles, Conductive, Euterpea y ritmoTG. 
+Cada lenguaje partiendo de una conceptualización difente de la __entidad musical_ enraizado en su diseño. 
+Mi interés está en las estrategias de diseño de estos lenguajes y su relación con el uso que agencian como herramientas para la creación musical.
+
+## Preguntas {.unlisted .unnumbered}
 
 Un conjunto de preguntas detonantes para la investigación. En algunos casos ya han respuestas parciales que necesitan ser formalizadas en el manuscrito.
 
-### ¿Cuáles parámetros matemáticos he identificado para la generación de ritmos cíclicos? 
+> ¿Cuáles parámetros matemáticos he identificado para la generación de ritmos cíclicos?
+
 1. Balance: Mide cuanto difiere el centro de masa de un patrón circular del centro del círculo (cero da balance perfecto). Relacionado con el coeficiente de grado cero en la transformada discreta de Fourier para el vector de eventos.
 2. Regularidad (*evenness*): Mide la cercanía a la regularidad perfecta (*perfect evenness*): cuando los elementos del patrón están separados por un mismo intervalo. Relacionada con el coeficiente de grado uno de la transformada de Fourier. Estadísticamente, este valor es equivalente la diferencia entre la varianza circular y la unidad. La regularidad perfecta implica balance perfecto (Milne et al. 2015).
 3. Buena forma: sólo existen dos diferentes intervalos entre los eventos.
 4. Sub-periodicidad: cuando un subconjuto del patrón genera a la totalidad del mismo.
 
-### ¿Qué geometría tiene el espacio de patrones en Tidal Cycles? 
+> ¿Qué geometría tiene el espacio de patrones en Tidal Cycles?
 
 Los patrones rítmicos en Tidal son funciones puras del tiempo que producen eventos (valuados en general en un tipo numérico).
 Las funciones de segundo orden, transforman patrones en patrones.
 Para poder caracterizar la geometría que emerge en Tidal, es fundamental identificar el conjunto completo de estas transformaciones.
 Posteriormente es posible, en principio, definir un *grupo* de transformaciones a partir del cuál caracterizar la geometría.
 
-### ¿Cómo el cálculo lambda permite representar la evolución de patrones rítmicos?
+> ¿Cómo el cálculo lambda permite representar la evolución de patrones rítmicos?
 
 Esto se relaciona con la FRP: un modelo para representar la continuidad del tiempo y la reactividad de un comportamiento a eventos.
 
-### ¿Cómo representar un ritmo como un ente evolutivo?
+> ¿Cómo representar un ritmo como un ente evolutivo?
 
-### ¿Existe una relación entre el cálculo lambda y el programa de Erlangen?
+> ¿Existe una relación entre el cálculo lambda y el programa de Erlangen?
 
 La idea central del cálculo lambda es que todo computo se puede representar mediante funciones puras. Por otro lado el programa de Erlangen propone que la geometría está caracterizada un grupo de transformaciones, es decir, un conjunto de funciones puras.
 
 
-### ¿Cuál es el aspecto matemático que quiero experimentar musicalmente? 
+> ¿Cuál es el aspecto matemático que quiero experimentar musicalmente?
 
 Abordar la composición desde la lógica de la geometría mediante el uso de patrones algorítmicos.
 
-## Objeto de estudio
+## Casos de estudio {.unlisted .unnumbered}
 
 La tesis abordará un estudio de las siguientes librerías de Haskell para la creación musical:
 
@@ -112,27 +124,13 @@ identificar elementos de diseño que impacten positivamente en la expresividad d
 como herramienta creativa o instrumento musical. Paralelamente
 un análisis de su _implementación_ tiene el objetivo de servir de referencia para el trabajo propio. 
 
+## Método
 
-## Objetivo de la investigación
+Como mencioné al introducir el objeto de investigación, y se evidencio al plantear las preguntas anteriores, trabajaré sobre dos aspectos de un grupo de lenguajes. Para conveniencia de la presente sección podemos llamarlos el aspecto tecnológico y el aspecto musical.
 
-El desarrollo de una librería para la creación musical, escrita en Haskell, que haga un aporte
-en 2 aspectos cuya prueba es el objetivo central de la tesis:
+El estudio del código implica su lectura y su uso. El aspecto musical será abordado mediante una investigación documental en los trabajos de compositores y Live Coders que permita ahondar en las capacidades expresivas de estos lenguajes y entender sus límites. El aspecto tecnológico requiere el análisis de las funciones presentes en estos lenguajes y el desarrollo de otras resultantes de la exploración musical. Esto constituiría un aporte tecnológico tangible a la práctica del Live Coding y una retribución a la comunidad detras del mantenimiento y evolución de estos lenguajes.
 
-1. Evidenciar como el uso de principios de la programación funcional aporta al diseño de una API creativa,
-    permitiendo que los lenguajes de programación tengan una expresividad similar a 
-    un instrumento musical.
-2. Establecer un vínculo teórico y práctico entre la geometría y el ritmo.
+Un elemento fundamental para el desarrollo de estás tecnologías es la apertura y liberación del código como un filosofía promovida por la [Free Software Foundation](https://www.gnu.org/philosophy/philosophy.html): se trata de proyectos personales o colaborativos de investigación y desarrollo tecnológico que son sujetos a la experimentación y aporte de terceros. Esta participación comunitaria es incentivada por la posibilidad legal de reapropiarse del código para crear versiones alternativas o implementar en otros proyectos o productos, comerciales o sin fines de lucro. Gracias a su licencia de software libre de Tidal Cycles es posible estudiar a profundidad su código.
 
-
-Se seguirán los siguientes principios provenientes de la teoría de la computación: 
-
-* Estilo de programación funcional para probar la correctud del código.
-* Programación funcional reactiva para trabajar la semántica del tiempo continuo. 
-* El diseño denotativo, que parte de una especificación detallada y procura el uso de abstracciones matemático-computacionales para su implementación.
-* Modelos generativos geométricos como funciones básicas del lenguaje.
-
-Con esta librería propongo una semántica que permita la traducción del pensamiento
-geométrico-espacial en la generación de patrones rítmicos mediante texto. 
-Es decir, trabajará al nivel de la organización de materiales
-sonoros, y no al nivel de la síntesis de sonido.
+En última instancia el objeto de estudio será abordado desde la geometría con la intención de proponer una estructura formal para su análisis y clasificación. El objetivo de esta aproximación es desarrollar una conceptualización que permita nuevas formas de pensar el Live Coding y la programación de herramientas y lenguajes musicales.
 

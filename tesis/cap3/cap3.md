@@ -1,26 +1,29 @@
-# Hipótesis
+# RTG: Una biblioteca de transformaciones
 
-A la fecha cuento con la siguiente hipótesis de trabajo:
+RTG se trata, en primera instancia, de una herramienta para la generación y manipulación de estructuras rítmicas. Me interesa explorar estructuras geométricas con cualidades rítmicas notables,[^buenosRitmos] a través de un método igualmente geométrico. RTG incluirá funciones generadoras de patrones rítmicos, utilizando algoritmos de fundamento geométrico como los ritmos euclidianos de Toussaint (2005) o los ritmos “balanceados” y “bien-formados” de Milne et al. (2016). En segundo lugar, estos patrones deben poder transformarse uno a otro mediante una operación que convierta un patrón rítmico arbitrario en una transformación de patrones.[^operación] Se utilizará provisionalmente [SuperDirt](https://github.com/musikinformatik/SuperDirt/), el motor de audio de Tidal Cycles, para reproducir muestras de sonido sobre los patrones generados. En los términos presentados, se trata de una herramienta para la exploración del espacio de las estructuras rítmicas.
 
-> Los lenguajes tipo Tidal son interfaces textuales entre modelos matemáticos y el secuenciamiento de sonidos. Además su estructura es geométrica en el sentido del programa de Erlangen: estan compuestos por conjuntos de funciones que son el grupo de transformaciones de un objeto u espacio geométrico. En otras palabras, estos lenguajes son interfaces geométricas para la manipulación del ritmo musical. Así, permiten un vínculo entre el pensamiento matemático-geométrico y la creación musical en el contexto del Live Coding.
+[^buenosRitmos]: La búsqueda de “buenos ritmos” está en el corazón de la investigación de Toussaint (2020), misma que se enfoca en las relaciones entre los aspectos geométricos y computacionales del ritmo.
 
-Esto me lleva a formular una primera serie de objetivos:
+[^operación]: La definición de una “operación” general capaz de adaptarse a los diferentes tipos de patrón o estructura rítmica corresponde al uso de una type class (clase de tipos) y la definición de instancias de esta para cada tipo de patrón. Las type classes son uno de los principales aportes de Haskell a la teoría de lenguajes de programación (Wadler y Blott 1989; Hudak et al. 2007). Ejemplo de dicha operación para el caso particular de los ritmos euclidianos: \url{https://gist.github.com/ninioArtillero/d57269464bd24600593e16530ca59cf7}
 
-1. Hacer un estudio exhaustivo del código fuente de Tidal.
-	1. Aprender los fundamentos de programación en Haskell.
-	2. Analizar Tidal como implementación de la FRP (Functional Reactive Programing: un esquema de programación para la implementación de funciones que dependen de parámetros continuos).
-2. Explorar la creación de patrones, en la variedad de lenguajes a explorar, a partir de transformaciones geométricas paradigmáticas: traslación, rotación, reflexión, dilatación, inversión, etc.
-	1. Investigar la aplicación de funciones matemáticas como ideas musicales. Al momento he encuentrado ejemplos de mi interés en el trabajo de [C. Nancarrow](https://youtu.be/R-AWEYJVKyo) y [S. Reich](https://youtu.be/YPU5XrmORCQ).
-3. Actualizar referencias a investigaciones matemáticas relacionadas al programa de Erlangen y la geometría de los espacios de funciones.
+Se seguirán los siguientes principios provenientes de la teoría de la computación: 
+
+* Estilo de programación funcional para probar la correctud del código.
+* Programación funcional reactiva para trabajar la semántica del tiempo continuo. 
+* El diseño denotativo, que parte de una especificación detallada y procura el uso de abstracciones matemático-computacionales para su implementación.
+* Modelos generativos geométricos como funciones básicas del lenguaje.
+
+Con esta librería propongo una semántica que permita la traducción del pensamiento
+geométrico-espacial en la generación de patrones rítmicos mediante texto. 
+Es decir, trabajará al nivel de la organización de materiales
+sonoros, y no al nivel de la síntesis de sonido.
 
 
-## Método
+1. Implementar RTG (Ritmo, Tiempo y Geometría): una biblioteca de programación con el concepto de transformación geométrica como abstracción de la entidad musical. Tendrá dos aportes cuyo sustento es el objetivo que unifica la tesis:
 
-Como mencioné al introducir el objeto de investigación, y se evidencio al plantear las preguntas anteriores, trabajaré sobre dos aspectos de un grupo de lenguajes. Para conveniencia de la presente sección podemos llamarlos el aspecto tecnológico y el aspecto musical.
+   1. Evidenciar como el uso de principios de la programación funcional aporta al diseño de una librería creativa que favorezca la expresividad.
 
-El estudio del código implica su lectura y su uso. El aspecto musical será abordado mediante una investigación documental en los trabajos de compositores y Live Coders que permita ahondar en las capacidades expresivas de estos lenguajes y entender sus límites. El aspecto tecnológico requiere el análisis de las funciones presentes en estos lenguajes y el desarrollo de otras resultantes de la exploración musical. Esto constituiría un aporte tecnológico tangible a la práctica del Live Coding y una retribución a la comunidad detras del mantenimiento y evolución de estos lenguajes.
+   2. Establecer un vínculo teórico y práctico entre la geometría y el ritmo.
 
-Un elemento fundamental para el desarrollo de estás tecnologías es la apertura y liberación del código como un filosofía promovida por la [Free Software Foundation](https://www.gnu.org/philosophy/philosophy.html): se trata de proyectos personales o colaborativos de investigación y desarrollo tecnológico que son sujetos a la experimentación y aporte de terceros. Esta participación comunitaria es incentivada por la posibilidad legal de reapropiarse del código para crear versiones alternativas o implementar en otros proyectos o productos, comerciales o sin fines de lucro. Gracias a su licencia de software libre de Tidal Cycles es posible estudiar a profundidad su código.
 
-En última instancia el objeto de estudio será abordado desde la geometría con la intención de proponer una estructura formal para su análisis y clasificación. El objetivo de esta aproximación es desarrollar una conceptualización que permita nuevas formas de pensar el Live Coding y la programación de herramientas y lenguajes musicales.
 

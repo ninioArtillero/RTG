@@ -1,30 +1,49 @@
-# Título tentativo {#titulo}
+# Lenguajes para live coding
 
-*Interfaces geométricas en lenguajes funcionales de dominio específico para la generación de patrones rítmicos*
+En este capítulo haré una breve introducción a los aspectos tecnológicos del _live coding_, para contextualizar la caracterización de sus intrumentos: los lenguajes de programación. 
+Discutiremos el funcionamiento de las librerías Conductive, Euterpea, Tidal Cycles y RTG como ejemplos de librerías destinadas a la creación musical.
 
-Algunos ejemplos de citación. Como dicen @McLean2020Algorithmic y @Spiegel1981Manipulations, la generación de patrones nos permite trabajar a un mayor nivel de abstracción.
-
-## Preguntas de investigación
-
-En esta sección desarrollaré algunas preguntas que delimitan el alcance de esta investigación:
-
-> ¿Qué modelos matemáticos existen implementados en estos lenguajes para la generación de ritmos? ¿Qué otros no han sido implementados?
-
-Esta pregunta surge de un ejemplo que considero clave para la perspectiva y marco teórico de este trabajo de tesis. En su artículo de 2005 ["The Euclidean Algorithm Generates Tradicional Musical Rhythms"](http://cgm.cs.mcgill.ca/~godfried/publications/banff.pdf), Godfried Toussaint describe una implementación del algoritmo de Euclides que permite generar una familia de patrones, en la que se incluyen ritmos de diversas tradiciones como casos particulares. Estos ritmos son ejemplos de lo que Toussaint denomina como "timelines": estructuras rítmicas, típicamente tocadas por instrumentos de percusión, que caracterizan algunos estilos de música popular y tradicional. Este ejemplo muestra como un modelo matemático-computacional puede ayudar a organizar datos musicológicos y, al ser implementado, producir una herramienta para la creación musical. Este algoritmo está implementado en varios contextos, por ejemplo: en la sintaxis de patrones en Tidal, en algunos plugins de secuenciamiento y en el [paquete Bjorklund](https://github.com/redFrik/Bjorklund) para el lenguaje de programación SuperCollider.
-
-En Tidal Cycles y otros lenguajes de dominio específico relacionados, que por conveniencia provisionalmente llamaré "lenguajes tipo Tidal", los patrones están  implementados como funciones del tiempo. La manipulación de estas funciones de tiempo se da a su vez a través de otras funciones que los transforman. Esta caracterización permite abordar el espacio de estas funciones y sus transformaciones como una geometría. Aquí "geometría" se toma en un sentido derivado del [programa de Erlangen](https://en.wikipedia.org/wiki/Erlangen_program): el conjunto de invariantes bajo un grupo de transformaciones. Esta conceptualización  permite extender la noción de geometría más allá del estudio de figuras en el espacio euclidiano. En este documento no abordaré la definición formal de "grupo de transformaciones", mismo que fue un concepto central en mi [tesis de licenciatura](https://repositorio.unam.mx/contenidos/ficha/328736). Por el momento me limitaré a mencionar que la relevancia de este concepto es que posibilita hacer un estudio abstracto de estos lenguajes como entornos geométricos, de los que se desprende la siguiente pregunta:
-
-> ¿Cómo describir la geometría implícita en los lenguajes tipo Tidal? Y ¿qué implica esta estructura geométrica respecto al diseño y uso de estos lenguajes?
-
-Esta pregunta apunta directamente a la hipótesis de trabajo que menciono en la siguiente sección: la existencia de un vínculo entre el pensamiento matemático-geométrico y la creación musical en el contexto del Live Coding. En el caso particular de Tidal Cycles me interesa hacer un estudio geométrico que describa a nivel formal las estructuras que produce y un estudio computacional (*i.e.* desde la ciencia de la computación) de las abstracciones que le permiten ejecutar ideas musicales. Este estudio empieza necesariamente por las características de Haskell, en el cual Tidal está embebido, de las cual interesan principalmente dos:
+Haré una distinción cuidadosa de los siguientes conceptos técnicos (con traslapes no triviales): API, lenguaje de programación, sistema de live coding, lenguaje de dominio específico (embebido) y biblioteca de programación.
 
 
-1. Es un lenguaje de *programación funcional pura*, la cual es un paradigma de programación basado en el [*cálculo lambda*](https://en.wikipedia.org/wiki/Lambda_calculus): una abstracción de los procesos computacionales a través del lenguaje de las funciones y su composición en que las estructuras de datos no son modificadas. En la práctica esto implica que el código de programas funcionales no lleva la cuenta de estados, sino que se trata de una concatenación de trasformaciones.
-2. Tiene *evaluación floja* que permite, por ejemplo, definir estructuras de datos infinitas sobre las que la solicitud de una función permite un cálculo finito (al que están sujetos todos los algoritmos computacionales para considerarse efectivos). La evaluación floja significa que no se realiza ninguna operación hasta que se pide un resultado explícitamente.
+## Live Coding
 
-Sobre esta línea, el estudio de la implementación de lenguajes tipo Tidal parte de las siguientes preguntas:
+El _live coding_, como práctica musical, consiste en escribir y modificar código fuente en vivo para producir sonido. Al ser simultáneamente escritura y producción de sonido, el _live coding_ difumina la distinción tradicional entre compositor e interprete, entrando en un diálogo con la computadora. Para una introducción detallada al live coding recomiendo consultar a @VillasenorRamirez2017Live y @Blackwell2022Live.
 
-> ¿Qué características tiene la representación de patrones rítmicos o temporales en la programación funcional? ¿De qué depende?
 
-> ¿Qué ventajas supone este paradigma de programación en el diseño de lenguajes? ¿Cuáles son sus peculiaridades en el Live Coding?
+## Lenguajes de dominio específico embebido
 
+
+Un _domain specific language_(DSL o lenguaje de dominio específico) es un lenguaje de programación especializado para un dominio de aplicación. Cómo ejemplo clásico está el lenguaje SQL para bases de datos.
+DSL se define en contraposición a lenguajes de uso general (GPL) que están diseñados para cumplir cualquier función. Entre los GPL se cuentan lenguajes como Common Lisp, Python y Haskell.
+
+Una subconjunto de DSLs son los _markup language_, como LaTeX, HTML y Markdown, utilizados para dar formato a textos.
+
+Un _embbeded domain specific language_ (eDSL) es un DSL programado al interior de otro lenguaje de programación.
+
+Tidal Cycles (Tidal) es un lenguaje de dominio específico embebido en el lenguaje de programación funcional Haskell. En términos técnicos, [Tidal es una librería de tipos y funciones en Haskell](https://hackage.haskell.org/package/tidal) que es cargada en el compilador interactivo GHCi. Las líneas (o bloques) de código de Tidal son enviadas como mensajes a GHCi. En este contexto, GHCi es esencialmente un programa que traduce código escrito en Tidal a mensajes de control. Por defecto estos mensajes son recibidos y ejecutados por [SuperDirt](https://github.com/musikinformatik/SuperDirt) que es el sistema generador de sonido diseñado para Tidal. En resumen, "Tidal Cycles" tiene las siguientes connotaciones:
+
+1. Un lenguaje de dominio específico
+2. Una librería de tipos y funciones
+3. Sistema modular integrado por un editor de texto, un interprete del lenguaje y un generador de sonido.
+
+Debido a su condición de sublenguaje, Tidal hereda la estructura sintáctica y capacidades de Haskell. Esta estructura se observa en el uso de operadores binarios como  "+" o en la evaluación de funciones: separando los argumentos por espacios o usando el operador "$" que evalúa una función tomando todo lo que está a la derecha como argumento. Se pueden usar otros elementos del lenguaje para operar sobre las funciones de Tidal, como expresiones lambda, asignación de variables, uso de condicionales o creación de nuevas funciones.
+
+## Introducción a Haskell
+
+```haskell {#mycode .numberLines}
+-- Pattern match
+sumarTres n = n + 3
+
+-- Lambda
+sumarTres = \n -> n + 3
+
+-- Section
+sumarTres = (+3)
+```
+
+Los [tres ejemplos anteriores](#mycode) son definiciones equivalentes de la misma función. Estas se pueden escribir, correspondientemente, como "" :
+
+1. La función `sumarTres`{.haskell} aplicada a `n`{.haskell} produce `n+3`{.haskell}.
+2. La función `sumarTres`{.haskell} es una función que aplicada a `n`{.haskell} produce `n+3`{.haskell}.
+3. La función `sumarTres`{.haskell} es la función _más tres_.
