@@ -46,6 +46,11 @@ maintainer:         ixbalanque@protonmail.ch
 -- copyright:
 category:           Sound
 
+-- A list of files to be installed for run-time use by the package.
+-- This is useful for packages that use a large amount of static data,
+-- such as tables of values or code templates.
+-- data-files:         BootRTG.hs
+
 -- Extra files to be distributed with the package, such as examples or a README.
 extra-source-files:
     CHANGELOG.md
@@ -53,6 +58,8 @@ extra-source-files:
 
 library
     -- Modules exported by the library.
+    -- The first is automatically loaded by `cabal repl`,
+    -- so the context is used as an entry point for the library.
     exposed-modules:
         Sound.RTG.Context
         Sound.RTG.Geometria.Euclidean
@@ -80,6 +87,8 @@ library
 
     -- Base language which the package is written in.
     default-language: Haskell2010
+
+    ghc-options: -Wall
 
 test-suite ritmoTG-test
     -- Base language which the package is written in.
