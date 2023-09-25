@@ -63,6 +63,7 @@ library
     exposed-modules:
         Sound.RTG.Context
         Sound.RTG.Geometria.Euclidean
+        Sound.RTG.Geometria.Polygon
         Sound.RTG.Ritmo.Bjorklund
         Sound.RTG.Ritmo.PatronRegular
         Sound.RTG.Ritmo.Pattern

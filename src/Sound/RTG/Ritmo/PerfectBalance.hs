@@ -5,7 +5,7 @@
 -- Basado en Milne et. al. 2015
 -- "Perfect Balance: A Novel Principle for the Construction of
 -- Musical Scales and Meters".
-module Sound.RTG.Ritmo.PerfectBalance (evenness, balance, indicatorVector, polygon, rotateLeft, rotateRight, polygonSum) where
+module Sound.RTG.Ritmo.PerfectBalance (evenness, balance, indicatorVector) where
 
 import Data.Complex (Complex (..), magnitude)
 import Data.Ratio (denominator, numerator, (%))
@@ -74,54 +74,3 @@ balance' pat =
       dimension = fromIntegral $ length indicator
       scaleFactor = (dimension / elements)
    in (1 -) . (scaleFactor *) . magnitude . dft 1 $ indicator
-
--- TODO: Combinaciones lineales de polígonos que sean
--- (1) disjuntos para preservar el balance
--- (2) Coprimos para evitar subperiodos.
--- Al definir un polígono hay que ver la manera de generalizar su posición
--- módulo rotaciones (para evitar que se superpongan).
--- Además, hay que cuidar cuando la suma de polígonos forman otro polígono regular
--- que no es coprimo con alguno de los considerados.
--- La generalización del artículo permite dar pesos a los polígonos, siempre que
--- la combinación lineal resultante sólo contenga 1 y 0.
-
--- Un polígono de k vértices en un universo discreto de dimensión n.
-polygon :: Int -> Int -> Int -> [Int]
-polygon n k position
-  | k > n = []
-  | otherwise =
-    if n `rem` k == 0
-      then rotateLeft position . concat . replicate k $ side
-      else []
-  where
-    subperiod = n `quot` k
-    side = 1 : replicate (subperiod - 1) 0
-
-rotateLeft :: Int -> [a] -> [a]
-rotateLeft _ [] = []
-rotateLeft n xs = zipWith const (drop n (cycle xs)) xs
-
-rotateRight :: Int -> [a] -> [a]
-rotateRight _ [] = []
-rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
-  where
-    size = length xs
-
--- TODO: Comparar con factors de Data.Numbers
-divisors :: Int -> [Int]
-divisors n = [k | k <- [2 .. (n - 1)], n `rem` k == 0]
-
-polygonSum :: Int -> Int -> Int -> [Int]
-polygonSum dimension n m =
-  if compatibleIndicators polygon1 polygon2
-    then sumIndicators polygon1 polygon2
-    else polygon1
-  where
-    polygon1 = polygon dimension n 0
-    polygon2 = polygon dimension m 0
-
-sumIndicators :: [Int] -> [Int] -> [Int]
-sumIndicators = zipWith (+)
-
-compatibleIndicators :: [Int] -> [Int] -> Bool
-compatibleIndicators xs ys = 2 `notElem` sumIndicators xs ys
