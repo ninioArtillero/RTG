@@ -1,9 +1,17 @@
 -- | This module implements linear sums of polygons
 -- to generate perfectly balaced rhythms.
+--
+-- Based on the heuristics found in:
+-- Milne, Andrew, David Bulger, Steffen Herff, y William Sethares. 2015.
+-- “Perfect balance: A novel principle for the construction of musical scales and meters”.
+-- In Mathematics and computation in music: 5th international conference, MCM 2015;
+-- proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
+-- https://doi.org/10.1007/978-3-319-20603-5.
+
 
 module Sound.RTG.Geometria.Polygon {-(Polygon, polygonPattern, polygonPatternSum, rotateLeft, rotateRight)-} where
 
-import Sound.RTG.Ritmo.Pattern (Pattern)
+import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft )
 
 -- TODO: Combinaciones lineales de polígonos que sean
 -- (1) disjuntos para preservar el balance
@@ -24,7 +32,12 @@ type Position = Int
 instance Show Polygon where
   show = show . polygonPattern
 
--- Un polígono de k vértices en un universo discreto de dimensión n.
+-- TODO: Comparar con factors de Data.Numbers
+divisors :: Int -> [Int]
+divisors n = [k | k <- [2 .. (n - 1)], n `rem` k == 0]
+--Copŕime Disjoint Regular Polygons
+
+-- A k-gon in a n-space
 polygonPattern :: Polygon -> Pattern Int
 polygonPattern (Polygon n k p)
   | k > n = []
@@ -35,19 +48,6 @@ polygonPattern (Polygon n k p)
     side = 1 : replicate (subperiod - 1) 0
 
 
-rotateLeft :: Int -> Pattern a -> Pattern a
-rotateLeft _ [] = []
-rotateLeft n xs = zipWith const (drop n (cycle xs)) xs
-
-rotateRight :: Int -> Pattern a -> Pattern a
-rotateRight _ [] = []
-rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
-  where
-    size = length xs
-
--- TODO: Comparar con factors de Data.Numbers
-divisors :: Int -> [Int]
-divisors n = [k | k <- [2 .. (n - 1)], n `rem` k == 0]
 
 -- | Suma de polygonos en el mismo espacio discreto
 polygonPatternSum :: Polygon -> Polygon -> Maybe (Pattern Int)

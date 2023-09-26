@@ -60,3 +60,16 @@ firstQuart = [0 / 16, 1 / 16, 2 / 16, 3 / 16]
 
 crowded :: Pattern Time
 crowded = [1, 1, 1, 1]
+
+
+-- Pattern operations
+
+rotateLeft :: Int -> Pattern a -> Pattern a
+rotateLeft _ [] = []
+rotateLeft n xs = zipWith const (drop n (cycle xs)) xs
+
+rotateRight :: Int -> Pattern a -> Pattern a
+rotateRight _ [] = []
+rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
+  where
+    size = length xs
