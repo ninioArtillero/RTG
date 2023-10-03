@@ -114,10 +114,15 @@ polygonPatternSumRestricted p1@(Polygon n _ _) p2@(Polygon n' _ _) =
 
 disjointPolygonRhythm :: Int -> Onsets -> Onsets -> [Pattern Int]
 disjointPolygonRhythm j k l
-  | gcd k l == 1 =
-      let n = k * l * j
-       in rotationNub $ setNub $ filter (/= []) $ map (polygonPatternSumRestricted (Polygon n k 0) . Polygon n l) [1..(n-1)]
+  | coprimeOnsets && disjointablePatterns =
+      let n = j * k * l
+          clean = rotationNub . setNub . filter (/= [])
+          displacementCombinations = map (polygonPatternSumRestricted (Polygon n k 0) . Polygon n l) [1..(n-1)]
+       in clean $ displacementCombinations
   | otherwise = []
+    where coprimeOnsets = gcd k l == 1
+          disjointablePatterns = j >= 2
+
 
 -- The following functions use the Data.Set module
 
