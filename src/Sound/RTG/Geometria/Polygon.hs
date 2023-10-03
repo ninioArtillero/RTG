@@ -20,8 +20,8 @@ https://doi.org/10.1007/978-3-319-20603-5.
 -}
 module Sound.RTG.Geometria.Polygon {-(Polygon, polygonPattern, polygonPatternSum, rotateLeft, rotateRight)-} where
 
+import qualified Data.Set as Set
 import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft )
-import Foreign.C (throwErrnoPath)
 
 -- TODO:
 -- Al definir un polígono hay que ver la manera de generalizar su posición
@@ -72,7 +72,7 @@ wPolygonPattern (a, Polygon n k p)
 
 -- | The list obtained by adding two polygons pointwise when in the same @n@-space.
 polygonPatternSum :: Polygon -> Polygon -> Maybe (Pattern Int)
-polygonPatternSum p1@(Polygon n k p) p2@(Polygon n' k' p') =
+polygonPatternSum p1@(Polygon n _ _) p2@(Polygon n' _ _) =
   if n == n'
     then Just $ patternSum pttrn1 pttrn2
     else Nothing
@@ -99,11 +99,11 @@ wPolygonPatternSum (a, Polygon n k p) (a', Polygon n' k' p') = patternSum pttrn1
 
 
 -- | Polygon sum restricted to disjoint polygons in the same @n@-space.
-polygonPatternSumRestricted :: Polygon -> Polygon -> Maybe (Pattern Int)
-polygonPatternSumRestricted p1@(Polygon n k p) p2@(Polygon n' k' p') =
+polygonPatternSumRestricted :: Polygon -> Polygon -> Pattern Int
+polygonPatternSumRestricted p1@(Polygon n _ _) p2@(Polygon n' _ _) =
   if compatiblePatterns pttrn1 pttrn2
-    then Just $ patternSum pttrn1 pttrn2
-    else Nothing
+    then patternSum pttrn1 pttrn2
+    else []
   where
     pttrn1 = polygonPattern p1
     pttrn2 = polygonPattern p2
@@ -111,3 +111,33 @@ polygonPatternSumRestricted p1@(Polygon n k p) p2@(Polygon n' k' p') =
     compatiblePatterns xs ys =
       n == n' &&
       2 `notElem` patternSum xs ys
+
+disjointPolygonRhythm :: Int -> Onsets -> Onsets -> [Pattern Int]
+disjointPolygonRhythm j k l
+  | gcd k l == 1 =
+      let n = k * l * j
+       in rotationNub $ setNub $ filter (/= []) $ map (polygonPatternSumRestricted (Polygon n k 0) . Polygon n l) [1..(n-1)]
+  | otherwise = []
+
+-- The following functions use the Data.Set module
+
+-- | Eliminates duplicate entries in a list but forgets original order.
+setNub :: Ord a => [a] -> [a]
+setNub = Set.toList . Set.fromList
+
+-- | Generates the set of all the patterns rotations
+rotationSet :: Ord a => [a] -> Set.Set [a]
+rotationSet xs =
+  let n = length xs
+  in Set.fromList $ map (\a -> rotateLeft a xs) [0..(n-1)]
+
+-- | Equivalence relation based on
+equivModRotation :: Ord a => [a] -> [a] -> Bool
+equivModRotation xs ys = ys `Set.member` rotationSet xs
+
+rotationNub :: Ord a => [[a]] -> [[a]]
+rotationNub [] = []
+rotationNub [x] = [x]
+rotationNub (x:y:xs) = if equivModRotation x y
+                     then y:rotationNub xs
+                     else x:y:rotationNub xs
