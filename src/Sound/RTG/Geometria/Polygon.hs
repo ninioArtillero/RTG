@@ -38,6 +38,8 @@ type Pulses = Int
 type Onsets = Int
 type Position = Int
 
+type Scalar = Int
+
 instance Show Polygon where
   show = show . polygonPattern
 
@@ -58,6 +60,16 @@ polygonPattern (Polygon n k p)
     subperiod = n `quot` k
     side = 1 : replicate (subperiod - 1) 0
 
+-- | The same as 'polygonPattern' but with weighted vertices of integer value @a@.
+wPolygonPattern :: (Scalar, Polygon) -> Pattern Int
+wPolygonPattern (a, Polygon n k p)
+  | k >= 2 && n `rem` k == 0 = rotateLeft p . concat . replicate k $ side
+  | otherwise = replicate n 0
+  where
+    subperiod = n `quot` k
+    side = a : replicate (subperiod - 1) 0
+
+
 -- | The list obtained by adding two polygons pointwise when in the same @n@-space.
 polygonPatternSum :: Polygon -> Polygon -> Maybe (Pattern Int)
 polygonPatternSum p1@(Polygon n k p) p2@(Polygon n' k' p') =
@@ -68,6 +80,23 @@ polygonPatternSum p1@(Polygon n k p) p2@(Polygon n' k' p') =
     pttrn1 = polygonPattern p1
     pttrn2 = polygonPattern p2
     patternSum = zipWith (+)
+
+-- | The list obtained by adding two weighted polygons pointwise in a @n@-space
+-- with adjusted granularity.
+wPolygonPatternSum :: (Scalar, Polygon) -> (Scalar, Polygon) -> Pattern Int
+wPolygonPatternSum (a, Polygon n k p) (a', Polygon n' k' p') = patternSum pttrn1 pttrn2
+  where
+    pttrn1 = wPolygonPattern (a, Polygon grain k position)
+    pttrn2 = wPolygonPattern (a', Polygon grain k' position')
+    patternSum = zipWith (+)
+    grain = lcm n n'
+    position =
+      let scaleFactor = grain `div` n
+       in (p `mod` n) * scaleFactor
+    position' =
+      let scaleFactor' = grain `div` n'
+       in (p' `mod` n') * scaleFactor'
+
 
 -- | Polygon sum restricted to disjoint polygons in the same @n@-space.
 polygonPatternSumRestricted :: Polygon -> Polygon -> Maybe (Pattern Int)
