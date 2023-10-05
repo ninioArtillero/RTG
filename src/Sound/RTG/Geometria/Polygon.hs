@@ -149,3 +149,7 @@ rotationNub [] = []
 rotationNub (x:xs) =
   let filteredList = filter (not . equivModRotation x) xs
   in x : rotationNub filteredList
+
+rotationNub' :: Ord a => [[a]] -> [[a]]
+rotationNub' = foldr (\x acc -> x : filterEquiv x acc) []
+  where filterEquiv x = filter (not . equivModRotation x)
