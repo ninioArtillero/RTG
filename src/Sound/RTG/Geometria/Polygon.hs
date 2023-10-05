@@ -18,9 +18,10 @@ In Mathematics and computation in music: 5th international conference, MCM 2015;
 proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
 https://doi.org/10.1007/978-3-319-20603-5.
 -}
-module Sound.RTG.Geometria.Polygon {-(Polygon, polygonPattern, polygonPatternSum, rotateLeft, rotateRight)-} where
+module Sound.RTG.Geometria.Polygon (disjointPolygonRhythm) where
 
 import qualified Data.Set as Set
+import qualified Math.Combinatorics.Multiset as MS
 import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft )
 
 -- TODO:
@@ -118,7 +119,7 @@ disjointPolygonRhythm :: Int -> Onsets -> Onsets -> [Pattern Int]
 disjointPolygonRhythm j k l
   | coprimeOnsets && disjointablePatterns =
       let n = j * k * l
-          clean = rotationNub . setNub . filter (/= [])
+          clean = necklaceNub . setNub . filter (/= [])
           displacementCombinations = map (polygonPatternSumRestricted (Polygon n k 0) . Polygon n l) [1..(j*k)-1]
        in clean displacementCombinations
   | otherwise = []
@@ -132,24 +133,40 @@ disjointPolygonRhythm j k l
 setNub :: Ord a => [a] -> [a]
 setNub = Set.toList . Set.fromList
 
--- | Generates the set of all rotations of a pattern.
+-- | Generates the set of all rotations of a pattern or,
+-- in other words, the orbit under the cyclic group action.
 rotationSet :: Ord a => [a] -> Set.Set [a]
 rotationSet [] = Set.empty
 rotationSet xs =
   let n = length xs
   in Set.fromList $ map (`rotateLeft` xs) [0..(n-1)]
 
--- | Equality based on rotation.
-equivModRotation :: Ord a => [a] -> [a] -> Bool
-equivModRotation xs ys = ys `Set.member` rotationSet xs
+-- | Equivalent patterns necklace-wise to factor the action of the cyclic group.
+equivNecklace :: Ord a => [a] -> [a] -> Bool
+equivNecklace xs ys = ys `Set.member` rotationSet xs
 
--- | Eliminate redundant elements (rotation-wise) in a pattern list.
-rotationNub :: Ord a => [[a]] -> [[a]]
-rotationNub [] = []
-rotationNub (x:xs) =
-  let filteredList = filter (not . equivModRotation x) xs
-  in x : rotationNub filteredList
+-- | Eliminate redundant elements (necklace-wise) in a pattern list.
+necklaceNub :: Ord a => [[a]] -> [[a]]
+necklaceNub [] = []
+necklaceNub (x:xs) =
+  let filteredList = filter (not . equivNecklace x) xs
+  in x : necklaceNub filteredList
 
-rotationNub' :: Ord a => [[a]] -> [[a]]
-rotationNub' = foldr (\x acc -> x : filterEquiv x acc) []
-  where filterEquiv x = filter (not . equivModRotation x)
+necklaceNub' :: Ord a => [[a]] -> [[a]]
+necklaceNub' = foldr (\x acc -> x : filterEquiv x acc) []
+  where filterEquiv x = filter (not . equivNecklace x)
+
+-- Using Multiset
+
+-- | Bracelet equivalence of patterns factors the action of the dihedral group.
+equivBracelet :: Ord a => [a] -> [a] -> Bool
+equivBracelet xs ys = MS.bracelets (MS.fromList xs) == MS.bracelets (MS.fromList ys)
+
+equivBracelet' :: Ord a => [a] -> [a] -> Bool
+equivBracelet' xs ys = ys `elem` MS.bracelets (MS.fromList xs)
+
+braceletNub :: Ord a => [[a]] -> [[a]]
+braceletNub = foldr (\x acc -> x : filterEquiv x acc) []
+  where filterEquiv x = filter (not . equivBracelet x)
+
+-- Integer Combinations of Intersecting Regular Polygons

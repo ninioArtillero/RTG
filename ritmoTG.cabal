@@ -83,6 +83,7 @@ library
         , containers >=0.6.5 && <0.7
         , group-theory ^>=0.2.2
         , hosc ^>=0.19.1
+        , multiset-comb ^>=0.2.4.2
 
     -- Directories containing source files.
     hs-source-dirs:   src
