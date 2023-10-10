@@ -1,6 +1,6 @@
 ---
-# Defaults para llamada a pandoc
-# Opciones generales para el procesamiento de pandoc
+# Punto de entrada de la maqueta, llamada por pandoc desde la Makefile con la flag '--defaults'
+# Contiene las opciones generales del documento.
 
 standalone: true
 
@@ -31,7 +31,7 @@ metadata-files:
 #  - head.tex
 
 #pdf-engine-opts:
-#  # Para utilizar paquete minted.
+#  # Para utilizar paquete 'minted' para marcar código fuente.
 #  - '-shell-escape'
 
 ...
