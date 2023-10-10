@@ -79,8 +79,8 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:
-        , base ^>=4.14.3.0
-        , group-theory ^>=0.2.2
+        , base ^>=4.16.4.0
+        , groups ^>=0.5.3
         , hosc ^>=0.19.1
 
     -- Directories containing source files.
