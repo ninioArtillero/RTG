@@ -105,4 +105,4 @@ test-suite ritmoTG-test
     main-is:          MyLibTest.hs
 
     -- Test dependencies.
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base ^>=4.16.4.0
