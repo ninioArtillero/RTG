@@ -87,3 +87,6 @@ rotateRight _ [] = []
 rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
   where
     size = length xs
+
+patternSum :: Num a => Pattern a -> Pattern a -> Pattern a
+patternSum = zipWith (+)

@@ -23,7 +23,7 @@ module Sound.RTG.Geometria.Polygon (disjointPolygonRhythm, perfectlyBalancedRhyt
 import qualified Data.Set as Set
 import Data.List (subsequences)
 import qualified Math.Combinatorics.Multiset as MS
-import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft )
+import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft, patternSum )
 import Math.NumberTheory.Primes (factorise)
 
 -- TODO:
@@ -82,7 +82,6 @@ polygonPatternSum p1@(Polygon n _ _) p2@(Polygon n' _ _) =
   where
     pttrn1 = polygonPattern p1
     pttrn2 = polygonPattern p2
-    patternSum = zipWith (+)
 
 -- | The list obtained by adding two weighted polygons pointwise in a @n@-space
 -- with adjusted granularity.
@@ -91,7 +90,6 @@ wPolygonPatternSum (a, Polygon n k p) (a', Polygon n' k' p') = patternSum pttrn1
   where
     pttrn1 = wPolygonPattern (a, Polygon grain k position)
     pttrn2 = wPolygonPattern (a', Polygon grain k' position')
-    patternSum = zipWith (+)
     grain = lcm n n'
     position =
       let scaleFactor = grain `div` n
@@ -110,7 +108,6 @@ polygonPatternSumRestricted p1@(Polygon n _ _) p2@(Polygon n' _ _) =
   where
     pttrn1 = polygonPattern p1
     pttrn2 = polygonPattern p2
-    patternSum = zipWith (+)
     compatiblePatterns xs ys =
       n == n' &&
       2 `notElem` patternSum xs ys
@@ -210,7 +207,6 @@ allPolygonPositions n = concatMap polygonPositionList $ availablePolygons n
 allUnityWeightedPolygons n = concatMap (\p -> [(1,p),(-1,p)]) $ allPolygonPositions n
 patternList n = map wPolygonPattern $ allUnityWeightedPolygons n :: [[Int]]
 combinations n = filter ((>= 2) . length) . subsequences $ patternList n
-patternSum = zipWith (+)
 summedCombinations n = map (foldl1 patternSum) $ combinations n
 
   -- in braceletNub . filter (\xs -> (2 `notElem` xs) && ((-1) `notElem` xs)) $ summedCombinations
