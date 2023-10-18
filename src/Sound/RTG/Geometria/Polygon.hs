@@ -142,7 +142,7 @@ rotationSet xs =
   let n = length xs
   in Set.fromList $ map (`rotateLeft` xs) [0..(n-1)]
 
--- | Equivalent patterns necklace-wise to factor the action of the cyclic group.
+-- | Necklace equivalence of patterns factors the action of the cyclic group.
 equivNecklace :: Ord a => [a] -> [a] -> Bool
 equivNecklace xs ys = ys `Set.member` rotationSet xs
 
@@ -160,15 +160,21 @@ necklaceNub' = foldr (\x acc -> x : filterEquiv x acc) []
 -- Using Multiset
 
 -- | Bracelet equivalence of patterns factors the action of the dihedral group.
-equivBracelet :: Ord a => [a] -> [a] -> Bool
-equivBracelet xs ys = MS.bracelets (MS.fromList xs) == MS.bracelets (MS.fromList ys)
-
 equivBracelet' :: Ord a => [a] -> [a] -> Bool
-equivBracelet' xs ys = ys `elem` MS.bracelets (MS.fromList xs)
+equivBracelet' xs ys = MS.bracelets (MS.fromList xs) == MS.bracelets (MS.fromList ys)
 
+equivBracelet :: Ord a => [a] -> [a] -> Bool
+equivBracelet xs ys = ys `elem` MS.bracelets (MS.fromList xs)
+
+-- | Eliminate redundant elements (bracelet-wise) in a pattern list.
 braceletNub :: Ord a => [[a]] -> [[a]]
-braceletNub = foldr (\x acc -> x : filterEquiv x acc) []
+braceletNub [] = []
+braceletNub (x:xs) = x : braceletNub ( filter (not . equivBracelet x) xs )
+
+braceletNub' :: Ord a => [[a]] -> [[a]]
+braceletNub' = foldr (\x acc -> x: filterEquiv x acc) []
   where filterEquiv x = filter (not . equivBracelet x)
+
 
 -- Integer Combinations of Intersecting Regular Polygons
 
@@ -177,7 +183,7 @@ basePolygon n k = Polygon n k 0
 
 -- TODO: decidir entre quot y div
 polygonPositionList :: Polygon -> [Polygon]
-polygonPositionList (Polygon n k p) =  map (Polygon n k) [0..(subperiod - 1)]
+polygonPositionList (Polygon n k _) =  map (Polygon n k) [0..(subperiod - 1)]
   where subperiod = n `div` k
 
 -- | All irreducibily periodic perfectly balanced rhythms
