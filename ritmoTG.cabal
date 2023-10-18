@@ -79,6 +79,7 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:
+        , arithmoi ^>=0.13.0.0
         , base ^>=4.14.3.0
         , containers >=0.6.5 && <0.7
         , group-theory ^>=0.2.2
