@@ -20,30 +20,44 @@ stdForm = sort . nub . map modOne
 
 -- | Escalas en temperamento justo de 12 tonos.
 diatonic :: Pattern Time
-diatonic = [0 / 12, 2 / 12, 4 / 12, 5 / 12, 7 / 12, 9 / 12, 11 / 12]
+diatonic = [0/12, 2/12, 4/12, 5/12, 7/12, 9/12, 11/12]
 
 diminished :: Pattern Time
-diminished = [0 / 12, 2 / 12, 3 / 12, 5 / 12, 6 / 12, 8 / 12, 9 / 12, 11 / 12]
+diminished = [0/12, 2/12, 3/12, 5/12, 6/12, 8/12, 9/12, 11/12]
 
 wholeTone :: Pattern Time
-wholeTone = [0 / 12, 2 / 12, 4 / 12, 6 / 12, 8 / 12, 10 / 12]
+wholeTone = [0/12, 2/12, 4/12, 6/12, 8/12, 10/12]
+
+-- | Gypsy scale, also known as the double harmonic scale.
+-- Is the unique 7-pattern in a 12-space
+-- both perfectly balanced and irreducibly periodic.
+gypsy :: Pattern Time
+gypsy = [0/12, 1/12, 4/12, 5/12, 7/12, 8/12, 11/12]
+
+japanese :: Pattern Time
+japanese = [0/12, 1/12, 5/12, 7/12, 8/12]
+
+-- | Unique 5-pattern in a 12-space
+-- both perfectly balanced and irreducibly periodic.
+fiveB :: Pattern Time
+fiveB = [0/12, 4/12, 5/12, 8/12, 11/12]
 
 -- | Timelines distinguidos de 5 ataques y 16 pulsos.
 -- Ver Cap. 7 en "The Geometry of Musical Rhythm", G. Toussaint.
 shiko :: Pattern Time
-shiko = [0 / 16, 4 / 16, 6 / 16, 10 / 16, 12 / 16]
+shiko = [0/16, 4/16, 6/16, 10/16, 12/16]
 
 clave :: Pattern Time
-clave = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 12 / 16]
+clave = [0/16, 3/16, 6/16, 10/16, 12/16]
 
 soukous :: Pattern Time
-soukous = [0 / 16, 4 / 16, 6 / 16, 10 / 16, 12 / 16]
+soukous = [0/16, 4/16, 6/16, 10/16, 12/16]
 
 rumba :: Pattern Time
-rumba = [0 / 16, 3 / 16, 7 / 16, 10 / 16, 12 / 16]
+rumba = [0/16, 3/16, 7/16, 10/16, 12/16]
 
 bossa :: Pattern Time
-bossa = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 13 / 16]
+bossa = [0/16, 3/16, 6/16, 10/16, 13/16]
 
 gahu :: Pattern Time
 gahu = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 14 / 16]
@@ -52,11 +66,11 @@ gahu = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 14 / 16]
 -- en un universo cromático de 30 vertices, que no se obtiene como la
 -- suma de polígonos disjuntos.
 amiotScale :: Pattern Time
-amiotScale = [0 / 30, 6 / 30, 7 / 30, 13 / 30, 17 / 30, 23 / 30, 24 / 30]
+amiotScale = [0/30, 6/30, 7/30, 13/30, 17/30, 23/30, 24/30]
 
 -- | Para pruebas
 firstQuart :: Pattern Time
-firstQuart = [0 / 16, 1 / 16, 2 / 16, 3 / 16]
+firstQuart = [0/16, 1/16, 2/16, 3/16]
 
 crowded :: Pattern Time
 crowded = [1, 1, 1, 1]

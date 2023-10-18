@@ -80,9 +80,8 @@ library
     -- Other library packages from which modules are imported.
     build-depends:
         , arithmoi ^>=0.13.0.0
-        , base ^>=4.14.3.0
+        , base ^>=4.16.4.0
         , containers >=0.6.5 && <0.7
-        , group-theory ^>=0.2.2
         , hosc ^>=0.19.1
         , multiset-comb ^>=0.2.4.2
 
@@ -108,4 +107,4 @@ test-suite ritmoTG-test
     main-is:          MyLibTest.hs
 
     -- Test dependencies.
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base ^>=4.16.4.0
