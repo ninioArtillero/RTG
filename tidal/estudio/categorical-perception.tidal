@@ -1,0 +1,73 @@
+-- Clarke, Eric F. 1999. “Rhythm and Timing in Music”.
+-- En The Psychology of Music (Second Edition), editado por Diana Deutsch, 473–500.
+-- Cognition and Perception. San Diego: Academic Press.
+-- https://doi.org/10.1016/B978-012213564-4/50014-7.
+--
+-- p. 490
+-- Ejemplo de percepción categórica.
+-- Una secuencia de pulsos con IOI's [600, 400, 1000],
+-- se puede representar en tidal como
+sequence = slow 2 $ struct "t ~ ~ t ~ . t" $ s "superpiano"
+
+-- Suena así
+do
+  hush
+  setcps 1
+  d1 sequence
+
+-- En un metro doble, se percibe en contraste con
+-- una estructura rítmica de proporción 1:1:2
+-- en que el primer evento tiene una extensión expresiva.
+do
+  hush
+  setcps 1
+  d1 sequence
+  let dupleMeter = struct "t t" $ s "tok" # n 1
+  d2 dupleMeter
+
+-- Dicha estructura rítmica subyacente suena así:
+do
+  hush
+  setcps 1
+  let oneOneTwo = slow 2 $ struct "t ~ t ~ . t" $ s "superpiano"
+      dupleMeter = struct "t t" $ s "tok" # n 1
+  d1 oneOneTwo
+  d2 dupleMeter
+
+-- Compárese de nuevo:
+do
+  hush
+  setcps 1
+  d1 sequence
+  let dupleMeter = struct "t t" $ s "tok" # n 1
+  d2 dupleMeter
+
+-- En un metro triple, se percibe en contraste con
+-- una estructura rítmica de proporción 2:1:3
+-- en que el segundo y tercer eventos tienen un alentamiento expresivo.
+do
+  hush
+  setcps 1
+  d1 sequence
+  let tripleMeter = struct "t t t" $ s "tok" # n 1
+  d2 tripleMeter
+
+-- La estructura rítmica de la que parte esta interpretación:
+do
+  hush
+  setcps 1
+  let twoOneThree = slow 2 $ struct "t ~ t . t" $ s "superpiano"
+      tripleMeter = struct "t t t" $ s "tok" # n 1
+  d1 twoOneThree
+  d2 tripleMeter
+
+
+-- Interpretado en un metro quintuple, la estructura rítmica es inexpresiva (i.e. metronómica)
+-- y corresponde a una proporción 3:2:5
+do
+ hush
+  setcps 1
+  d1 sequence
+  let quintupleMeter = struct "t t t t t" $ s "tok" # n 1
+  d2 quintupleMeter
+
