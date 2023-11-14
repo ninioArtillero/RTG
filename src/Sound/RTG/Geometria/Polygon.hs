@@ -1,59 +1,251 @@
--- | This module implements linear sums of polygons
--- to generate perfectly balaced rhythms.
+{-|
+Module      : Polygon
+Description : Generation of irreducibly periodic and perfectly balanced rhythms
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
 
-module Sound.RTG.Geometria.Polygon (polygon, rotateLeft, rotateRight, polygonSum) where
+Generation of irreducibily periodic and perfectly balaced rhythms
+using linear sums of polygons. In the simplest case they can be thought of as /displaced polyrhythms/: the combination
+of isochronous beats of different and coprime interonset intervals displaced so that they never
+coincide. None trivial structures araise when weigthed sums are allowed.
 
-import Sound.RTG.Ritmo.Pattern (Pattern)
+Based on the heuristics found in:
+Milne, Andrew, David Bulger, Steffen Herff, y William Sethares. 2015.
+“Perfect balance: A novel principle for the construction of musical scales and meters”.
+In Mathematics and computation in music: 5th international conference, MCM 2015;
+proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
+https://doi.org/10.1007/978-3-319-20603-5.
+-}
+module Sound.RTG.Geometria.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
 
--- TODO: Combinaciones lineales de polígonos que sean
--- (1) disjuntos para preservar el balance
--- (2) Coprimos para evitar subperiodos.
+import qualified Data.Set as Set
+import qualified Data.List  as List (subsequences)
+import qualified Math.Combinatorics.Multiset as MS
+import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft, patternSum )
+import qualified Math.NumberTheory.Primes as Primes (unPrime, factorise)
+import Math.NumberTheory.Primes (UniqueFactorisation)
+
+-- TODO:
 -- Al definir un polígono hay que ver la manera de generalizar su posición
 -- módulo rotaciones (para evitar que se superpongan).
--- Además, hay que cuidar cuando la suma de polígonos forman otro polígono regular
--- que no es coprimo con alguno de los considerados.
--- La generalización en Milne et. al.  artículo permite dar pesos a los polígonos, siempre que
+-- NOTE:
+-- Posible uso del patrón "Smart constructor"
+-- https://kowainik.github.io/posts/haskell-mini-patterns#smart-constructor-task
+
+-- La generalización a sumas no disjuntas permite dar pesos a los polígonos, siempre que
 -- la combinación lineal resultante sólo contenga 1 y 0.
+
+-- | The Polygon data type is used to represent regular polygons on a discrete space in the circle.
+data Polygon = Polygon Pulses Onsets Position
 
 type Pulses = Int
 type Onsets = Int
 type Position = Int
 
--- Un polígono de k vértices en un universo discreto de dimensión n.
-polygon :: Pulses -> Onsets -> Position -> Pattern Int
-polygon n k p
-  | k > n = []
-  | n `rem` k == 0 = rotateLeft p . concat . replicate k $ side
-  | otherwise = []
-  where
-    subperiod = n `quot` k
-    side = 1 : replicate (subperiod - 1) 0
+type Scalar = Int
 
-rotateLeft :: Int -> [a] -> [a]
-rotateLeft _ [] = []
-rotateLeft n xs = zipWith const (drop n (cycle xs)) xs
+instance Show Polygon where
+  show = show . polygonPattern
 
-rotateRight :: Int -> [a] -> [a]
-rotateRight _ [] = []
-rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
-  where
-    size = length xs
 
+-- AUX: Numbers
 -- TODO: Comparar con factors de Data.Numbers
 divisors :: Int -> [Int]
 divisors n = [k | k <- [2 .. (n - 1)], n `rem` k == 0]
 
-polygonSum :: Pulses -> Onsets -> Onsets -> Pattern Int
-polygonSum pulses n m =
-  if compatibleIndicators polygon1 polygon2
-    then sumIndicators polygon1 polygon2
-    else polygon1
+-- Coprime Disjoint Regular Polygons
+
+-- | Produces a list of @1@ and @0@ representing a @k@-gon in circular @n@-space
+-- It only has @0@ when @k@ is less than @2@ or doesn't divide @n@.
+-- Empty for @n <= 0@.
+polygonPattern :: Polygon -> Pattern Int
+polygonPattern (Polygon n k p)
+  | k >= 2 && n `rem` k == 0 = rotateLeft p . concat . replicate k $ side
+  | otherwise = replicate n 0
   where
-    polygon1 = polygon pulses n 0
-    polygon2 = polygon pulses m 0
+    subperiod = n `quot` k
+    side = 1 : replicate (subperiod - 1) 0
 
-sumIndicators :: [Int] -> [Int] -> [Int]
-sumIndicators = zipWith (+)
+-- | The list obtained by adding two polygons pointwise when in the same @n@-space.
+polygonPatternSumSmart :: Polygon -> Polygon -> Maybe (Pattern Int)
+polygonPatternSumSmart p1@(Polygon n _ _) p2@(Polygon n' _ _) =
+  if n == n'
+    then Just $ patternSum pttrn1 pttrn2
+    else Nothing
+  where
+    pttrn1 = polygonPattern p1
+    pttrn2 = polygonPattern p2
 
-compatibleIndicators :: [Int] -> [Int] -> Bool
-compatibleIndicators xs ys = 2 `notElem` sumIndicators xs ys
+--- | Polygon sum restricted to disjoint polygons in the same @n@-space.
+polygonPatternSumRestricted :: Polygon -> Polygon -> Pattern Int
+polygonPatternSumRestricted p1@(Polygon n _ _) p2@(Polygon n' _ _)
+  | compatiblePatterns = summedPattern
+  | otherwise = []
+  where
+    pttrn1 = polygonPattern p1
+    pttrn2 = polygonPattern p2
+    summedPattern = patternSum pttrn1 pttrn2
+    compatiblePatterns =
+      n == n' &&
+      2 `notElem` summedPattern
+
+-- | The same as 'polygonPattern' but with weighted vertices of integer value @a@.
+wPolygonPattern :: (Scalar, Polygon) -> Pattern Int
+wPolygonPattern (a, Polygon n k p)
+  | k >= 2 && n `rem` k == 0 = rotateLeft p . concat . replicate k $ side
+  | otherwise = replicate n 0
+  where
+    subperiod = n `quot` k
+    side = a : replicate (subperiod - 1) 0
+
+-- | The list obtained by adding two weighted polygons pointwise in a @n@-space
+-- with adjusted granularity.
+wPolygonPatternSum :: (Scalar, Polygon) -> (Scalar, Polygon) -> Pattern Int
+wPolygonPatternSum (a, Polygon n k p) (a', Polygon n' k' p') = patternSum pttrn1 pttrn2
+  where
+    pttrn1 = wPolygonPattern (a, Polygon grain k position)
+    pttrn2 = wPolygonPattern (a', Polygon grain k' position')
+    grain = lcm n n'
+    position =
+      let scaleFactor = grain `div` n
+       in (p `mod` n) * scaleFactor
+    position' =
+      let scaleFactor' = grain `div` n'
+       in (p' `mod` n') * scaleFactor'
+
+
+-- | A list of all perfectly balanced rhythms  generated by the combination
+-- and displacement of two coprime polygons represented by their onsets.
+disjointPolygonRhythm :: Int -> Onsets -> Onsets -> [Pattern Int]
+disjointPolygonRhythm j k l
+  | coprimeOnsets && disjointablePatterns =
+      let n = j * k * l
+          clean = necklaceNub . filter (/= [])
+          displacementCombinations = map (polygonPatternSumRestricted (Polygon n k 0) . Polygon n l) [1..(j*k)-1]
+       in clean displacementCombinations
+  | otherwise = []
+    where coprimeOnsets = gcd k l == 1
+          disjointablePatterns = j >= 2
+
+disjointPolygonRhythm' :: Polygon -> Polygon -> [Pattern Int]
+disjointPolygonRhythm' (Polygon n k _) (Polygon n' k' _) =
+  let i = min k k'
+      j = max k k'
+      grain = lcm n n'
+      clean = necklaceNub . filter (/= [])
+      displacementCombinations = map (polygonPatternSumRestricted (Polygon grain i 0) . Polygon grain j) [1 ..quot grain j - 1]
+   in clean displacementCombinations
+
+-- TODO: ser capaz de añadir otro polygono, o alternativamente, hacer fold sobre
+-- una lista de polígonos.
+
+combinePolygonWithPattern :: Pattern Int -> Polygon -> [Pattern Int]
+combinePolygonWithPattern xs (Polygon n k _) =
+  let pulses = max (length xs) n
+      polyPatts = map polygonPattern (polygonPositionList (polygon pulses k 0))
+  in map (patternSum xs) polyPatts
+
+-- | A list of all perfectly balanced rhythms generated by a combination polygons
+-- such that at least one polygon is coprime with at least one other.
+irreducibleBalancedDisplacedPolyrhythms :: Pulses -> [[Polygon]]
+irreducibleBalancedDisplacedPolyrhythms n =
+  let factorCombinations = setNub . filter (\x -> length x >= 2) . List.subsequences . uniqueFactorisationList
+  in map (map (basePolygon n)) $ filter withCoprime $ factorCombinations n
+
+withCoprime :: Integral a => [a] -> Bool
+withCoprime xs = foldl (\acc x ->  any (coprimePair x) xs || acc) False xs
+  where coprimePair m n = gcd m n == 1
+
+
+-- | This function depends on the Math.NumberTheory.Primes package
+uniqueFactorisationList :: UniqueFactorisation a => a -> [a]
+uniqueFactorisationList = concatMap unfold . Primes.factorise
+  where unfold (p,q) = replicate (fromIntegral q) (Primes.unPrime p)
+
+
+-- AUX: Necklaces. Using the Data.Set module
+
+-- | Eliminates duplicate entries in a list but forgets original order.
+setNub :: Ord a => [a] -> [a]
+setNub = Set.toList . Set.fromList
+
+-- | Generates the set of all rotations of a pattern or,
+-- in other words, the orbit under the cyclic group action.
+rotationSet :: Ord a => [a] -> Set.Set [a]
+rotationSet [] = Set.empty
+rotationSet xs =
+  let n = length xs
+  in Set.fromList $ map (`rotateLeft` xs) [0..(n-1)]
+
+-- | Necklace equivalence of patterns factors the action of the cyclic group.
+equivNecklace :: Ord a => [a] -> [a] -> Bool
+equivNecklace xs ys = ys `Set.member` rotationSet xs
+
+-- | Eliminate redundant elements (necklace-wise) in a pattern list.
+necklaceNub :: Ord a => [[a]] -> [[a]]
+necklaceNub [] = []
+necklaceNub (x:xs) =
+  let filteredList = filter (not . equivNecklace x) xs
+  in x : necklaceNub filteredList
+
+necklaceNub' :: Ord a => [[a]] -> [[a]]
+necklaceNub' = foldr (\x acc -> x : filterEquiv x acc) []
+  where filterEquiv x = filter (not . equivNecklace x)
+
+-- AUX: Bracelets. Using Math.Combinatorics.Multiset
+
+-- | Bracelet equivalence of patterns factors the action of the dihedral group.
+equivBracelet' :: Ord a => [a] -> [a] -> Bool
+equivBracelet' xs ys = MS.bracelets (MS.fromList xs) == MS.bracelets (MS.fromList ys)
+
+equivBracelet :: Ord a => [a] -> [a] -> Bool
+equivBracelet xs ys = ys `elem` MS.bracelets (MS.fromList xs)
+
+-- | Eliminate redundant elements (bracelet-wise) in a pattern list.
+braceletNub :: Ord a => [[a]] -> [[a]]
+braceletNub [] = []
+braceletNub (x:xs) = x : braceletNub ( filter (not . equivBracelet x) xs )
+
+braceletNub' :: Ord a => [[a]] -> [[a]]
+braceletNub' = foldr (\x acc -> x: filterEquiv x acc) []
+  where filterEquiv x = filter (not . equivBracelet x)
+
+
+-- Integer Combinations of Intersecting Regular Polygons
+
+-- | A polygon in its first position.
+basePolygon :: Pulses -> Onsets -> Polygon
+basePolygon n k = polygon n k 0
+
+-- | Interface for polygon creation.
+polygon :: Pulses -> Onsets -> Position -> Polygon
+polygon n k = Polygon (lcm n k) k
+
+-- TODO: decidir entre quot y div
+polygonPositionList :: Polygon -> [Polygon]
+polygonPositionList (Polygon n k _) =
+  if gcd n k /= 0 then map (Polygon n k) [0..(subperiod - 1)] else map (Polygon n k) [0..(n - 1)]
+  where subperiod = n `div` k
+
+-- | All irreducibily periodic perfectly balanced rhythms
+-- are integer linear combinations of polygons(Milne et. al. 2015).
+-- This is a brute-force implementation of this approach.
+perfectlyBalancedRhythms :: Pulses -> [[Int]]
+perfectlyBalancedRhythms n = braceletNub . filter ((`Set.isSubsetOf` Set.fromList [0,1]) . Set.fromList) $ summedCombinations n
+
+availablePolygons n = map (basePolygon n) (divisors n)
+
+-- TODO: cambiar definición para generar combinaciones antes de transformar en patrón.
+allPolygonPositions n = concatMap polygonPositionList $ availablePolygons n
+allUnityWeightedPolygons n = concatMap (\p -> [(1,p),(-1,p)]) $ allPolygonPositions n
+patternList n = map wPolygonPattern $ allUnityWeightedPolygons n :: [[Int]]
+combinations n = filter ((>= 2) . length) . List.subsequences $ patternList n
+summedCombinations n = map (foldl1 patternSum) $ combinations n
+
+  -- in braceletNub . filter (\xs -> (2 `notElem` xs) && ((-1) `notElem` xs)) $ summedCombinations
+
+-- Alternativa separando en sublistas
+allPolygonPositions' n = map polygonPositionList $ availablePolygons n
+allUnityWeightedPolygons' n = map (map $ \p -> [(1,p),(-1,p)]) $ allPolygonPositions' n

@@ -79,9 +79,12 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:
+        , arithmoi ^>=0.13.0.0
         , base ^>=4.16.4.0
+        , containers >=0.6.5 && <0.7
         , groups ^>=0.5.3
         , hosc ^>=0.19.1
+        , multiset-comb ^>=0.2.4.2
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -89,7 +92,7 @@ library
     -- Base language which the package is written in.
     default-language: Haskell2010
 
-    ghc-options: -Wall
+    -- ghc-options: -Wall
 
 test-suite ritmoTG-test
     -- Base language which the package is written in.
