@@ -29,8 +29,6 @@ toc: true
 lof: true
 lot: true
 
-thanks: "Apoyado por CONAHCYT través del programa de becas nacionales."
-
 hyperrefoptions:
 - breaklinks=true
 #- linktoc=all
@@ -39,8 +37,8 @@ hyperrefoptions:
 
 link-citations: true
 linkcolor: magenta
-urlcolor: cyan
-citecolor: yellow
+urlcolor: blue
+citecolor: black
 toccolor: black
 urlstyle: tt
 links-as-notes: true
@@ -54,11 +52,12 @@ biblatexoptions:
 - backend=biber
 - sorting=nyt
 
-biblio-style: authoryear
-biblio-title: Bibliografía
+# Cuando se llama pandoc con --natbib y --biblatex
+#biblio-style: authoryear
+#biblio-title: Bibliografía
 
-# Este valor se introduce en la Makefile
-# utilisando la flag --bibliography y la variable BIBLIO
+# Este valor ya está incluido en la Makefile
+# utilizando la flag --bibliography y la variable BIBLIO
 #bibliography: sources.bib
 
 # Fuentes

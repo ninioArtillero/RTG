@@ -16,7 +16,7 @@ list-tables: true
 
 top-level-division: chapter
 
-# Este valor se introduce en la Makefile
+# Este valor está incluído en la Makefile
 # utilizando la flag --csl y la variable CITATIONSTYLE
 #metadata:
 #  csl: ${.}/chicago-author-date.csl
@@ -33,5 +33,4 @@ metadata-files:
 #pdf-engine-opts:
 #  # Para utilizar paquete 'minted' para marcar código fuente.
 #  - '-shell-escape'
-
 ...
