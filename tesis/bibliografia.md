@@ -1,3 +1,0 @@
-# Bibliografía {#refs}
-
-

@@ -16,7 +16,6 @@ SOURCE=dedicatoria.md \
 	   cap*/*.md \
 	   conclusiones.md \
 	   glosario.md \
-	   bibliografia.md
 
 CITATIONSTYLE=maqueta/chicago-author-date.csl
 
