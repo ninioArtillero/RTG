@@ -66,8 +66,10 @@ do
 -- y corresponde a una proporción 3:2:5
 do
  hush
-  setcps 1
-  d1 sequence
-  let quintupleMeter = struct "t t t t t" $ s "tok" # n 1
-  d2 quintupleMeter
+ setcps 1
+ d1 sequence
+ let quintupleMeter = struct "t t t t t" $ s "tok" # n 1
+ d2 quintupleMeter
+
+hush
 
