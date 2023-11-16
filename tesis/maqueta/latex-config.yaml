@@ -1,7 +1,7 @@
 ---
 # Maqueta de documento
 
-# Opciones (metadatos) para pandoc que corresponden a opciones para paquetes de LaTex.
+# Opciones de pandoc para la configuración de la maqueta LaTex.
 # Referencia
 # https://pandoc.org/MANUAL.html#variables-for-latex
 
@@ -13,6 +13,7 @@ classoption:
 - onecolumn
 - 12pt
 - oneside
+- letterpaper
 #- notitlepage
 
 # geometry:
@@ -46,7 +47,7 @@ links-as-notes: true
 
 indent: true
 #pagestyle: plain
-papersize: letterpaper
+#papersize: letterpaper
 #secnumdepth: 3
 
 biblatexoptions:
@@ -54,11 +55,15 @@ biblatexoptions:
 - sorting=nyt
 
 biblio-style: authoryear
-
 biblio-title: Bibliografía
 
 # Este valor se introduce en la Makefile
 # utilisando la flag --bibliography y la variable BIBLIO
-#blioliography: source.bib
+#bibliography: sources.bib
 
+# Fuentes
+fonaatfamily: libertine
+fontfamily: inconsolata
+mainfont: Linux Libertine
+monofont: Inconsolata
 ...

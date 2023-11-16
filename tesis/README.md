@@ -1,7 +1,8 @@
 # Markdown como fuente
 
 Esta tesis está escrita utilizando [Pandoc-Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown),
-la cual cuenta con una gran cantidad de extensiones de sintaxis que permiten traducir la misma fuente a formatos como
+variante de markdown con una gran cantidad de extensiones para dar más flexibilidad.
+Pandoc permite traducir la misma fuente texto a formatos como
 HTML, XML, DOCX, EPUB, ODT, LaTeX y PDF.
 
 
@@ -12,7 +13,21 @@ producir el texto en formato ODT (para revisión con control de cambios y coment
 a partir de los archivos de texto en _markdown_.
 
 Para ello basta con ejecutar el comando `make` desde esta ubicación.[^1]
-Es necesario [instalar Pandoc](https://pandoc.org/installing.html).
+
+Es necesario instalar las siguientes dependencias:
+
+* Pandoc. [Instrucciones oficiales de instalación](http://pandoc.org/installing.html).
+  * MacOS: Se recomienda utilizar el administrador de paquetes [Homebrew](http://brew.sh/). Correr `brew update` en la terminal y en seguida `brew install pandoc`.
+  * Windows: Se recomienda utilizar el administrador de paquetes [Chocolatey](https://chocolatey.org/). Correr en terminal `choco install pandoc`.
+  * Linux: usar el administrador de paquetes de la distribución.
+* LaTex (se peude instalar de manera similar utilizando los administradores de paquetes antes mencionados):
+[MacTeX](https://www.tug.org/mactex/) para MacOS,
+[MiKTeX](https://miktex.org/) o [Tex Live](https://www.tug.org/texlive/) para Windows y
+[Tex Live](https://www.tug.org/texlive/) para linux.
+  * Asegurarse de tener instalado XeTeX en caso de tener una instalación parcial de la distribución de LaTeX (particularmente en el caso de Tex Live en Linux).
+* Fuentes:
+  * [Linux Libertine](http://www.linuxlibertine.org/index.php?id=91&L=1)
+  * [Inconsolata](http://levien.com/type/myfonts/inconsolata.html)
 
 [^1]: https://www.gnu.org/software/make/
 

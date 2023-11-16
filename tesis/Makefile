@@ -26,8 +26,6 @@ DEFAULTS=maqueta/defaults.yaml
 
 TARGET=$(OUTPUT).odt $(OUTPUT).pdf
 
-
-
 PANDOC=pandoc \
 			 --from=markdown+rebase_relative_paths \
 			 --standalone --bibliography $(BIBLIO) \
@@ -42,7 +40,7 @@ $(OUTPUT).odt: $(SOURCE) $(METADATA)
 
 # create pdf
 $(OUTPUT).pdf: $(SOURCE) $(METADATA)
-	$(PANDOC) --output=$(OUTPUT).pdf
+	$(PANDOC) --output=$(OUTPUT).pdf --pdf-engine=xelatex
 
 
 all: $(TARGET)
