@@ -8,6 +8,8 @@
 module Sound.RTG.Geometria.Euclidean (Euclidean, e, (<+>)) where
 
 import Data.Group
+import Sound.RTG.Ritmo.Pattern (rotateLeft)
+import Sound.RTG.Ritmo.Bjorklund (euclideanPattern)
 
 data Euclidean = Euclidean Onsets Pulses Position deriving (Ord)
 
@@ -24,7 +26,7 @@ instance Eq Euclidean where
     simpleForm (k, n, p) == simpleForm (k', n', p')
 
 instance Show Euclidean where
-  show (Euclidean k n p) = show $ simpleForm (k, n, p)
+  show (Euclidean k n p) = show $ rotateLeft p $ euclideanPattern k n
 
 -- Euclidean rhythms in its stardard semantics are elements of
 -- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
