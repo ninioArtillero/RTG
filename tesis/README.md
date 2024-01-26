@@ -34,46 +34,49 @@ Es necesario instalar las siguientes dependencias:
 
 # Índice
 
-* Introducción (_pre-examen_)
+El siguiente es un índice tentativo elaborado para proyectar la escritura de la tesis.
+Algunos títulos tienen `etiquetas`.
+
+* Introducción `pre-examen`
    * Temática y preguntas de investigación
 
-1. Antecedentes y Marco teórico
-   1. Genealogía (_antecedentes_)
-	  1. Patrón algorítmico
-	  1. Programación reactiva funcional
-	  1. Haskell: eDSLs para programación multimedia
-   1. Abstracción y Expresividad (_marco teórico_)
-	  1. Musical vs computacional
-		  * Expresividad de un lenguaje de programación
-	  1. Ejemplo: Problema "FizzBuzz" (_¿se queda?_)
-	  1. Ejemplo: RTG
-1. Programación funcional de música (_estado de la cuestión_)
+1. Lenguajes de programación `marco teórico`
+   1. eDSLs para programación multimedia
+   1. Expresividad
+       * Lenguaje de programación
+       * Musical
+   1. Abstracción
+       * Computacional
+       * Musical
    1. Programación funcional
+       1. Programación reactiva funcional (representación del tiempo)
+1. Programación funcional de música `estado de la cuestión`
    1. Lenguajes para música en Haskell
-	  1. La multidimensionalidad de la música: representaciones y modelos
-	  1. Código y pensamiento (en live coding y composición algorítmica)
-	  1. eDSLs
-		  1. Tidal Cycles
-		  1. Euterpea
-		  1. Conductive
-		  1. RTG
-1. RTG: Ritmo, tiempo y geometría (_aporte tecnológico_)
+      1. La multidimensionalidad de la música: representaciones y modelos
+      1. Código y pensamiento (en live coding y composición algorítmica)
+      1. Casos de estudio
+         1. Tidal Cycles
+            1. Patrón algorítmico
+         1. Euterpea
+         1. Conductive
+         1. RTG
+1. RTG: Ritmo, tiempo y geometría `aporte tecnológico`
    1. Concepto
-	  * Patrones como transformaciones geométricas
+      * Patrones como transformaciones geométricas
+      * Estudio matemático-geométrico `aporte teórico-artístico`
+          * Programa de Erlangen
    1. Diseño
-	  1. Tipos de datos
-	  1. Funciones básicas
-	  1. Funciones auxiliares
+      1. Tipos de datos
+      1. Funciones básicas
+      1. Funciones auxiliares
    1. Implementación
    1. API
-   1. _Live coding_ y composición algorítmica
-1. Estudio matemático-geométrico (_aporte teórico-artístico_)
-   1. Programa de Erlangen
+   1. Uso en _Live coding_ y composición algorítmica
 
-* Conclusiones (_pre-candidatura_)
+* Conclusiones `pre-candidatura`
 * Anexos
-  * Grupos de transformaciones
-  * Teoría de lenguajes de programación
+   * Grupos de transformaciones
+   * Teoría de lenguajes de programación
 * Índice analítico (pendiente)
 * Glosario
 * Bibliografía
