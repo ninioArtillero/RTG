@@ -36,11 +36,13 @@ hyperrefoptions:
 #- pdfpagemode=FullScreen
 
 link-citations: true
+link-bibliography: true
 linkcolor: magenta
+filecolor: red
 urlcolor: blue
 citecolor: black
 toccolor: black
-urlstyle: tt
+urlstyle: rm
 links-as-notes: true
 
 indent: true
@@ -53,6 +55,7 @@ biblatexoptions:
 - sorting=nyt
 
 # Cuando se llama pandoc con --natbib y --biblatex
+# para producir un documento LaTeX
 #biblio-style: authoryear
 #biblio-title: Bibliografía
 
@@ -61,10 +64,10 @@ biblatexoptions:
 #bibliography: sources.bib
 
 # Fuentes
-fonaatfamily: libertine
-fontfamily: inconsolata
+fontfamily: libertine
 mainfont: Linux Libertine
+fontfamily: inconsolata
 monofont: Inconsolata
 
-reference-section-title: Bibliografía
+reference-section-title: Referencias
 ...

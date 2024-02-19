@@ -27,7 +27,7 @@ TARGET=$(OUTPUT).odt $(OUTPUT).pdf
 
 PANDOC=pandoc \
 			 --from=markdown+rebase_relative_paths \
-			 --standalone --bibliography $(BIBLIO) \
+			 --bibliography $(BIBLIO) \
 			 --csl=$(CITATIONSTYLE) \
 			 --defaults $(DEFAULTS) \
 			 $(SOURCE)
