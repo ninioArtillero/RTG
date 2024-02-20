@@ -1,25 +1,40 @@
 ## Tidal Cycles
 
+En esta sección haremos un análisis de [Tidal Cycles](https://tidalcycles.org/) (en adelante abreviado sólo como Tidal)
+como un instrumento musical expresivo en relación a las abstracciones en que se basa su diseño.
+
 Tidal Cycles es un sistema para live coding de software libre y código abierto creado por Alex Mclean, quién lo describe como
 "un lenguaje de dominio específico para patrones embebido en el lenguaje de programación Haskell,
-constituido por una representación de patrones, una librería para generarlos y combinarlos, un programador de eventos (_scheduler_) y una interfaz de programación para live coding" [-@McLean2011ArtistProgrammers, p. 79].
-Dicha interfaz se implementa en un _plugin_ que carga un archivo de configuración^[Llamado por defecto `BootTidal.hs` que configura el interprete y define algunas variables convenientes para el uso de la librería] y comunica al editor de texto con una sesión del intérprete de Haskell (`ghci`) en la que están cargados los módulos de Tidal expuestos. Los patrones generados son _streams_ de mensajes OSC.
-Tidal no está diseñado para hacer síntesis de sonido, sino que se encarga únicamente del secuenciamiento y [_patronificación_](#patrones) de eventos.
+constituido por una representación de patrones, una librería para generarlos y combinarlos,
+un programador de eventos (_scheduler_) y una interfaz de programación para live coding"
+[-@McLean2011ArtistProgrammers, p. 79].
 
-En general, para el live coding musical, dichos mensajes son recibidos por
+Los patrones en Tidal son la unidad musical y computacional fundamental;
+se trata de una abstracción que configura tanto el diseño del sistema como su uso.
+Describiremos los patrones en Tidal Cycles en tres niveles conceptuales: [usuario](#uso-de-patrones), implementación y especificación.
+La [representación de patrones](#representación-de-patrones) (implementación) utiliza los principios de la [programación reactiva funcional](#frp) (especificación).
+Como una definición común a los tres, podemos decir que un patrón es _una función del tiempo en un conjunto de eventos_.
+
+La "interfaz de programación para live coding" se manifiesta como un _plugin_ que carga un archivo de configuración^[Llamado por defecto `BootTidal.hs`.
+Este configura el interprete y define algunas variables convenientes para el uso de la librería.]
+y comunica al editor de texto con una sesión del intérprete de Haskell (`ghci`) en la que están cargados los módulos expuestos de Tidal.
+
+El programador de eventos es un modulo encargado crear _streams_ con paquetes de mensajes OSC que representan los eventos.
+Cada uno de estos tiene un _time-stamps_ para garantizar su reproducción en tiempo.
+Este proceso depende de un tiempo de latencia para que los eventos
+contenidos en dichos paquetes para que el procesador pueda agendarlos [@Blackwell2020Live, chap. 6],
+sentando una cota inferior en milisegundos para el tiempo de acción de evaluar código durante una interpretación.
+Tidal no está diseñado para hacer síntesis de sonido, sino que se encarga únicamente del secuenciamiento y _patronificación_ de eventos.^[La patronificación es la traducción literal del uso de la palabra _pattern_ como verbo, en lugar de sustantivo. El concepto de patrón algorítmico justifica el uso de este término como se verá más adelante.]
+En general, para su uso musical, dichos mensajes son recibidos por
 [SuperDirt](https://github.com/musikinformatik/SuperDirt): un motor de audio en SuperCollider que establece un marco para la creación de sintetizadores y reproducción de muestras
-que permite procesar los mensajes de Tidal.
+diseñado par procesar los mensajes de Tidal.
 
 La conceptualización e implementación de los patrones en Tidal Cycles desborda el ámbito músical.
-El sistema puede ser usado para crear patrones visuales [@McLean2020Algorithmic] y ha sido utilizando para livecodear patrones de tejido [@McLean2018Weaving]
+El sistema puede ser usado para crear patrones visuales [@McLean2020Algorithmic] y ha sido utilizando para livecodear patrones de tejido [@McLean2018Weaving].
 
+### Uso de patrones
 
-Un patrón en Tidal es una función del tiempo.
-
-### Uso de patrones  {#patrones}
-
-Los patrones en Tidal Cycles se pueden describir a varios niveles.
-El primero a nivel de usuario: un patrón es una secuencia de eventos y valores descritos en una cadena de texto o varias cadenas de texto,
+ un patrón es una secuencia de eventos y valores descritos en una cadena de texto o varias cadenas de texto,
 que son combinadas y luego agendadas con respecto a un ciclo implícito.
 
 El siguiente comando crea un patrón que reproduce dos aplausos de igual duración durante la duración del ciclo.
@@ -44,7 +59,8 @@ que son accesibles utilizando los identificadores `d1`, `d2`, `d3`, ...
 La cadena de texto es leída con referencia a la sintaxis de la _mini-notation_, que permite subdividir cada evento hasta una profundidad arbitraria.
 
 ```haskell
---- Los eventos entre corchetes ocupan el mismo espacio del ciclo que el inicial
+--- Los eventos entre corchetes ocupan
+-- el mismo espacio del ciclo que el inicial
 d1 $ sound "cp [cp sn cp]"
 ```
 
@@ -55,55 +71,56 @@ mediante una variedad de operadores.
 
 El operador `#` (alias de `|>`) toma la estructura de patrón de sonido (ubicado a la izquierda) y le asignando los valores de un patrón de control en función de su posición.
 
-```haskell
--- los eventos en la segunda mitad del ciclo se reproducen al doble de velocidad
-d1 $ sound "cp sn cp" # speed "1 2"
+```haskell {#ejemplo-para-transformar}
+-- Los eventos en la segunda mitad del ciclo
+-- se reproducen al doble de velocidad
+d1 $ sound "sn cp sn" # speed "1 2"
 ```
 
-Tidal nos arroja la siguiente visualización del patrón al evaluarlo fuera del contexto de una órbita:
+Evaluar un patrón fuera del contexto de una órbita imprime una lisa lista
+de los contenidos del paquete OSC del patrón.
 
 ```haskell
--- evaluar esta linea
-sound "cp sn cp" # speed "1 2"
+sound "sn cp sn" # speed "1 2"
 
--- muestra lo siguiente
-(0>⅓)|s: "cp", speed: 1.0f
-(⅓>½)-⅔|s: "sn", speed: 1.0f
-⅓-(½>⅔)|s: "sn", speed: 2.0f
-(⅔>1)|s: "cp", speed: 2.0f
+-- Produce la siguiente salida en la consola:
+(0>⅓)|s: "sn", speed: 1.0f
+(⅓>½)-⅔|s: "cp", speed: 1.0f
+⅓-(½>⅔)|s: "cp", speed: 2.0f
+(⅔>1)|s: "sn", speed: 2.0f
 ```
 
 Esta lista indica la secuencia de eventos, representados como segmentos del ciclo (`(0>⅓)`),
 y el conjunto de valores  que les son asignados (`s: "sn", speed: 1.0f`).
-El cuarto evento no produce ningún sonido y sólo registra las regiones en que se traslapan los valores.
+Aquí el tercer evento no produce ningún sonido y sólo registra las regiones en que se traslapan los valores.
 Alternativamente podemos utilizar el operador `|>|`, que asigna los valores y combina las estructuras
 
 ```haskell
-d1 $ sound "cp sn cp" |>| speed "1 2"
-```
+d1 $ sound "sn cp sn" |>| speed "1 2"
 
-produciendo:
-
-```
-(0>⅓)|s: "cp", speed: 1.0f
-(⅓>½)|s: "sn", speed: 1.0f
-(½>⅔)|s: "sn", speed: 2.0f
-(⅔>1)|s: "cp", speed: 2.0f
+-- Produce:
+(0>⅓)|s: "sn", speed: 1.0f
+(⅓>½)|s: "cp", speed: 1.0f
+(½>⅔)|s: "cp", speed: 2.0f
+(⅔>1)|s: "sn", speed: 2.0f
 ```
 
 En este caso sí se reproducen los 4 eventos.
-Además de pasar los valores, estos también se pueden combinar con operadores aritméticos.El siguiente ejemplo es reducido paso a paso de representaciones equivalentes del mismo patrón (gracias a la transparencia referencial).
+Además de pasar los valores, estos también se pueden combinar con operadores aritméticos.
+El siguiente ejemplo es reducido paso a paso de representaciones equivalentes del mismo patrón (gracias a la transparencia referencial).
 
 ```haskell
-d1 $ sound "drum" |+| n "2 3" |+| n "4 5 6"
+d1 $ sound "drum" |+| n "2 3" |+| n "4 5 6>
 
 d1 $ sound "drum" |+| n "6 [7 8] 9"
 
--- La notación sonido:número índica que muestra se utiliza.
 d1 $ sound "drum:6 [drum:7 drum:8] drum:9"
+
+-- La notación <sonido:número>
+-- índica que muestra se utiliza.
 ```
 
-Los patrones en Tidal pueden ser transformados por una extensa variedad de funciones^[Mismas que se pueden encontrar en la documentación oficial en https://tidalcycles.org/docs/] que junto a la capacidad de combinar estructuras y valores permite crear patrones de elevada complejidad con relativamente poco código. Esto permite diluir rápidamente toda noción de repetición (aunque eventualmente sucede).
+Los patrones en Tidal pueden ser transformados por una extensa variedad de funciones^[Mismas que se pueden encontrar en la documentación oficial.] que, junto a la capacidad de combinar estructuras y valores, permite crear patrones de elevada complejidad con relativamente poco código. Esto permite diluir rápidamente toda noción de repetición (aunque eventualmente sucede). Podemos transformar el [ejemplo anterior](#ejemplo-para-transformar) así:
 
 ```haskell {#ejemploTidalHaskell}
 d1
@@ -113,12 +130,14 @@ d1
   $ superimpose (
     (+ squiz "3 7 3 9") .
     (# room "0.3 0.3 0.7") .
-    (hurry "[0.35 | 0.25 | 0.10 0.35 | 0.25 0.75]")
+    (hurry
+   "[0.35|0.25|0.10 0.35|0.25 0.75]")
     )
   $ s "sn cp sn"
 ```
 
-Sólo por diversión podemos ver la representación de este patrón:
+Escuchar este patrón da una idea muy precisa del poder expresivo de Tidal,
+pero en honor al presente medio podemos en su lugar atestiguar la representación de este patrón:
 
 ```
 (0>¼)|pan: 0.0f, room: 0.3f, s: "sn", speed: 0.25f, squiz: 3.0f
@@ -180,27 +199,19 @@ A diez años del desarrollo de Tidal,  @McLean2021TidalCycles refiere la siguien
 ```haskell
 data Span = Span { begin :: Rational, end :: Rational}
   deriving (Show)
--- Ejemplo > Span {begin = 0 , end = 1}
 
--- Un evento se corresponde a un valor activo por una
--- cierta cantidad de timepo (Span)
 data Event a = Event {
-                      -- whole permite registrar la duración completa/original
-                      -- de un evento, mientras active se reparte en ciclos.
-                      -- whole no aplica a señales.
                       whole  :: Maybe Span,
                       active :: Span,
                       value  :: a
                      }
   deriving (Show, Functor)
 
--- Ejemplo > Event{ active = Span {begin = 0 , end = 1}, value = "hola"}
-
--- Un patrón es presentado como una serie de eventos
--- en un período de tiempo.
--- El campo `query` permite acceder a la función que define el patrón
--- i.e. sacarlo del constructor para ver que eventos produce en
--- el tiempo dado.
 data Pattern a = Pattern {query :: Span -> [Event a]}
   deriving (Functor)
 ```
+
+### Programación Reactiva Funcional (FRP) {#frp}
+
+La programación reactiva funcional (FRP por sus siglas en inglés) es una metodología
+para el diseño de sistemas que dependen de un parámetro continuo.^[En el sentido matemático de continuidad.]
