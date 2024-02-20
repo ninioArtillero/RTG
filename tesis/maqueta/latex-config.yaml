@@ -70,4 +70,10 @@ fontfamily: inconsolata
 monofont: Inconsolata
 
 reference-section-title: Referencias
+
+# TODO: Cortar líneas de código largas
+# https://stackoverflow.com/questions/20788464/pandoc-doesnt-text-wrap-code-blocks-when-converting-to-pdf
+header-includes:
+ - \usepackage{fvextra}
+ - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ...
