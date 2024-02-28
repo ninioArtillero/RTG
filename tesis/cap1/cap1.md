@@ -1,4 +1,4 @@
-# Lenguajes para live coding
+# Lenguajes de programación para la música {#cap1}
 
 En este capítulo haré una breve introducción a los aspectos tecnológicos del _live coding_, para contextualizar la caracterización de sus intrumentos: los lenguajes de programación. 
 Discutiremos el funcionamiento de las librerías Conductive, Euterpea, Tidal Cycles y RTG como ejemplos de librerías destinadas a la creación musical.
