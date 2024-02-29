@@ -2,10 +2,10 @@
 
 La programación reactiva funcional (FRP por sus siglas en inglés) es una metodología
 para el diseño de sistemas que evolucionan en el tiempo basada en el uso de una
-[denotación](#denotación) clara y concisa [@Elliot2015Essence].
+[denotación](#denotación) clara y concisa [@Elliott2015Essence].
 
 Su formulación inicial utilizó Haskell, aunque el concepto trasciende el uso de un lenguaje de programación específico.
-y estaba enfocada en abstracciones apropiadas para permitir la programación funcional de animaciones [@Elliot1997Functional].
+y estaba enfocada en abstracciones apropiadas para permitir la programación funcional de animaciones [@Elliott1997Functional].
 Posteriormente la FRP fue reformulada utilizando las abstracciones más generales incluidas en Haskell como [clases de tipos](#type-classes).
 
 En la FRP la especificación de la librería toma el tiempo como un parámetro valuado en los números reales.
