@@ -26,7 +26,7 @@ y comunica al editor de texto con una sesión del intérprete de Haskell (`ghci`
 El programador de eventos es un modulo encargado crear _streams_ con paquetes de mensajes OSC que representan los eventos.
 Una _time-stamp_ es asignada a cada evento para coordinar su reproducción en el tiempo.
 Este proceso depende de un tiempo de latencia para que el procesador 
-pueda agendar los eventos contenidos en dichos paquetes [ver @Blackwell2020Live, chap. 6],
+pueda agendar los eventos contenidos en dichos paquetes [ver @Blackwell2022Live, chap. 6],
 sentando una cota inferior en milisegundos para el tiempo de acción de evaluar código durante una interpretación.
 
 Tidal no está diseñado para hacer síntesis de sonido, sino que se encarga únicamente del secuenciamiento y _patronificación_ de eventos.^[La patronificación es la traducción literal del uso de la palabra _pattern_ como verbo, en lugar de sustantivo. El concepto de patrón algorítmico justifica el uso de este término como se verá más adelante.]
