@@ -1,14 +1,22 @@
 # Abstracción y expresividad  {#cap2}
 
-Para elaborar el marco teórico se establecerá una correspondencia musical para términos como “espacio conceptual”, “nivel semántico”, “abstracción” y “expresividad”. En dicha correspondencia relacionaré las nociones formales de los términos en las ciencias de la computación, como por ejemplo la expresividad de un lenguaje de programación en Felleisen (1990), con las propias en el ámbito musical. Esto se hará a través de una investigación documental en búsqueda de dichas nociones formales y el cotejo con las nociones intuitivas de los términos. El concepto de “abstracción” será eje para comparar las librerías mencionadas (incluída RTG), observando principalmente la implementación de la entidad musical.
+En este capítulo se indagará en la acepción de los términos “abstracción” y “expresividad” en los contextos de la ciencia de la computación y la composición musical.
+El objetivo es delimitar un _espacio conceptual_ transdiciplinario que permita tratar los lenguajes de programación como instrumentos musicales.
 
-Los objetivos son
-1. Elaborar un marco teórico aplicable a lenguajes de programación diseñados para live coding que me permita explicar el alcance de mi propuesta de desarrollo tecnológico, misma que será presentada en el capítulo 3.
-1. Proponer un concepto de “expresividad funcional” como criterio de diseño para lenguajes orientados a la música.
+## Un espacio conceptual para la expresividad funcional
 
+Para la noción de “espacio conceptual” se utiliza la formulación de @Wiggins2015marco en el contexto de la creatividad computacional explorativa; se entiende como un conjunto de conceptos definido por criterios de pertenencia, estrategias de generación y una función de valor. Esto se puede entender como un tipo de semiósfera [@Lotman1996Acerca].
 
-Empezaré este capítulo presentando un estudio exhaustivo de Tidal Cycles como sistema de _live coding_. Posteriormente indagaremos en las nociones de _expresividad_ en el ámbito de la programación de _software_ y en la música. El objetivo será adoptar una connotación transdisciplinaria aplicable al uso de lenguajes de programación como instrumentos musicales.
+Para esta operación teórico-conceptual se tomará el concepto de “nivel semántico” que encontramos en lingüística y en la teoría de lenguajes de programación.
+Básicamente, se identifica un nivel semántico con un capa de abstracción.
+El caso de Haskell y Tidal Cycles estudiado en el capítulo anterior ofrecerá ejemplos pertinentes.
 
+La expresividad de un lenguaje de programación es abordada por @Felleisen1990expressive; utilizaremos esta aproximación para analizar algunas nociones formales e intuitivas de la expresividad musical en la literatura.
+
+Este marco permitirá describir la concepción, especificación y desarrollo de la biblioteca RTG partiendo de la representación de la entidad musical en Haskell.
+El mismo será también aplicable de manera general para el diseño de otros lenguajes para la música y, en particular, el live coding (cuando partimos de la [FRP](#frp)). 
+
+Finalemente, emergerá el concepto de “expresividad funcional” como criterio de diseño para lenguajes orientados a la música.
 
 ## Tidal Cycles como sistema expresivo
 
