@@ -1,10 +1,10 @@
 ---
 # Punto de entrada de la maqueta, llamada por pandoc desde la Makefile con la flag '--defaults'
-# Contiene las opciones generales del documento.
+# Contiene las opciones generales de pandoc para la generación del documento.
 
 standalone: true
 
-verbosity: INFO
+verbosity: WARNING
 
 citeproc: true
 
@@ -16,14 +16,20 @@ list-tables: true
 
 top-level-division: chapter
 
+from: markdown+rebase_relative_paths
+
+pdf-engine: xelatex
+
+highlight-style: breezedark
+
 # Este valor está incluído en la Makefile
 # utilizando la flag --csl y la variable CITATIONSTYLE
 #metadata:
 #  csl: ${.}/chicago-author-date.csl
 
 metadata-files:
-  - ${.}/metadata.yaml
-  - ${.}/latex-config.yaml
+- ${.}/metadata.yaml
+- ${.}/document.yaml
 
 # Alternativamente algunas opciones de pueden añadir
 # directamente al templete de pandoc para latex:

@@ -19,14 +19,13 @@ SOURCE=dedicatoria.md \
 
 CITATIONSTYLE=maqueta/chicago-author-date.csl
 
-BIBLIO=maqueta/fuentes.bib
+BIBLIO=referencias.bib
 
 DEFAULTS=maqueta/defaults.yaml
 
 TARGET=$(OUTPUT).odt $(OUTPUT).pdf
 
 PANDOC=pandoc \
-			 --from=markdown+rebase_relative_paths \
 			 --bibliography $(BIBLIO) \
 			 --csl=$(CITATIONSTYLE) \
 			 --defaults $(DEFAULTS) \
@@ -39,7 +38,7 @@ $(OUTPUT).odt: $(SOURCE) $(METADATA)
 
 # create pdf
 $(OUTPUT).pdf: $(SOURCE) $(METADATA)
-	$(PANDOC) --output=$(OUTPUT).pdf --pdf-engine=xelatex
+	$(PANDOC) --output=$(OUTPUT).pdf
 
 
 all: $(TARGET)

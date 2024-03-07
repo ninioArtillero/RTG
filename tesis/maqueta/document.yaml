@@ -13,7 +13,7 @@ classoption:
 - onecolumn
 - 12pt
 - oneside
-- letterpaper
+#- letterpaper
 #- notitlepage
 
 # geometry:
@@ -24,6 +24,8 @@ classoption:
 
 # Table of contents
 toc: true
+#toc-depth: 4
+#secnumdepth: 4
 
 # Figures and tables
 lof: true
@@ -45,10 +47,18 @@ toccolor: black
 urlstyle: rm
 links-as-notes: true
 
+# Indentación en lugar de espacio entre párrafos
 indent: true
-#pagestyle: plain
-#papersize: letterpaper
-#secnumdepth: 3
+
+# empty | plain (números de página) | headings (encabezados con títulos)
+# Es headings por defecto para book
+#pagestyle: headings
+
+# Por defecto para local MX es letterpaper
+#papersize: a4
+
+# Espaciado de líneas con paquete setspace
+#linestretch=1.5
 
 biblatexoptions:
 - backend=biber
@@ -69,11 +79,26 @@ mainfont: Linux Libertine
 fontfamily: inconsolata
 monofont: Inconsolata
 
+monofontfallback:
+- "Hasklig:"
+
 reference-section-title: Referencias
 
-# TODO: Cortar líneas de código largas
+# Opciones para acomodo fino del texto
+# https://www.khirevich.com/latex/microtype/
+microtypeoptions:
+#- activate={true,nocompatibility}
+- final
+#- tracking=true
+#- kerning=true
+#- spacing=true
+- factor=1100
+- stretch=10
+- shrink=10
+
+# Cortar líneas de código largas en bloques de código con resaltado de sintaxis
 # https://stackoverflow.com/questions/20788464/pandoc-doesnt-text-wrap-code-blocks-when-converting-to-pdf
 header-includes:
- - \usepackage{fvextra}
- - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+- \usepackage{fvextra}
+- \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ...
