@@ -19,7 +19,7 @@ from: markdown+rebase_relative_paths
 pdf-engine: xelatex
 
 ## Syntax
-highlight-style: breezedark
+highlight-style: ${.}/syntax-highlight.theme
 
 indented-code-classes:
 - haskell
