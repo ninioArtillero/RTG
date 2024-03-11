@@ -12,20 +12,18 @@ number-sections: true
 
 reference-links: true
 
-list-tables: true
-
 top-level-division: chapter
 
 from: markdown+rebase_relative_paths
 
 pdf-engine: xelatex
 
+## Syntax
 highlight-style: breezedark
 
-# Este valor está incluído en la Makefile
-# utilizando la flag --csl y la variable CITATIONSTYLE
-#metadata:
-#  csl: ${.}/chicago-author-date.csl
+indented-code-classes:
+- haskell
+- numberline
 
 metadata-files:
 - ${.}/metadata.yaml
