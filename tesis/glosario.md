@@ -42,12 +42,12 @@ Estructura algebraica.
 Conjunto provisto de una operación binaria, cerrada y asociativa con un elemento neutro.
 Concepto de importancia en la teoría de categorías.
 
-## Patrón {#patron .unnumbered .unlisted}
+## Patrón {#patrón .unnumbered .unlisted}
 
 En un sentido reducido y operativo, se trata de un arreglo de los elementos de un conjunto. 
 En el caso de patrones rítmicos, corresponde a un subconjunto de un universo discreto.
 
-## Simetría {#simetria .unnumbered .unlisted}
+## Simetría {#simetría .unnumbered .unlisted}
 
 Elemento de un grupo de transformaciones.
 

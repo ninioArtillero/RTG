@@ -7,7 +7,7 @@ Tidal Cycles es un sistema para live coding de software libre y código abierto 
 "un lenguaje de dominio específico para patrones embebido en el lenguaje de programación Haskell,
 constituido por una representación de patrones, una librería para generarlos y combinarlos,
 un programador de eventos (_scheduler_) y una interfaz de programación para live coding"
-[-@McLean2011ArtistProgrammers, p. 79]. 
+[-@McLean2011ArtistProgrammers, p. 79].
 A continuación se describen cada uno de estos componentes.
 
 Los _patrones_ en Tidal son la unidad musical y computacional fundamental;
@@ -16,7 +16,7 @@ Describiremos los patrones en Tidal Cycles en tres niveles conceptuales: [usuari
 La [representación de patrones](#representación-de-patrones) utiliza los principios de la [programación reactiva funcional](#frp).
 En Haskell el modelado idiomático de problemas parte la representación de valores apropiados al dominio utilizando el sistema de tipos.
 Este modelado corresponde al nivel de la implementación.
-Por su parte podemos, aprovechando las ventajas de la retrospectiva, podemos remitir la especificación al concepto de [patrón algorítmico](#patrón-algoritmico).
+Por su parte podemos, aprovechando las ventajas de la retrospectiva, podemos remitir la especificación al concepto de [patrón algorítmico](#patrón-algorítmico).
 Como una definición común a los tres niveles, podemos decir que un patrón es _una función del tiempo en un conjunto de eventos_.
 
 La interfaz de programación para live coding se manifiesta como un _plugin_ que carga un archivo de configuración^[Llamado por defecto `BootTidal.hs`.
@@ -25,7 +25,7 @@ y comunica al editor de texto con una sesión del intérprete de Haskell (`ghci`
 
 El programador de eventos es un modulo encargado crear _streams_ con paquetes de mensajes OSC que representan los eventos.
 Una _time-stamp_ es asignada a cada evento para coordinar su reproducción en el tiempo.
-Este proceso depende de un tiempo de latencia para que el procesador 
+Este proceso depende de un tiempo de latencia para que el procesador
 pueda agendar los eventos contenidos en dichos paquetes [ver @Blackwell2022Live, chap. 6],
 sentando una cota inferior en milisegundos para el tiempo de acción de evaluar código durante una interpretación.
 
@@ -49,11 +49,11 @@ El siguiente comando crea un patrón que reproduce un aplauso y una tarola con u
 d1 $ sound "cp cp"
 ```
 
-El ciclo implícito establece el marco de referencia para la programación de los eventos, 
+El ciclo implícito establece el marco de referencia para la programación de los eventos,
 respecto a un valor global en ciclos por segundo (CPS).
 Este ciclo es compartido por todas las _órbitas_ (noción similar a la de "canal" en SuperDirt),
 que son accesibles utilizando los identificadores `d1`, `d2`, `d3`, ...
-Definir la duración del ciclo en 1 segundo hace que cada evento del patrón anterior 
+Definir la duración del ciclo en 1 segundo hace que cada evento del patrón anterior
 tenga una duración de medio segundo:
 
 ```haskell
@@ -64,7 +64,7 @@ Podemos utilizar la fórmula $(\text{BPM}/60/\text{PULSOS})$ para determinar el 
 con respecto a un valor de pulsos por minuto y a un número de pulsos por ciclo.
 El valor por defecto en Tidal es $(135/60/4) = 0.5625$.
 
-Podemos describir polirritmos mediante la superposición de patrones. 
+Podemos describir polirritmos mediante la superposición de patrones.
 El siguiente código produce un polirritmo de dos contra cinco:
 
 ```haskell
@@ -74,7 +74,7 @@ d1 $ stack [
   ]
 ```
 
-La sintaxis de la _mini-notation_ aplicada a las cadenas de texto es el método para describir los patrones de sonidos o parámetros. 
+La sintaxis de la _mini-notation_ aplicada a las cadenas de texto es el método para describir los patrones de sonidos o parámetros.
 Esta notación permite subdividir cada evento hasta una profundidad arbitraria.
 Los eventos en cada nivel de anidación (delimitados por corchetes) ocupan el mismo tiempo.
 El siguiente patrón asigna duraciones de $1/2$, $1/6$, $1/12$, $1/12$ y $1/6$ de ciclo a sus eventos respectivamente:
@@ -83,7 +83,7 @@ El siguiente patrón asigna duraciones de $1/2$, $1/6$, $1/12$, $1/12$ y $1/6$ d
 d1 $ sound "cp [cp [sn cp] sn]]"
 ```
 
-Las cadenas que se dan como argumento a la función `sound` subdividen la unidad temporal del ciclo para ser traducidos a un flujo de eventos. 
+Las cadenas que se dan como argumento a la función `sound` subdividen la unidad temporal del ciclo para ser traducidos a un flujo de eventos.
 La posición y nivel de anidación de cada valor (aqui `cp` o `sn`) determinan una subdivisión racional ^[Relativo a los número racionales, es decir, aquellos que se expresan como fracciones de números enteros.] de la unidad temporal del ciclo.
 
 Es posible definir los valores de efectos mediante patrones, que se combinan a su vez con los eventos de sonido
@@ -159,7 +159,7 @@ d1
 Escuchar este patrón da una idea muy precisa del poder expresivo de Tidal,
 pero en honor al presente medio podemos en su lugar atestiguar la representación de este patrón:
 
-```
+```haskell
 (0>¼)|pan: 0.0f, room: 0.3f, s: "sn", speed: 0.25f, squiz: 3.0f
 (0>¼)|pan: 1.0f, room: 0.7f, s: "sn", speed: 0.25f, squiz: 9.0f
 (0>¼)|n: 2.0n (d5), pan: 0.0f, s: "sn"
@@ -215,7 +215,7 @@ type Period = Maybe Int
 ```
 
 Esta y subsiguientes implementaciones están influenciadas por la [FRP](#frp).
-En este caso el tiempo es representado por los enterios `Int`, pensando el flujo de tiempo como una serie de pulsos isócronos discretos. 
+En este caso el tiempo es representado por los enterios `Int`, pensando el flujo de tiempo como una serie de pulsos isócronos discretos.
 
 A diez años del desarrollo de Tidal,  @McLean2021TidalCycles refiere la siguiente representación:
 
@@ -236,3 +236,6 @@ data Pattern a = Pattern {query :: Span -> [Event a]}
 
 El uso de números racionales para representar el tiempo tiene la ventaja de que permite preservar la presición de los cálculos.
 
+### Patrón algorítmico
+
+TODO
