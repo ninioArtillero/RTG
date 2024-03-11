@@ -84,17 +84,30 @@ monofontfallback:
 
 reference-section-title: Referencias
 
-# Opciones para acomodo fino del texto
+# Opciones para acomodo fino del texto (paquete microtype)
 # https://www.khirevich.com/latex/microtype/
+# Algunas no disponibles por utilizar xelatex (xetex)
 microtypeoptions:
-#- activate={true,nocompatibility}
-- final
-#- tracking=true
-#- kerning=true
-#- spacing=true
+- babel=true
 - factor=1100
+- protrusion=true
 - stretch=10
 - shrink=10
+#- activate={true,nocompatibility}
+#- kerning=true
+#- tracking=true
+#- spacing=true
+header-includes:
+- \SetProtrusion{encoding={*},family={bch},series={*},size={6,7}}
+                {1={ ,750},2={ ,500},3={ ,500},4={ ,500},5={ ,500},
+                 6={ ,500},7={ ,600},8={ ,500},9={ ,500},0={ ,500}}
+#- \SetExtraKerning[unit=space]
+#      {encoding={*}, family={bch}, series={*}, size={footnotesize,small,normalsize}}
+#      {\textendash={400,400}, % en-dash, add more space around it
+#       "28={ ,150}, % left bracket, add space from right
+#       "29={150, }, % right bracket, add space from left
+#       \textquotedblleft={ ,150}, % left quotation mark, space from right
+#       \textquotedblright={150, }} % right quotation mark, space from left
 
 # Cortar líneas de código largas en bloques de código con resaltado de sintaxis
 # https://stackoverflow.com/questions/20788464/pandoc-doesnt-text-wrap-code-blocks-when-converting-to-pdf
