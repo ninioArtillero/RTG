@@ -152,7 +152,7 @@ identificar elementos de diseño que impacten positivamente en la expresividad d
 como herramienta creativa o instrumento musical. Paralelamente
 un análisis de su _implementación_ tiene el objetivo de servir de referencia para el trabajo propio.
 
-## Método
+## Método {.unnumbered}
 
 Como mencioné al introducir el objeto de investigación, y se evidencio al plantear las preguntas anteriores, trabajaré sobre dos aspectos de un grupo de lenguajes. Para conveniencia de la presente sección podemos llamarlos el aspecto tecnológico y el aspecto musical.
 
