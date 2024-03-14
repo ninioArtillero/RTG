@@ -238,4 +238,4 @@ El uso de números racionales para representar el tiempo tiene la ventaja de que
 
 ### Patrón algorítmico
 
-TODO
+TODO Patrón algorítmico
