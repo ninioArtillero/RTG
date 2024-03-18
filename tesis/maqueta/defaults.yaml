@@ -30,8 +30,4 @@ indented-code-classes:
 metadata-files:
 - ${.}/metadata.yaml
 - ${.}/document.yaml
-
-#pdf-engine-opts:
-#  # Para utilizar paquete 'minted' para marcar código fuente.
-#  - '-shell-escape'
 ...
