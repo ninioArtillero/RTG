@@ -18,9 +18,11 @@ from: markdown+rebase_relative_paths
 
 pdf-engine: xelatex
 
-## Syntax
+## Syntax = pygments | tango | espresso | zenburn | kate | monochrome | breezedark | haddock
+## haddock + background tango
 highlight-style: ${.}/syntax-highlight.theme
 
+## Aplicar por defecto a todo el código indentado
 indented-code-classes:
 - haskell
 - numberline
@@ -28,11 +30,6 @@ indented-code-classes:
 metadata-files:
 - ${.}/metadata.yaml
 - ${.}/document.yaml
-
-# Alternativamente algunas opciones de pueden añadir
-# directamente al templete de pandoc para latex:
-#include-in-header:
-#  - head.tex
 
 #pdf-engine-opts:
 #  # Para utilizar paquete 'minted' para marcar código fuente.
