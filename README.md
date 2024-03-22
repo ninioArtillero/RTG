@@ -1,10 +1,6 @@
 # Ritmo, Tiempo y Geometría
 
-"ritmoTG" es una investigación que explora la relación entre la abstracción computacional, el pensamiento geométrico y los patrones rítmicos.
-
-Se estudia un conjunto selecto de lenguajes para la programación musical embebidos en Haskell para comprender la abstracción computacional de la _entidad musical_ y sus implicaciones en la _expresividad_ (musical).
-
-Este repositorio tiene el propósito de documentar el proceso de investigación, contener el texto de la tesis y servir de plataforma para el desarrollo de **RTG**: una biblioteca de Haskell para la generación y manipulación de patrones rítmicos con el concepto de _geometría_ como abstracción central de su interfaz.
+RTG es una bibliotega de Haskell para la creación de patrones rítmicos musicales con el concepto de _geometría_ como abstracción central de su API. Como parte de mi investigación doctoral, es una prueba de concepto en el uso de las capacidades de abstracción de Haskell para el diseño de lenguajes de dominio específico para la música.
 
 ## Instalación
 
