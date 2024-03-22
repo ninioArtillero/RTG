@@ -1,7 +1,0 @@
-# Salida de make
-out.pdf
-out.odt
-
-# Archivos auxiliares
-**/*.tmp
-.auctex-auto/**
