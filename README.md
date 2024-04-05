@@ -14,18 +14,25 @@ Este proyecto utiliza el administrador de paquetes [Nix](https://nixos.org/manua
    1. Instalar [SuperCollider](https://supercollider.github.io/downloads.html) y, para tener todos los sintetizadores predefinidos, los [sc3-plugins](https://supercollider.github.io/sc3-plugins/). Ambos son accesibles desde el administrador de paquetes en varias distribuciones de Linux.
    1. Con el interprete de SuperCollider (`sclang`) andando, ejecutar `Quarks.checkForUpdates({Quarks.install("SuperDirt", "v1.7.3"); thisProcess.recompile()})`.
 1. Clonar este repositorio.
-1. Desde la raíz del repositorio ejecutar `nix-shell`. Nix procedera a descargar todas las dependencias de la biblioteca (este proceso puede tardar un poco y se hace sólo en la primera invocación). Si termina exitosamente, iniciará un ambiente de _shell_ con las herramientas y dependencias necesarias para RTG.
-1. En seguida, ejecutar `cabal build` para compilar la biblioteca. Si hay error, favor de [levantar un issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) con el _output_.
-1. Finalmente `cabal repl` inicia una sesión del interprete (`ghci`) con la biblioteca cargada. Ahora se puede interactuar con las funciones exportadas por cada uno de los módulos.
-1. Salir del interprete con `:quit` y del _nix-shell_ con `exit`.
+1. Desde la raíz del repositorio ejecutar `nix-shell --run 'cabal repl'`.
+Nix procedera a descargar (y, de ser necesario, compilar) las dependencias de la biblioteca.
+Este proceso puede tardar un poco, pero subsecuentes invocaciones serán casi inmediatas
+siempre que no se limpie el almacén de Nix (con `nix-collect-garbage` o `nix-store --gc` por ejemplo).
+Si el proceso termina exitosamente, iniciará un ambiente de _shell_ con las herramientas y dependencias necesarias para RTG,
+la compilará y abrirá una sesión del interprete de Haskell (`ghci`) con la biblioteca cargada.
+   1. En caso error, favor de [levantar un issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) con el _output_.
+1. Seguir las instrucciones de [uso](#utilizar-la-biblioteca) para probar las funciones exportadas por cada uno de los módulos.
+1. Para salir de la sesión ejecutar `:quit` en la línea de comando.
 
 ## Uso
 
 ### Preámbulo
 
-Abrir SuperCollider (o `sclang` desde una terminal) y ejecutar `SuperDirt.start` para iniciar el motor de audio y cargar las muestras. En caso de problemas de reproducción, se puede utilizar [este archivo de configuración](https://raw.githubusercontent.com/musikinformatik/SuperDirt/develop/superdirt_startup.scd) para iniciar SuperDirt.
+Abrir SuperCollider (o `sclang` desde una terminal) y ejecutar (Ctrl+Enter) `SuperDirt.start` para iniciar el motor de audio y cargar las muestras.
+Alternativamente, o en caso de problemas de reproducción, se puede ejecutar todo el bloque de código de este
+[archivo](https://raw.githubusercontent.com/musikinformatik/SuperDirt/develop/superdirt_startup.scd) para iniciar SuperDirt con varias configuraciones de optimización.
 
-Abrir una terminal en el directorio raíz del repositorio, iniciar una `nix-shell` y enseguida un `cabal repl`.
+Abrir una terminal en el directorio raíz del repositorio, iniciar una `nix-shell --run 'cabal repl'`.
 
 ### Utilizar la biblioteca
 
