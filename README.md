@@ -5,7 +5,7 @@ RTG es una bibliotega de Haskell para la creación de patrones rítmicos musical
 ## Pendientes
 
 Principalmente implementar los patrones rítmicos de manera que se puedan componer y se puedan generar multiples
-streams simultaneos de eventos OSC
+streams simultaneos de eventos OSC o MIDI
 
   * [ ] Implementación de patrones con FRP. Alternativas a investigar:
     * [ ] Utilizando la biblioteca de MUIs del Haskell School of Music
@@ -15,7 +15,7 @@ streams simultaneos de eventos OSC
     * [ ] parsec: Manipulación de Strings
   * [ ] Audio
     * [ ] hosc: mensajes OSC
-    * [ ] MIDI
+    * [ ] MIDI: Euterpea o HSoM
 
 
 ## Instalación
