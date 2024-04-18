@@ -2,6 +2,22 @@
 
 RTG es una bibliotega de Haskell para la creación de patrones rítmicos musicales con el concepto de _geometría_ como abstracción central de su API. Como parte de mi investigación doctoral, es una prueba de concepto en el uso de las capacidades de abstracción de Haskell para el diseño de lenguajes de dominio específico para la música.
 
+## Pendientes
+
+Principalmente implementar los patrones rítmicos de manera que se puedan componer y se puedan generar multiples
+streams simultaneos de eventos OSC
+
+  * [ ] Implementación de patrones con FRP. Alternativas a investigar:
+    * [ ] Utilizando la biblioteca de MUIs del Haskell School of Music
+    * [ ] Implementación propia similar a la de Tidal Cycles
+    * [ ] Otras bibliotecas: Yampa y Reactive-banana
+  * [ ] Diseño de API
+    * [ ] parsec: Manipulación de Strings
+  * [ ] Audio
+    * [ ] hosc: mensajes OSC
+    * [ ] MIDI
+
+
 ## Instalación
 
 Este proyecto utiliza el administrador de paquetes [Nix](https://nixos.org/manual/nix/stable/) para lograr la reproducibilidad del entorno de desarrollo, necesario para interactuar con la biblioteca, de manera multi-plataforma. Otra ventaja en este contexto es que permite abstraer la instalación de [_haskell_](https://www.haskell.org/downloads/) y reducir la compilación de las dependencias gracias al [caché de binarios de Nix](https://cache.nixos.org), que cubre gran parte de los [paquetes de su repositorio](https://search.nixos.org/packages). A continuación se revisa la instalación de los componentes requeridos.
