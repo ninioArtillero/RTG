@@ -4,14 +4,16 @@ import Control.Concurrent
 import Control.Monad (forM_, forever)
 import Sound.OSC.FD
 import System.Environment (getArgs)
+import Sound.RTG.Ritmo.Pattern (Pattern)
 
 type CPS = Rational
+type SampleName = String
 
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
-play :: CPS -> [Int] -> IO ()
-play cps pttrn = do
+play :: CPS -> SampleName -> Pattern Int -> IO ()
+play cps sample pttrn = do
   let cyclicPattern = cycle pttrn
       dur = eventDurationS cps (length pttrn)
   -- initialize variables
@@ -28,7 +30,7 @@ play cps pttrn = do
   forever $ do
     x <- takeMVar container
     let send = sendMessage port
-        message = messageGen x
+        message = messageGen x sample
     send message
     pauseThread dur
 
@@ -36,8 +38,8 @@ play cps pttrn = do
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
 -- Esta estructura esta definida en el módulo Sound.Tidal.Stream
 -- De esta manera, tengo un mensaje que SuperDirt entiende para producir sonido.
-messageGen :: Integral a => a -> Message
-messageGen x =
+messageGen :: Integral a => a -> SampleName -> Message
+messageGen x sample =
   if x == 1
     then
       message
@@ -49,7 +51,7 @@ messageGen x =
           ASCII_String $ ascii "delta",
           Float 1.7777760028839,
           ASCII_String $ ascii "s",
-          ASCII_String $ ascii "sn"
+          ASCII_String $ ascii sample
         ]
     else
       message
@@ -61,7 +63,7 @@ messageGen x =
           ASCII_String $ ascii "delta",
           Float 1.7777760028839,
           ASCII_String $ ascii "s",
-          ASCII_String $ ascii "tok"
+          ASCII_String $ ascii "~"
         ]
 
 eventDurationMs :: Rational -> Int -> Int
