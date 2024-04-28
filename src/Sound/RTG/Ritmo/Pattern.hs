@@ -51,7 +51,7 @@ clave :: Pattern Time
 clave = [0/16, 3/16, 6/16, 10/16, 12/16]
 
 soukous :: Pattern Time
-soukous = [0/16, 4/16, 6/16, 10/16, 12/16]
+soukous = [0/16, 3/16, 6/16, 10/16, 11/16]
 
 rumba :: Pattern Time
 rumba = [0/16, 3/16, 7/16, 10/16, 12/16]
@@ -60,7 +60,7 @@ bossa :: Pattern Time
 bossa = [0/16, 3/16, 6/16, 10/16, 13/16]
 
 gahu :: Pattern Time
-gahu = [0 / 16, 3 / 16, 6 / 16, 10 / 16, 14 / 16]
+gahu = [0/16, 3/16, 6/16, 10/16, 14/16]
 
 -- | Esta patrón es el único perfectamente balanceado,
 -- en un universo cromático de 30 vertices, que no se obtiene como la
