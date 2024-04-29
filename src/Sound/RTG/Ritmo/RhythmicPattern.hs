@@ -12,7 +12,7 @@ Rhythmic patterns are wrapped patterns with aditional structure.
 -}
 
 import           Data.Group                     (Group, invert)
-import           Data.List                      (group)
+import           Data.List                      (group, sort)
 import qualified Sound.RTG.Ritmo.Pattern        as P
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
 
@@ -58,27 +58,38 @@ data Rhythmic = Rhythm {
                         pttrn  :: OnsetPattern,
                         groups :: OnsetGroups,
                         meter  :: !Meter,
-                        sign   :: Int
-                       } deriving Eq
+                        sign   :: !Int
+                       } deriving (Eq,Show)
 
+{-
 instance Show Rhythmic where
   show rhythm = show (pttrn rhythm)
+-}
 
 instance Semigroup Rhythmic where
   (<>) :: Rhythmic -> Rhythmic -> Rhythmic
   (Rhythm pttrn1 groups1 meter1 sign1) <> (Rhythm pttrn2 groups2 meter2 sign2) =
-    let orientation = signum sign1 * signum sign2
+    let orientation | sign1 == 0 = sign2
+                    | sign2 == 0 = sign1
+                    | otherwise = sign1 * sign2
         -- mtr = if orientation == 1 then meter1 + meter2 else max meter1 meter2
-        mtr = sign1 * meter1 + sign2 * meter2
-        fit = if sign1 > 0 then take else drop
+        signedMeter = sign1 * meter1 + sign2 * meter2
+        meterDiff = abs (meter1 - meter2)
     in Rhythm {
-      pttrn = fit mtr $ case orientation of
-          1    -> pttrn1 ++ pttrn2
-          (-1) -> zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2
-          0    -> error "A rhythmic pattern always has a non-null orientation",
+      pttrn =  case orientation of
+          0  -> []
+          1  -> pttrn1 ++ pttrn2
+          -1 ->
+            -- Alternativa haciendo zip sobre el final de la lista
+            -- case (sign1 > 0, compare meter1 meter2) of
+            --   (True, GT) -> drop meterDiff $ zipWith (<>) pttrn1 ( replicate meterDiff Zero ++ pttrn2)
+            --   (False, GT) -> drop meterDiff $ zipWith (<>) pttrn1 ( replicate meterDiff Zero ++ pttrn2)
+            --   (True, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2
+            --   (False, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2,
+            reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2,
       groups = groups1 ++ groups2,
-      meter = mtr,
-      sign = orientation
+      meter = abs signedMeter,
+      sign = signum signedMeter
       }
 
 instance Monoid Rhythmic where
@@ -87,17 +98,39 @@ instance Monoid Rhythmic where
 
 instance Group Rhythmic where
   invert :: Rhythmic -> Rhythmic
-  invert (Rhythm pttrn groups meter sign) = Rhythm pttrn groups meter (- sign)
+  invert = inv
+
+inv :: Rhythmic -> Rhythmic
+inv (Rhythm pttrn groups meter sign) = Rhythm pttrn groups meter (- sign)
+
+inv' :: Rhythmic -> Rhythmic
+inv' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter sign
+
+inv'' :: Rhythmic -> Rhythmic
+inv'' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter (- sign)
 
 toRhythm :: P.Pattern P.Time -> Rhythmic
-toRhythm xs =
-  let p = if null xs then [] else toOnset (indicatorVector xs)
-  in Rhythm {
-             pttrn = p,
-             groups = mutualNNG p,
-             meter = length p,
-             sign = 1
-            }
+toRhythm xs
+  | null xs =Rhythm {
+               pttrn = [],
+               groups = [],
+               meter = 0,
+               sign = 0
+              }
+  | reverse xs == sort xs = Rhythm {
+      -- Negative rhythms are represented by decreasing patterns
+               pttrn = p,
+               groups = mutualNNG p,
+               meter = length p,
+               sign = -1
+              }
+  | otherwise = Rhythm {
+               pttrn = p,
+               groups = mutualNNG p,
+               meter = length p,
+               sign = 1
+              }
+  where p = toOnset (indicatorVector xs)
 
 toOnset :: Integral a => P.Pattern a -> OnsetPattern
 toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
@@ -129,3 +162,13 @@ gahu = toRhythm P.gahu
 shiko = toRhythm P.shiko
 bossa = toRhythm P.bossa
 soukous = toRhythm P.soukous
+
+unitTestRhythmic :: IO ()
+unitTestRhythmic =
+  do
+    putStrLn $ "Identity: " ++ show (rumba <> mempty == rumba &&
+      mempty <> rumba == rumba)
+    putStrLn $ "Inverses: " ++ show ((clave <> invert clave == mempty) &&
+      (invert clave <> clave == mempty))
+    putStrLn $ "Associativity: " ++ show (((soukous <> clave) <> gahu == soukous <> (clave <> gahu)) &&
+      ((invert clave <> clave) <> gahu == invert clave <> (clave <> gahu)))
