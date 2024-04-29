@@ -12,7 +12,8 @@ Rhythmic patterns are wrapped patterns with aditional structure.
 -}
 
 import           Data.Group                     (Group, invert)
-import   qualified        Sound.RTG.Ritmo.Pattern as P
+import           Data.List                      (group)
+import qualified Sound.RTG.Ritmo.Pattern        as P
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
 
 -- | This data type represents integers modulo 2
@@ -21,7 +22,7 @@ data Binary = Zero | One deriving Eq
 instance Show Binary where
   show :: Binary -> String
   show Zero = show 0
-  show One = show 1
+  show One  = show 1
 
 instance Semigroup Binary where
   (<>) :: Binary -> Binary -> Binary
@@ -57,7 +58,7 @@ data Rhythmic = Rhythm {
                         pttrn  :: OnsetPattern,
                         groups :: OnsetGroups,
                         meter  :: !Meter,
-                        sign :: Int
+                        sign   :: Int
                        } deriving Eq
 
 instance Show Rhythmic where
@@ -72,9 +73,9 @@ instance Semigroup Rhythmic where
         fit = if sign1 > 0 then take else drop
     in Rhythm {
       pttrn = fit mtr $ case orientation of
-          1 -> pttrn1 ++ pttrn2
+          1    -> pttrn1 ++ pttrn2
           (-1) -> zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2
-          0 -> error "A rhythmic pattern always has a non-null orientation",
+          0    -> error "A rhythmic pattern always has a non-null orientation",
       groups = groups1 ++ groups2,
       meter = mtr,
       sign = orientation
@@ -98,11 +99,29 @@ toRhythm xs =
              sign = 1
             }
 
+toOnset :: Integral a => P.Pattern a -> OnsetPattern
+toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
+
 mutualNNG :: OnsetPattern -> OnsetGroups
 mutualNNG xs = []
 
-toOnset :: Integral a => P.Pattern a -> OnsetPattern
-toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
+-- | Compute the Inter-Onset-Interval of an onset pattern
+iois :: OnsetPattern -> [Int]
+iois xs =
+  let intervals = group $ drop 1 $ scanl (\acc x -> if x == One then x:acc else acc) [] $ startPosition xs
+  in map length intervals
+
+
+startPosition :: OnsetPattern -> OnsetPattern
+startPosition [] = []
+startPosition pttrn@(x:xs)
+  | null (reduceEmpty pttrn) = []
+  | x == Zero = startPosition $ P.rotateLeft 1 pttrn
+  | otherwise = pttrn
+
+reduceEmpty :: OnsetPattern -> OnsetPattern
+reduceEmpty []           = []
+reduceEmpty pttrn@(x:xs) = if x == Zero then reduceEmpty xs else pttrn
 
 clave = toRhythm P.clave
 rumba = toRhythm P.rumba
