@@ -56,6 +56,7 @@ type Meter = Int
 -- other structure related to rhythm perception.
 data Rhythmic = Rhythm {
                         pttrn  :: OnsetPattern,
+                        -- TODO: renombrar a cluster
                         groups :: OnsetGroups,
                         meter  :: !Meter,
                         sign   :: !Int
@@ -108,6 +109,14 @@ inv' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter sign
 
 inv'' :: Rhythmic -> Rhythmic
 inv'' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter (- sign)
+
+
+toOnes :: OnsetPattern -> P.Pattern Int
+toOnes = map onesZeros
+
+onesZeros :: Binary -> Int
+onesZeros x = if x == Zero then 0 else 1
+
 
 toRhythm :: P.Pattern P.Time -> Rhythmic
 toRhythm xs
