@@ -3,7 +3,7 @@ module Sound.RTG.Ritmo.RhythmicPattern where
 {-|
 Module      : RhythmicPattern
 Description : Main data type and its API helper functions
-Copyright   : (c) Xavier Góngora, 2023
+Copyright   : (c) Xavier Góngora, 2024
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
@@ -62,11 +62,6 @@ data Rhythmic = Rhythm {
                         sign   :: !Int
                        } deriving (Eq,Show)
 
-{-
-instance Show Rhythmic where
-  show rhythm = show (pttrn rhythm)
--}
-
 instance Semigroup Rhythmic where
   (<>) :: Rhythmic -> Rhythmic -> Rhythmic
   (Rhythm pttrn1 groups1 meter1 sign1) <> (Rhythm pttrn2 groups2 meter2 sign2) =
@@ -110,13 +105,12 @@ inv' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter sign
 inv'' :: Rhythmic -> Rhythmic
 inv'' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter (- sign)
 
+toOnset :: Integral a => P.Pattern a -> OnsetPattern
+toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
 
-toOnes :: OnsetPattern -> P.Pattern Int
-toOnes = map onesZeros
-
-onesZeros :: Binary -> Int
-onesZeros x = if x == Zero then 0 else 1
-
+toInts :: OnsetPattern -> P.Pattern Int
+toInts = let toInt x = case x of Zero -> 0; One -> 1
+         in map toInt
 
 toRhythm :: P.Pattern P.Time -> Rhythmic
 toRhythm xs
@@ -141,9 +135,6 @@ toRhythm xs
               }
   where p = toOnset (indicatorVector xs)
 
-toOnset :: Integral a => P.Pattern a -> OnsetPattern
-toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
-
 mutualNNG :: OnsetPattern -> OnsetGroups
 mutualNNG xs = []
 
@@ -152,7 +143,6 @@ iois :: OnsetPattern -> [Int]
 iois xs =
   let intervals = group $ drop 1 $ scanl (\acc x -> if x == One then x:acc else acc) [] $ startPosition xs
   in map length intervals
-
 
 startPosition :: OnsetPattern -> OnsetPattern
 startPosition [] = []
@@ -165,6 +155,7 @@ reduceEmpty :: OnsetPattern -> OnsetPattern
 reduceEmpty []           = []
 reduceEmpty pttrn@(x:xs) = if x == Zero then reduceEmpty xs else pttrn
 
+-- | Toussaint's six distinguished rhythms
 clave = toRhythm P.clave
 rumba = toRhythm P.rumba
 gahu = toRhythm P.gahu
