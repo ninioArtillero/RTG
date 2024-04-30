@@ -17,7 +17,7 @@ import qualified Sound.RTG.Ritmo.Pattern        as P
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
 
 -- | This data type represents integers modulo 2
-data Binary = Zero | One deriving Eq
+data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)
 
 instance Show Binary where
   show :: Binary -> String
@@ -52,27 +52,31 @@ type OnsetGroups = Groupings Binary
 -- related to a patterns underlying pulse.
 type Meter = Int
 
+newtype Sign = Sign { sign :: Int } deriving (Show,Eq)
+
 -- | This data type encondes a rhythmic pattern along with
 -- other structure related to rhythm perception.
 data Rhythmic = Rhythm {
-                        pttrn  :: OnsetPattern,
+                        pttrn       :: OnsetPattern,
                         -- TODO: renombrar a cluster
-                        groups :: OnsetGroups,
-                        meter  :: !Meter,
-                        sign   :: !Int
+                        groups      :: OnsetGroups,
+                        meter       :: !Meter,
+                        orientation :: !Sign
                        } deriving (Eq,Show)
 
 instance Semigroup Rhythmic where
   (<>) :: Rhythmic -> Rhythmic -> Rhythmic
-  (Rhythm pttrn1 groups1 meter1 sign1) <> (Rhythm pttrn2 groups2 meter2 sign2) =
-    let orientation | sign1 == 0 = sign2
-                    | sign2 == 0 = sign1
-                    | otherwise = sign1 * sign2
+  (Rhythm pttrn1 groups1 meter1 s1) <> (Rhythm pttrn2 groups2 meter2 s2) =
+    let sign1 = sign s1
+        sign2 = sign s2
+        direction | sign1 == 0 = sign2
+                  | sign2 == 0 = sign1
+                  | otherwise = sign1 * sign2
         -- mtr = if orientation == 1 then meter1 + meter2 else max meter1 meter2
         signedMeter = sign1 * meter1 + sign2 * meter2
         meterDiff = abs (meter1 - meter2)
     in Rhythm {
-      pttrn =  case orientation of
+      pttrn =  case direction of
           0  -> []
           1  -> pttrn1 ++ pttrn2
           -1 ->
@@ -85,7 +89,7 @@ instance Semigroup Rhythmic where
             reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2,
       groups = groups1 ++ groups2,
       meter = abs signedMeter,
-      sign = signum signedMeter
+      orientation = Sign $ signum signedMeter
       }
 
 instance Monoid Rhythmic where
@@ -97,13 +101,13 @@ instance Group Rhythmic where
   invert = inv
 
 inv :: Rhythmic -> Rhythmic
-inv (Rhythm pttrn groups meter sign) = Rhythm pttrn groups meter (- sign)
+inv (Rhythm pttrn groups meter (Sign n)) = Rhythm pttrn groups meter (Sign (-n))
 
 inv' :: Rhythmic -> Rhythmic
 inv' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter sign
 
 inv'' :: Rhythmic -> Rhythmic
-inv'' (Rhythm pttrn groups meter sign) = Rhythm (reverse pttrn) groups meter (- sign)
+inv'' (Rhythm pttrn groups meter (Sign n)) = Rhythm (reverse pttrn) groups meter (Sign (-n))
 
 toOnset :: Integral a => P.Pattern a -> OnsetPattern
 toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
@@ -114,24 +118,24 @@ toInts = let toInt x = case x of Zero -> 0; One -> 1
 
 toRhythm :: P.Pattern P.Time -> Rhythmic
 toRhythm xs
-  | null xs =Rhythm {
+  | null xs = Rhythm {
                pttrn = [],
                groups = [],
                meter = 0,
-               sign = 0
+               orientation = Sign 0
               }
   | reverse xs == sort xs = Rhythm {
       -- Negative rhythms are represented by decreasing patterns
                pttrn = p,
                groups = mutualNNG p,
                meter = length p,
-               sign = -1
+               orientation = Sign (-1)
               }
   | otherwise = Rhythm {
                pttrn = p,
                groups = mutualNNG p,
                meter = length p,
-               sign = 1
+               orientation = Sign 1
               }
   where p = toOnset (indicatorVector xs)
 
@@ -170,5 +174,4 @@ unitTestRhythmic =
       mempty <> rumba == rumba)
     putStrLn $ "Inverses: " ++ show ((clave <> invert clave == mempty) &&
       (invert clave <> clave == mempty))
-    putStrLn $ "Associativity: " ++ show (((soukous <> clave) <> gahu == soukous <> (clave <> gahu)) &&
-      ((invert clave <> clave) <> gahu == invert clave <> (clave <> gahu)))
+    putStrLn $ "Associativity: " ++ show (((soukous <> clave) <> gahu == soukous <> (clave <> gahu)) && ((invert clave <> clave) <> gahu == invert clave <> (clave <> gahu)))
