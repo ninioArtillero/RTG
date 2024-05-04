@@ -1,9 +1,9 @@
 {-# LANGUAGE InstanceSigs #-}
 module Main (main) where
 
-import Test.QuickCheck
-import Sound.RTG.Ritmo.RhythmicPattern
-import Control.Monad (liftM4)
+import           Control.Monad                   (liftM4)
+import           Sound.RTG.Ritmo.RhythmicPattern
+import           Test.QuickCheck
 
 main :: IO ()
 main = do
