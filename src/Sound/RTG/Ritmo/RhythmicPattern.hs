@@ -136,6 +136,17 @@ toRhythm xs
               }
   where p = toOnset (indicatorVector xs)
 
+makeRhythm :: Int -> P.Pattern Int -> Rhythmic
+makeRhythm n ns = Rhythm {
+  pttrn = p,
+  clusters = mutualNNG p,
+  meter = length p,
+  orientation = s
+  }
+  where
+    p = toOnset ns
+    s= Sign (signum n)
+
 mutualNNG :: OnsetPattern -> OnsetClusters
 mutualNNG xs = []
 
