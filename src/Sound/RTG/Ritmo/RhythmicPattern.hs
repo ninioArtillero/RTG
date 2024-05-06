@@ -163,6 +163,14 @@ startPosition pttrn@(x:xs)
   | x == Zero = startPosition $ P.rotateLeft 1 pttrn
   | otherwise = pttrn
 
+-- | Steps away from the first onset
+position :: OnsetPattern -> Int
+position xs
+  | null (reduceEmpty xs) = 0
+  | take 1 xs == [One] = 0
+  | otherwise = position (drop 1 xs) + 1
+
+
 reduceEmpty :: OnsetPattern -> OnsetPattern
 reduceEmpty []           = []
 reduceEmpty pttrn@(x:xs) = if x == Zero then reduceEmpty xs else pttrn
