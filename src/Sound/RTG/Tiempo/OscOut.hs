@@ -1,11 +1,11 @@
 module Sound.RTG.Tiempo.OscOut where
 
-import Control.Concurrent
-import Control.Monad (forM_, forever)
-import Sound.OSC.FD
-import System.Environment (getArgs)
-import Sound.RTG.Ritmo.Pattern (Pattern)
-import Sound.RTG.Ritmo.RhythmicPattern (toInts, Rhythmic(..))
+import           Control.Concurrent
+import           Control.Monad                   (forM_, forever)
+import           Sound.OSC.FD
+import           Sound.RTG.Ritmo.Pattern         (Pattern)
+import           Sound.RTG.Ritmo.RhythmicPattern (Rhythmic (..), toInts)
+import           System.Environment              (getArgs)
 
 type CPS = Rational
 type SampleName = String
