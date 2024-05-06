@@ -5,6 +5,7 @@ import Control.Monad (forM_, forever)
 import Sound.OSC.FD
 import System.Environment (getArgs)
 import Sound.RTG.Ritmo.Pattern (Pattern)
+import Sound.RTG.Ritmo.RhythmicPattern (toInts, Rhythmic(..))
 
 type CPS = Rational
 type SampleName = String
@@ -77,3 +78,7 @@ eventDurationS cps pulses = secondsPerCycle / cyclePartition
   where
     secondsPerCycle = 1 / cps
     cyclePartition = fromIntegral pulses
+
+-- | Provisional to play Rhythmic values fast and easy.
+playR :: Rhythmic -> IO()
+playR = play 0.4 "cp" . toInts . pttrn
