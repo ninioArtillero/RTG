@@ -63,7 +63,7 @@ data Rhythmic = Rhythm {
 
 instance Semigroup Rhythmic where
   (<>) :: Rhythmic -> Rhythmic -> Rhythmic
-  (Rhythm pttrn1 groups1 meter1 s1) <> (Rhythm pttrn2 groups2 meter2 s2) =
+  (Rhythm pttrn1 clusters1 meter1 s1) <> (Rhythm pttrn2 clusters2 meter2 s2) =
     let sign1 = sign s1
         sign2 = sign s2
         direction | sign1 == 0 = sign2
@@ -84,7 +84,7 @@ instance Semigroup Rhythmic where
             --   (True, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2
             --   (False, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2,
             reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2,
-      clusters = groups1 ++ groups2,
+      clusters = clusters1 ++ clusters2,
       meter = abs signedMeter,
       orientation = Sign $ signum signedMeter
       }
