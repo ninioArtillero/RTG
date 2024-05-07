@@ -68,6 +68,7 @@ library
         Sound.RTG.Ritmo.PatronRegular
         Sound.RTG.Ritmo.Pattern
         Sound.RTG.Ritmo.PerfectBalance
+        Sound.RTG.Ritmo.RhythmicPattern
         Sound.RTG.Tiempo.OscOut
 
     -- Modules included in this library but not exported.
@@ -81,7 +82,7 @@ library
     build-depends:
         , arithmoi ^>=0.13.0.0
         , base ^>=4.17.2.1
-        , containers >=0.6.5 && <0.7
+        , containers ^>=0.6.5
         , groups ^>=0.5.3
         , hosc ^>=0.19.1
         , multiset-comb ^>=0.2.4.2
@@ -105,7 +106,10 @@ test-suite rtg-test
     hs-source-dirs:   test
 
     -- The entrypoint to the test suite.
-    main-is:          MyLibTest.hs
+    main-is:          Main.hs
 
     -- Test dependencies.
-    build-depends:    base ^>=4.17.2.1
+    build-depends:
+        , base ^>=4.17.2.1
+        , QuickCheck ^>=2.14.3
+        , rtg
