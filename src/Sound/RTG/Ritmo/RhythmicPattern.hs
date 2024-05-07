@@ -30,6 +30,7 @@ instance Semigroup Binary where
   One  <> Zero = One
   _    <> _    = Zero
 
+-- TODO: change to onset notation (x . . x . .)
 instance Monoid Binary where
   mempty :: Binary
   mempty = Zero
@@ -60,6 +61,8 @@ data Rhythmic = Rhythm {
                         meter       :: !Meter,
                         orientation :: !Sign
                        } deriving (Eq,Show)
+
+-- TODO: Create functor instance of rhythmic to lift list transformations
 
 instance Semigroup Rhythmic where
   (<>) :: Rhythmic -> Rhythmic -> Rhythmic
@@ -183,3 +186,6 @@ gahu = toRhythm P.gahu
 shiko = toRhythm P.shiko
 bossa = toRhythm P.bossa
 soukous = toRhythm P.soukous
+
+-- TODO: Create module with rhythmic pattern combinators:
+-- sequence, parallel, complement, reverse...
