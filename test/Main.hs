@@ -1,17 +1,22 @@
 {-# LANGUAGE InstanceSigs #-}
 module Main (main) where
 
-import           Control.Monad                   (liftM4)
+import           Control.Monad                   (liftM4, unless)
 import           Sound.RTG.Ritmo.RhythmicPattern
+import           System.Exit                     (exitFailure)
 import           Test.QuickCheck
 
 main :: IO ()
 main = do
-  quickCheck prop_groupAssoc
-  quickCheck prop_groupLeftIdentity
-  quickCheck prop_groupRightIdentity
-  quickCheck prop_groupLeftInverse
-  quickCheck prop_groupRightInverse
+  let tests = [
+        quickCheckResult prop_groupAssoc,
+        quickCheckResult prop_groupLeftIdentity,
+        quickCheckResult prop_groupRightIdentity,
+        quickCheckResult prop_groupLeftInverse,
+        quickCheckResult prop_groupRightInverse
+        ]
+  success <- fmap (all isSuccess) . sequence $ tests
+  unless success exitFailure
 
 -- The Arbitrary class overloads the the 'arbitrary' value,
 -- which is a like a random generator for the instantiated type.
@@ -35,7 +40,7 @@ instance Arbitrary Binary where
   arbitrary = oneof [return Zero, return One]
 
 instance Arbitrary Sign where
-  -- | 0 is not looked for as it is an edge case of meter,
+  -- | 0 is not generated as it is an edge case of meter,
   -- already accounted for on the Rhythmic instance.
   arbitrary :: Gen Sign
   arbitrary = frequency [(2, return $ Sign 1), (1, return $ Sign (-1))]
