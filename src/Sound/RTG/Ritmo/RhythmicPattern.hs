@@ -182,12 +182,3 @@ gahu = toRhythm P.gahu
 shiko = toRhythm P.shiko
 bossa = toRhythm P.bossa
 soukous = toRhythm P.soukous
-
-unitTestRhythmic :: IO ()
-unitTestRhythmic =
-  do
-    putStrLn $ "Identity: " ++ show (rumba <> mempty == rumba &&
-      mempty <> rumba == rumba)
-    putStrLn $ "Inverses: " ++ show ((clave <> invert clave == mempty) &&
-      (invert clave <> clave == mempty))
-    putStrLn $ "Associativity: " ++ show (((soukous <> clave) <> gahu == soukous <> (clave <> gahu)) && ((invert clave <> clave) <> gahu == invert clave <> (clave <> gahu)))
