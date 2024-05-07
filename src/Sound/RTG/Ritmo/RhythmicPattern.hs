@@ -72,8 +72,7 @@ instance Semigroup Rhythmic where
         -- mtr = if orientation == 1 then meter1 + meter2 else max meter1 meter2
         signedMeter = sign1 * meter1 + sign2 * meter2
         meterDiff = abs (meter1 - meter2)
-    in Rhythm {
-      pttrn =  case direction of
+        p = case direction of
           0  -> []
           1  -> pttrn1 ++ pttrn2
           -1 ->
@@ -83,8 +82,10 @@ instance Semigroup Rhythmic where
             --   (False, GT) -> drop meterDiff $ zipWith (<>) pttrn1 ( replicate meterDiff Zero ++ pttrn2)
             --   (True, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2
             --   (False, LT) -> drop meterDiff $ zipWith (<>) (replicate meterDiff Zero ++ pttrn1) pttrn2,
-            reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2,
-      clusters = clusters1 ++ clusters2,
+            reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2
+    in Rhythm {
+      pttrn = p,
+      clusters = mutualNNG p,
       meter = abs signedMeter,
       orientation = Sign $ signum signedMeter
       }
