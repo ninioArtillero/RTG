@@ -157,7 +157,8 @@ mutualNNG xs = []
 -- | Compute the Inter-Onset-Interval of an onset pattern
 iois :: OnsetPattern -> [Int]
 iois xs =
-  let intervals = group $ drop 1 $ scanl (\acc x -> if x == One then x:acc else acc) [] $ startPosition xs
+  let intervals = group . drop 1 . scanl pickOnsets [] $ startPosition xs
+      pickOnsets acc x = if x == One then x:acc else acc
   in map length intervals
 
 startPosition :: OnsetPattern -> OnsetPattern
