@@ -151,10 +151,36 @@ makeRhythm n ns = Rhythm {
     p = toOnset ns
     s= Sign (signum n)
 
+-- TODO: Using biggerNeighbors + parseNeighbors to select which IOIs to join.
+-- in the corresponding cluster.
 mutualNNG :: OnsetPattern -> OnsetClusters
 mutualNNG xs = []
 
--- | Compute the Inter-Onset-Interval of an onset pattern
+-- | Lists with Neighborhood information. Expects an IOI list
+parseNeighbors :: [(Bool,Bool)] -> [[(Bool,Bool)]]
+parseNeighbors bs = map reverse $ parseNeighborsIter bs []
+
+-- | Helper function with an extra parameter to keep track of nearest neighbors
+parseNeighborsIter :: [(Bool,Bool)] -> [(Bool,Bool)] -> [[(Bool,Bool)]]
+parseNeighborsIter [] [] = []
+parseNeighborsIter [] xs = [xs]
+parseNeighborsIter (ns:bs) xs = case ns of
+  -- | A local minimum is its own cluster
+  (True,True) -> xs : [ns] : parseNeighborsIter bs []
+  -- | Start a new cluster
+  (True,False) -> xs : parseNeighborsIter bs [ns]
+  -- | Add to cluster
+  (False,False) -> parseNeighborsIter bs (ns:xs)
+  -- | Close a cluster
+  (False,True) -> (ns:xs) : parseNeighborsIter bs []
+
+
+biggerNeighbors :: [Int] -> [(Bool,Bool)]
+biggerNeighbors xs = let leftNeighbors = zipWith (>) (P.rotateRight 1 xs) xs
+                         rightNeighbors = zipWith (>) (P.rotateLeft 1 xs) xs
+                       in zip leftNeighbors rightNeighbors
+
+-- | Compute the Inter-Onset-Intervals of an onset pattern
 iois :: OnsetPattern -> [Int]
 iois xs =
   let intervals = group . drop 1 . scanl pickOnsets [] $ startPosition xs
