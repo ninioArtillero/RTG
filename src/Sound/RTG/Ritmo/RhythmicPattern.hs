@@ -151,21 +151,30 @@ makeRhythm n ns = Rhythm {
     p = toOnset ns
     s= Sign (signum n)
 
--- TODO: Using biggerNeighbors + parseNeighbors to select which IOIs to join.
--- in the corresponding cluster.
+-- | Computes the mutual nearest neighbor graph for the Rhythmic type cluster field.
+-- For example:
+-- cluster rumba = [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
+-- TODO Decide what to do with clusters that wrap pass the cycle border
+-- For example, bossa has only one cluster:
+-- clusters bossa = [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
 mutualNNG :: OnsetPattern -> OnsetClusters
-mutualNNG xs = map clusterBuilder neighborhoods
+mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilder neighborhood) neighborhoods
   where neighborhoods = parseNeighborhoods $ iois xs
         clusterBuilder neighborhood =
-          case neighborhood  of
+          case neighborhood of
             [] -> []
-            (n, (b1,b2)):nbs -> case (b1,b2) of
-              (True,True)   -> ((One : replicate (n-1) Zero) ++ [One]) ++ clusterBuilder nbs
-              (True,False)  -> (One : replicate (n-1) Zero) ++ clusterBuilder nbs
-              (False,False) -> replicate (n-1) Zero ++ clusterBuilder nbs
-              (False,True)  -> ((One:replicate (n-1) Zero) ++ [One]) ++ clusterBuilder nbs
+            (n, (b1,b2)) : nbs -> case (b1,b2) of
+              (True,True)   -> One : replicate (n-1) Zero ++ [One]
+              (True,False)  -> One : replicate (n-1) Zero
+              (False,False) -> replicate (n-1) Zero
+              (False,True)  -> replicate (n-1) Zero ++ [One]
+        longClusterBuilder neighborhood =
+          case neighborhood of
+            [] -> []
+            (n, (b1,b2)) : nbs -> case (b1,b2) of
+              (_,True)   -> One : replicate (n-1) Zero ++ [One] ++ longClusterBuilder nbs
+              (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
 
--- mutualNNG (pttrn rumba) = [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
 
 parseNeighborhoods :: [Int] -> [[(Int,(Bool,Bool))]]
 -- | Applicative style is used on the input, which means that
