@@ -154,31 +154,47 @@ makeRhythm n ns = Rhythm {
 -- TODO: Using biggerNeighbors + parseNeighbors to select which IOIs to join.
 -- in the corresponding cluster.
 mutualNNG :: OnsetPattern -> OnsetClusters
-mutualNNG xs = []
+mutualNNG xs = map clusterBuilder neighborhoods
+  where neighborhoods = parseNeighborhoods $ iois xs
+        clusterBuilder neighborhood =
+          case neighborhood  of
+            [] -> []
+            (n, (b1,b2)):nbs -> case (b1,b2) of
+              (True,True)   -> ((One : replicate (n-1) Zero) ++ [One]) ++ clusterBuilder nbs
+              (True,False)  -> (One : replicate (n-1) Zero) ++ clusterBuilder nbs
+              (False,False) -> replicate (n-1) Zero ++ clusterBuilder nbs
+              (False,True)  -> ((One:replicate (n-1) Zero) ++ [One]) ++ clusterBuilder nbs
 
--- | Lists with Neighborhood information. Expects an IOI list
-parseNeighbors :: [(Bool,Bool)] -> [[(Bool,Bool)]]
-parseNeighbors bs = map reverse $ parseNeighborsIter bs []
+-- mutualNNG (pttrn rumba) = [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
 
--- | Helper function with an extra parameter to keep track of nearest neighbors
-parseNeighborsIter :: [(Bool,Bool)] -> [(Bool,Bool)] -> [[(Bool,Bool)]]
-parseNeighborsIter [] [] = []
-parseNeighborsIter [] xs = [xs]
-parseNeighborsIter (ns:bs) xs = case ns of
-  -- | A local minimum is its own cluster
-  (True,True) -> xs : [ns] : parseNeighborsIter bs []
-  -- | Start a new cluster
-  (True,False) -> xs : parseNeighborsIter bs [ns]
-  -- | Add to cluster
-  (False,False) -> parseNeighborsIter bs (ns:xs)
+parseNeighborhoods :: [Int] -> [[(Int,(Bool,Bool))]]
+-- | Applicative style is used on the input, which means that
+-- the rhythmic pattern is evaluated on both functions surrounding @<*>@ before zipping)
+parseNeighborhoods bs = map reverse $ parseNeighborhoodsIter (zip <$> id <*> biggerNeighbor $ bs) []
+
+-- | Helper function with an extra parameter to join the intervals of nearest neighbors
+parseNeighborhoodsIter :: [(Int, (Bool,Bool))] -> [(Int, (Bool,Bool))] -> [[(Int, (Bool,Bool))]]
+parseNeighborhoodsIter [] [] = []
+parseNeighborhoodsIter [] xs = [xs]
+parseNeighborhoodsIter (m@(int,ns):bs) xs = case ns of
+  -- | A local minimum is its own cluster. Avoid passing empty list.
+  (True,True) -> if null xs
+    then [m] : parseNeighborhoodsIter bs []
+    else xs : [m] : parseNeighborhoodsIter bs []
+  -- | Start a new cluster without passing empty lists
+  (True,False) -> if null xs
+    then parseNeighborhoodsIter bs [m]
+    else xs : parseNeighborhoodsIter bs [m]
+  -- | Add interval to cluster
+  (False,False) -> parseNeighborhoodsIter bs (m:xs)
   -- | Close a cluster
-  (False,True) -> (ns:xs) : parseNeighborsIter bs []
+  (False,True) -> (m:xs) : parseNeighborhoodsIter bs []
 
-
-biggerNeighbors :: [Int] -> [(Bool,Bool)]
-biggerNeighbors xs = let leftNeighbors = zipWith (>) (P.rotateRight 1 xs) xs
-                         rightNeighbors = zipWith (>) (P.rotateLeft 1 xs) xs
-                       in zip leftNeighbors rightNeighbors
+-- | Compare an element's left and right neighbors. True means its bigger.
+biggerNeighbor :: [Int] -> [(Bool,Bool)]
+biggerNeighbor xs = let leftNeighbors = zipWith (>) (P.rotateRight 1 xs) xs
+                        rightNeighbors = zipWith (>) (P.rotateLeft 1 xs) xs
+                    in zip leftNeighbors rightNeighbors
 
 -- | Compute the Inter-Onset-Intervals of an onset pattern
 iois :: OnsetPattern -> [Int]
@@ -186,6 +202,9 @@ iois xs =
   let intervals = group . drop 1 . scanl pickOnsets [] $ startPosition xs
       pickOnsets acc x = if x == One then x:acc else acc
   in map length intervals
+
+ioisToOnset :: [Int] -> OnsetPattern
+ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
 
 startPosition :: OnsetPattern -> OnsetPattern
 startPosition [] = []
