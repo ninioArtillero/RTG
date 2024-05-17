@@ -101,6 +101,8 @@ instance Group Rhythmic where
   invert :: Rhythmic -> Rhythmic
   invert = inv
 
+-- Main functions
+
 inv :: Rhythmic -> Rhythmic
 inv (Rhythm pttrn clusters meter (Sign n)) = Rhythm pttrn clusters meter (Sign (-n))
 
@@ -212,8 +214,54 @@ iois xs =
       pickOnsets acc x = if x == One then x:acc else acc
   in map length intervals
 
+-- Conversion functions
+
+toOnset :: Integral a => P.Pattern a -> OnsetPattern
+toOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
+
+toInts :: OnsetPattern -> P.Pattern Int
+toInts = let toInt x = case x of Zero -> 0; One -> 1
+         in map toInt
+
+toRhythm :: P.Pattern P.Time -> Rhythmic
+toRhythm xs
+  | null xs = Rhythm {
+               pttrn = [],
+               clusters = [],
+               meter = 0,
+               orientation = Sign 0
+              }
+  | reverse xs == sort xs = Rhythm {
+      -- Negative rhythms are represented by decreasing patterns
+               pttrn = p,
+               clusters = mutualNNG p,
+               meter = length p,
+               orientation = Sign (-1)
+              }
+  | otherwise = Rhythm {
+               pttrn = p,
+               clusters = mutualNNG p,
+               meter = length p,
+               orientation = Sign 1
+              }
+  where p = toOnset (indicatorVector xs)
+
+makeRhythm :: Int -> P.Pattern Int -> Rhythmic
+makeRhythm n ns = Rhythm {
+  pttrn = p,
+  clusters = mutualNNG p,
+  meter = length p,
+  orientation = s
+  }
+  where
+    p = toOnset ns
+    s= Sign (signum n)
+
+
 ioisToOnset :: [Int] -> OnsetPattern
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
+
+-- Auxiliary functions
 
 startPosition :: OnsetPattern -> OnsetPattern
 startPosition [] = []
@@ -234,7 +282,8 @@ reduceEmpty :: OnsetPattern -> OnsetPattern
 reduceEmpty []           = []
 reduceEmpty pttrn@(x:xs) = if x == Zero then reduceEmpty xs else pttrn
 
--- | Toussaint's six distinguished rhythms
+-- Toussaint's six distinguished rhythms for examples
+
 clave = toRhythm P.clave
 rumba = toRhythm P.rumba
 gahu = toRhythm P.gahu
