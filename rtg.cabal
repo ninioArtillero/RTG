@@ -70,6 +70,7 @@ library
         Sound.RTG.Ritmo.Pattern
         Sound.RTG.Ritmo.PerfectBalance
         Sound.RTG.Ritmo.RhythmicPattern
+        Sound.RTG.Ritmo.TimePatterns
         Sound.RTG.Tiempo.OscOut
 
     -- Modules included in this library but not exported.
