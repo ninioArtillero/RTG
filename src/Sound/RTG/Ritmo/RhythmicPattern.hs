@@ -50,9 +50,41 @@ instance Applicative Rhythm where
 
 -- TODO: DEFINIR MONADA... QUIZAS AÑADIR COMO ESTADO EL METER
 
--- TODO: Falta lograr propiedad de inversos
+-- TODO: Falta lograr propiedad de inversos.
+-- Tal propiedad implicaría que dados dos ritmos cualesquiera r1 y r2
+-- entonces existe x de forma que r1 <> x == r2 es True
 instance Semigroup a => Semigroup (Rhythm a) where
-  Rhythm pttrn1 <> Rhythm pttrn2 = Rhythm $ zipWith (<>) pttrn1 pttrn2 ++ diffPattern pttrn1 pttrn2
+  Rhythm pttrn1 <> Rhythm pttrn2 = Rhythm $ pttrn1 `euclideanZip` pttrn2
+
+-- | Deprecated semigroup operation
+pttrn1 `frontWideZip` pttrn2 = zipWith (<>) pttrn1 pttrn2 ++ diffPattern pttrn1 pttrn2
+
+-- TODO: Explore other operations: backWideZip, frontNarrowZip (regular zip),
+-- backNarrowZip, centerWideZip and centerNarrowZip.
+-- Note that according to design criteria, we target the least amount of arbritrarity.
+
+-- | When patterns have different size,
+-- distributes event composition as evenly as possible matching euclidean onsets.
+-- Otherwise it zips one to one.
+-- TODO: there's ambiguity regarding the position of the euclidean pattern,
+-- this could be exploited. For example, use all and choose the one
+-- with the least rests.
+euclideanZip :: Semigroup a => Pattern a -> Pattern a -> Pattern a
+pttrn1 `euclideanZip` pttrn2
+  | len1 == len2 = zipWith (<>) pttrn1 pttrn2
+  | otherwise = fzip pttrn markedPattern []
+  where (pttrn, markedPattern)= if len1 == k
+          then (pttrn1, pttrn2 `zip` euclideanPattern k n)
+          else (pttrn2, pttrn1 `zip` euclideanPattern k n)
+        len1 = length pttrn1; len2 = length pttrn2
+        k = min len1 len2; n = max len1 len2
+        fzip :: Semigroup a => Pattern a -> Pattern (a,Int) -> Pattern a -> Pattern a
+        fzip [] ys zs = reverse zs
+        -- superflous case?
+        fzip xs [] zs = reverse zs
+        fzip (x:xs) (y:ys) zs = if snd y == 1 then fzip xs ys ((x <> fst y):zs)
+                                              else fzip (x:xs) ys ((fst y):zs)
+        -- is this a fold? branched fold?
 
 -- TODO: Podría usar una relación de equivalencia
 instance Semigroup a => Monoid (Rhythm a) where
