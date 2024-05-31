@@ -6,6 +6,8 @@ import Sound.RTG.Ritmo.RhythmicPattern
 
 -- TODO: ¿Paralellization of patterns? Would depend on the implementation of concurrent streams.
 
+{-
+
 -- | Sequence. Plays each pattern every other cycle. TODO: needs to account for cycle
 (|>) :: Rhythmic -> Rhythmic -> Rhythmic
 r1 |> r2 =
@@ -52,3 +54,4 @@ r1 <+> r2 =
 -- Euclidean rhythms generalize isochronous rhythms and evenly spacing. This might be enough.
 -- And in this way rhythm generation might be abstracted.
 -- Check this ideas after reading Toussaint chapters 20 and 21
+-}
