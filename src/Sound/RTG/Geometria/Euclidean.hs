@@ -5,7 +5,7 @@
 -- 4. Los valores negativos de k se traducen por aritmética modular sobre n.
 -- 5. Los valores negativos de n significan un cambio de orientación en el ritmo,
 --    de manera que (k,-n,p) == (k, n, -p)
-module Sound.RTG.Geometria.Euclidean (Euclidean, e, invert) where
+module Sound.RTG.Geometria.Euclidean (Euclidean (..), e, invert) where
 
 import Data.Group
 import Sound.RTG.Ritmo.Pattern (rotateLeft)
