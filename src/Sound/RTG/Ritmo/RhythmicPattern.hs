@@ -60,11 +60,14 @@ type OnsetClusters = [Rhythm Binary]
 -- related to a patterns underlying pulse.
 type Meter = Int
 
--- | An interface to combine diferent group operations
+-- | An interface to use diferent group operations
 class Semigroup a => Rhythmic a where
   toRhythm :: a -> RhythmicPattern
   (<°>) :: Rhythmic b => a -> b -> RhythmicPattern
   x <°> y = toRhythm x <> toRhythm y
+  (<!>) :: a -> a -> RhythmicPattern
+  x <!> y = toRhythm (x <> y)
+
 
 instance Rhythmic Euclidean where
   toRhythm (Euclidean k n p) = Rhythm . integralToOnset . P.rotateLeft p $ euclideanPattern k n
@@ -75,10 +78,11 @@ instance Rhythmic RhythmicPattern where
 instance Rhythmic (P.Pattern Binary) where
   toRhythm = Rhythm
 
--- Podría generalizarse a Rhythm a donde a sea un Monoide...
-instance Semigroup RhythmicPattern where
+-- Falta lograr propiedad de inversos
+instance (Eq a, Monoid a) => Semigroup (Rhythm a) where
   Rhythm pttrn1 <> Rhythm pttrn2 = Rhythm $ reduceEmpty $ zipWith (<>) pttrn1 pttrn2 ++ P.diff pttrn1 pttrn2
 
+-- Podría usar una relación de equivalencia
 instance Monoid RhythmicPattern where
   mempty = Rhythm []
 
@@ -169,24 +173,24 @@ ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc els
 
 -- Auxiliary functions
 
-startPosition :: P.Pattern Binary -> P.Pattern Binary
+startPosition :: (Eq a, Monoid a) => P.Pattern a -> P.Pattern a
 startPosition [] = []
 startPosition pttrn@(x:xs)
   | null (reduceEmpty pttrn) = []
-  | x == Zero = startPosition $ P.rotateLeft 1 pttrn
+  | x == mempty = startPosition $ P.rotateLeft 1 pttrn
   | otherwise = pttrn
 
 -- | Steps away from the first onset
-position :: P.Pattern Binary -> Int
+position :: (Eq a, Monoid a) => P.Pattern a -> Int
 position xs
-  | null (reduceEmpty xs) = 0
-  | take 1 xs == [One] = 0
+  | null xs = 0
+  | let [x] = take 1 xs in x /= mempty = 0
   | otherwise = 1 + position (drop 1 xs)
 
 
-reduceEmpty :: P.Pattern Binary -> P.Pattern Binary
+reduceEmpty :: (Eq a, Monoid a) => P.Pattern a -> P.Pattern a
 reduceEmpty []           = []
-reduceEmpty pttrn@(x:xs) = if x == Zero then reduceEmpty xs else pttrn
+reduceEmpty pttrn@(x:xs) = if x == mempty then reduceEmpty xs else pttrn
 
 -- Toussaint's six distinguished rhythms for examples
 
