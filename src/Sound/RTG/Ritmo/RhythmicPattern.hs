@@ -36,8 +36,7 @@ instance Monoid Binary where
 instance Group Binary where
   invert  = id
 
--- | Onset patterns are represented by binary valued lists
--- so that group structure can de lifted.
+-- | Pattern wrapper to define a new Subgroup instance
 newtype Rhythm a = Rhythm {getRhythm :: Pattern a} deriving (Eq,Show)
 
 instance Functor Rhythm where
@@ -100,16 +99,69 @@ type OnsetClusters = [Rhythm Binary]
 -- related to a patterns underlying pulse.
 type Meter = Int
 
--- | The interface for rhythmic pattern types. It lifts instances to
--- the concrete type RhythmicPattern so they can transform each other using @<¡>@,
--- and lift its group operation with @<!>@.
+-- | The interface for rhythmic pattern types.
+-- It lifts instances to rhythmic patterns.
 class Semigroup a => Rhythmic a where
+  -- | Minimal complete definition
   toRhythm :: a -> RhythmicPattern
-  (<¡>) :: Rhythmic b => a -> b -> RhythmicPattern
-  x <¡> y = toRhythm x <> toRhythm y
-  (<!>) :: a -> a -> RhythmicPattern
-  x <!> y = toRhythm (x <> y)
 
+  -- | Group structure lifting
+  (&) :: Rhythmic b => a -> b -> RhythmicPattern
+  x & y = toRhythm x <> toRhythm y
+  (!&) :: a -> a -> RhythmicPattern
+  x !& y = toRhythm (x <> y)
+
+  -- | Complement. Exchange Onsets and Rests (One and Zero).
+  --
+  -- prop> (x & co x) = toRhythm $ replicate (length x) One
+  --
+  -- prop> co (co x) = toRhythm x
+  --
+  co :: a -> RhythmicPattern
+  co x = let rhythm = toRhythm x
+         in fmap (\x -> case x of Zero -> One; One -> Zero) rhythm
+
+  -- | Reverse. Play pattern backwards, different from Inverse.
+  --
+  -- prop> rev (rev x) = toRhythm x
+  --
+  rev ::  a -> RhythmicPattern
+  rev x = let Rhythm xs = toRhythm x
+          in Rhythm $ reverse xs
+
+  -- | Sequence. Plays each pattern every other cycle.
+  -- TODO: needs to account for cycle/cycle speed
+  (|>) :: Rhythmic b => a -> b -> RhythmicPattern
+  r1 |> r2 = Rhythm $ (getRhythm . toRhythm) r1 ++ (getRhythm . toRhythm) r2
+
+  -- | Add up
+  --
+  -- prop> x <+> x = x
+  --
+  -- prop> x <+> co x = toRhythm $ replicate (length x) One
+  (<+>) :: Rhythmic b => a -> b -> RhythmicPattern
+  r1 <+> r2 = fixOne <$> toRhythm r1 <*> toRhythm r2
+    where fixOne x y = if x == One then One else y
+
+  -- TODO
+  --
+  -- ¿Paralellization of patterns? Would depend on a implementation of concurrent streams.
+  --
+  -- Interpolate. Continuous transformation of patterns.
+  -- (/\)
+  --
+  -- Diverge. Interpolate into complement.
+  -- (\/) = (/\) . co
+
+infixr 5 &
+infixr 6 !&
+infixr 5 |>
+infixl 5 <+>
+
+ -- TODO: ¿can euclidean rhythm generate all rhythms?
+-- Euclidean rhythms generalize isochronous rhythms and evenly spacing. This might be enough.
+-- And in this way rhythm generation might be abstracted.
+-- Check this ideas after reading Toussaint chapters 20 and 21
 
 instance Rhythmic Euclidean where
   toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft p $ euclideanPattern k n
