@@ -68,6 +68,7 @@ pttrn1 `frontWideZip` pttrn2 = zipWith (<>) pttrn1 pttrn2 ++ diffPattern pttrn1 
 -- TODO: there's ambiguity regarding the position of the euclidean pattern,
 -- this could be exploited. For example, use all and choose the one
 -- with the least rests.
+-- TODO: choose finite lists... may be I need stronger types (GADTs?).
 euclideanZip :: Semigroup a => Pattern a -> Pattern a -> Pattern a
 pttrn1 `euclideanZip` pttrn2
   | len1 == len2 = zipWith (<>) pttrn1 pttrn2
@@ -85,12 +86,13 @@ pttrn1 `euclideanZip` pttrn2
                                               else fzip (x:xs) ys ((fst y):zs)
         -- is this a fold? branched fold?
 
--- TODO: Podría usar una relación de equivalencia
-instance Semigroup a => Monoid (Rhythm a) where
-  mempty = Rhythm []
+-- TODO: ¿Lista vacía, relación de equivalencia o lista infinita?
+-- Depende de la operación. Depende de la operación.
+instance (Semigroup a, Monoid a) => Monoid (Rhythm a) where
+  mempty = Rhythm $ repeat mempty
 
-instance Group RhythmicPattern where
-  invert = fmap (\x -> if x == Zero then One else Zero)
+instance (Semigroup a, Monoid a, Group a) => Group (Rhythmic a) where
+  invert = fmap (invert x)
 
 type RhythmicPattern = Rhythm Binary
 
