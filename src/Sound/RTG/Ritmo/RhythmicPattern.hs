@@ -91,8 +91,8 @@ pttrn1 `euclideanZip` pttrn2
 instance (Semigroup a, Monoid a) => Monoid (Rhythm a) where
   mempty = Rhythm $ repeat mempty
 
-instance (Semigroup a, Monoid a, Group a) => Group (Rhythmic a) where
-  invert = fmap (invert x)
+instance (Semigroup a, Monoid a, Group a) => Group (Rhythm a) where
+  invert = fmap invert
 
 type RhythmicPattern = Rhythm Binary
 
