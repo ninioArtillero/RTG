@@ -185,6 +185,8 @@ instance Rhythmic RhythmicPattern where
 instance Rhythmic (Pattern Binary) where
   toRhythm = Rhythm
 
+-- TODO: La operación de grupo en Pattern es la concatenación de listas,
+-- al levantarse, ¿Cómo se relaciona con la superposición <+>?
 instance Rhythmic (Pattern Time) where
   toRhythm = Rhythm . timeToOnset
 
