@@ -121,6 +121,7 @@ class Semigroup a => Rhythmic a where
   -- prop> x <+> x = x
   --
   -- prop> x <+> co x = toRhythm $ replicate (length x) One
+  --
   (<+>) :: Rhythmic b => a -> b -> RhythmicPattern
   r1 <+> r2 = fixOne <$> toRhythm r1 <*> toRhythm r2
     where fixOne x y = if x == One then One else y
@@ -161,18 +162,24 @@ instance Rhythmic (Pattern Time) where
 
 -- Geometric structures
 
--- | Computes the mutual nearest neighbor graph for the Rhythmic type cluster field.
+-- | Computes the mutual nearest neighbor graph of an onset pattern.
 -- For example:
--- cluster rumba = [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
--- TODO Decide what to do with clusters that wrap pass the cycle border
--- For example, bossa has only one cluster:
--- clusters bossa = [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
+--
+-- >>> cluster rumba
+-- [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
+--
+-- TODO: Decide what to do with clusters that wrap pass the cycle border
+-- For example, bossa has only one cluster sourrounding the 3 rest interval:
+--
+-- >>> clusters bossa
+-- [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
 mutualNNG :: Pattern Binary -> [Pattern Binary]
 mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilder neighborhood) neighborhoods
   where neighborhoods = parseNeighborhoods $ iois xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
+            -- True signals the presense of a One
             (n, (b1,b2)) : nbs -> case (b1,b2) of
               (True,True)   -> One : replicate (n-1) Zero ++ [One]
               (True,False)  -> One : replicate (n-1) Zero
@@ -186,9 +193,11 @@ mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBui
               (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
 
 
-parseNeighborhoods :: [Int] -> [[(Int,(Bool,Bool))]]
+-- | Takes a IOIs pattern and returns a list of lists with minimal IOIs in the same list
+-- and neighboorhood information.
+parseNeighborhoods :: Pattern Int -> [[(Int,(Bool,Bool))]]
 -- | Applicative style is used on the input, which means that
--- the rhythmic pattern is evaluated on both functions surrounding @<*>@ before zipping)
+-- the pattern is evaluated on both functions surrounding @<*>@ before zipping)
 parseNeighborhoods bs = map reverse $ parseNeighborhoodsIter (zip <$> id <*> biggerNeighbor $ bs) []
 
 -- | Helper function with an extra parameter to join the intervals of nearest neighbors
@@ -196,15 +205,15 @@ parseNeighborhoodsIter :: [(Int, (Bool,Bool))] -> [(Int, (Bool,Bool))] -> [[(Int
 parseNeighborhoodsIter [] [] = []
 parseNeighborhoodsIter [] xs = [xs]
 parseNeighborhoodsIter (m@(int,ns):bs) xs = case ns of
-  -- | A local minimum is its own cluster. Avoid passing empty list.
+  -- A local minimum is its own cluster. Avoid passing empty list.
   (True,True) -> if null xs
     then [m] : parseNeighborhoodsIter bs []
     else xs : [m] : parseNeighborhoodsIter bs []
-  -- | Start a new cluster without passing empty lists
+  -- Start a new cluster without passing empty lists
   (True,False) -> if null xs
     then parseNeighborhoodsIter bs [m]
     else xs : parseNeighborhoodsIter bs [m]
-  -- | Add interval to cluster
+  -- Add interval to cluster
   (False,False) -> parseNeighborhoodsIter bs (m:xs)
   -- | Close a cluster
   (False,True) -> (m:xs) : parseNeighborhoodsIter bs []
