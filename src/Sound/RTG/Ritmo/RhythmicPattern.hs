@@ -226,6 +226,7 @@ biggerNeighbor xs = let leftNeighbors = zipWith (>) (rotateRight 1 xs) xs
 
 -- | Compute the Inter-Onset-Intervals of an onset pattern
 iois :: Pattern Binary -> [Int]
+-- Intervals are calculated by counting the times the scan doesn't add another onset
 iois = let intervals = List.group . drop 1 . scanl pickOnsets [] . startPosition
            pickOnsets acc x = if x == One then x:acc else acc
        in map length . intervals
