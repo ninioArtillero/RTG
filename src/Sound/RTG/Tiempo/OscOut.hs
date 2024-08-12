@@ -13,8 +13,8 @@ type SampleName = String
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
-play :: CPS -> SampleName -> Pattern Int -> IO ()
-play cps sample pttrn = do
+patternStream :: CPS -> SampleName -> Pattern Int -> IO ThreadId
+patternStream cps sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
       dur = eventDurationS cps (length pttrn)
   -- initialize variables
@@ -34,6 +34,11 @@ play cps sample pttrn = do
         message = messageGen x sample
     send message
     pauseThread dur
+
+play :: CPS -> SampleName -> Pattern Int -> IO ()
+play cps sample pttrn = do
+  patternStream cps sample pttrn
+  return ()
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
