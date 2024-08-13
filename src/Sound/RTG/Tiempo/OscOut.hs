@@ -6,6 +6,7 @@ import           Sound.OSC.FD
 import           Sound.RTG.Ritmo.Pattern         (Pattern)
 import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..), toInts)
 import           System.Environment              (getArgs)
+import GHC.IO (unsafePerformIO)
 
 type CPS = Rational
 type SampleName = String
@@ -13,20 +14,22 @@ type SampleName = String
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
-globalCPS :: IO (MVar CPS)
-globalCPS = newMVar 0.4
+globalCPS :: MVar CPS
+{-# NOINLINE globalCPS #-}
+globalCPS = unsafePerformIO $ newMVar 0.4
 
-setcps :: CPS -> IO (MVar CPS)
+setcps :: CPS -> IO ()
 setcps x = do
-  mvar <- globalCPS
-  currentcps <- takeMVar mvar
-  putMVar mvar x
-  return mvar
+  _ <- takeMVar globalCPS
+  putMVar globalCPS x
 
-patternStream :: CPS -> SampleName -> Pattern Int -> IO ThreadId
-patternStream cps sample pttrn = forkIO $ do
+queryCPS :: IO CPS
+queryCPS = do
+  takeMVar globalCPS
+
+patternStream :: SampleName -> Pattern Int -> IO ThreadId
+patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
-      dur = eventDurationS cps (length pttrn)
   -- initialize variables
   port <- openUDP "127.0.0.1" 57120 :: IO UDP
   container <- newEmptyMVar
@@ -40,14 +43,17 @@ patternStream cps sample pttrn = forkIO $ do
   -- output loop
   forever $ do
     x <- takeMVar container
+    cps <- queryCPS
     let send = sendMessage port
         message = messageGen x sample
+        dur = eventDurationS cps (length pttrn)
     send message
     pauseThread dur
+    putMVar globalCPS cps
 
-play :: CPS -> SampleName -> Pattern Int -> IO ()
-play cps sample pttrn = do
-  patternStream cps sample pttrn
+play :: SampleName -> Pattern Int -> IO ()
+play sample pttrn = do
+  patternStream sample pttrn
   return ()
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
@@ -96,8 +102,4 @@ eventDurationS cps pulses = secondsPerCycle / cyclePartition
 
 -- | Provisional to play Rhythmic values fast and easy.
 playR :: Rhythmic a => a -> IO()
-playR rhythm = do
-  mvar <- globalCPS
-  currentcps <- takeMVar mvar
-  play currentcps "cp" . toInts . getRhythm . toRhythm $ rhythm
-  putMVar mvar currentcps
+playR = play "cp" . toInts . getRhythm . toRhythm
