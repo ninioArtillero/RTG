@@ -13,6 +13,16 @@ type SampleName = String
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
+globalCPS :: IO (MVar CPS)
+globalCPS = newMVar 0.4
+
+setcps :: CPS -> IO (MVar CPS)
+setcps x = do
+  mvar <- globalCPS
+  currentcps <- takeMVar mvar
+  putMVar mvar x
+  return mvar
+
 patternStream :: CPS -> SampleName -> Pattern Int -> IO ThreadId
 patternStream cps sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
@@ -86,4 +96,8 @@ eventDurationS cps pulses = secondsPerCycle / cyclePartition
 
 -- | Provisional to play Rhythmic values fast and easy.
 playR :: Rhythmic a => a -> IO()
-playR = play 0.4 "cp" . toInts . getRhythm . toRhythm
+playR rhythm = do
+  mvar <- globalCPS
+  currentcps <- takeMVar mvar
+  play currentcps "cp" . toInts . getRhythm . toRhythm $ rhythm
+  putMVar mvar currentcps
