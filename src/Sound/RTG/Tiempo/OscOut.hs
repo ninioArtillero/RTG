@@ -19,9 +19,9 @@ globalCPS :: MVar CPS
 globalCPS = unsafePerformIO $ newMVar 0.4
 
 setcps :: CPS -> IO ()
-setcps x = do
-  _ <- takeMVar globalCPS
-  putMVar globalCPS x
+setcps newcps = do
+  swapMVar globalCPS newcps
+  return ()
 
 patternStream :: SampleName -> Pattern Int -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
