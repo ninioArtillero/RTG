@@ -23,10 +23,6 @@ setcps x = do
   _ <- takeMVar globalCPS
   putMVar globalCPS x
 
-queryCPS :: IO CPS
-queryCPS = do
-  takeMVar globalCPS
-
 patternStream :: SampleName -> Pattern Int -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
@@ -43,13 +39,12 @@ patternStream sample pttrn = forkIO $ do
   -- output loop
   forever $ do
     x <- takeMVar container
-    cps <- queryCPS
+    cps <- readMVar globalCPS
     let send = sendMessage port
         message = messageGen x sample
         dur = eventDurationS cps (length pttrn)
     send message
     pauseThread dur
-    putMVar globalCPS cps
 
 play :: SampleName -> Pattern Int -> IO ()
 play sample pttrn = do
