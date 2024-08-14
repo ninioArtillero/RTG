@@ -46,10 +46,10 @@ patternStream sample pttrn = forkIO $ do
     send message
     pauseThread dur
 
-play :: SampleName -> Pattern Int -> IO ()
+play :: Rhythmic a => SampleName -> a -> IO ()
 play sample pttrn = do
-  patternStream sample pttrn
-  return ()
+  threadid <- patternStream sample . toInts . getRhythm . toRhythm $ pttrn
+  print threadid
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
@@ -94,7 +94,3 @@ eventDurationS cps pulses = secondsPerCycle / cyclePartition
   where
     secondsPerCycle = 1 / cps
     cyclePartition = fromIntegral pulses
-
--- | Provisional to play Rhythmic values fast and easy.
-playR :: Rhythmic a => a -> IO()
-playR = play "cp" . toInts . getRhythm . toRhythm
