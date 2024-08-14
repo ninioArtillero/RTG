@@ -61,24 +61,24 @@ messageGen x sample =
     then
       message
         "/dirt/play"
-        [ ASCII_String $ ascii "cps",
-          Float 0.5,
-          ASCII_String $ ascii "cycle",
-          Float 0.0,
-          ASCII_String $ ascii "delta",
-          Float 1.7777760028839,
+        [ -- ASCII_String $ ascii "cps",
+          -- Float 0.5,
+          -- ASCII_String $ ascii "cycle",
+          -- Float 0.0,
+          -- ASCII_String $ ascii "delta",
+          -- Float 1.7777760028839,
           ASCII_String $ ascii "s",
           ASCII_String $ ascii sample
         ]
     else
       message
         "/dirt/play"
-        [ ASCII_String $ ascii "cps",
-          Float 0.5,
-          ASCII_String $ ascii "cycle",
-          Float 0.0,
-          ASCII_String $ ascii "delta",
-          Float 1.7777760028839,
+        [ -- ASCII_String $ ascii "cps",
+          -- Float 0.5,
+          -- ASCII_String $ ascii "cycle",
+          -- Float 0.0,
+          -- ASCII_String $ ascii "delta",
+          -- Float 1.7777760028839,
           ASCII_String $ ascii "s",
           ASCII_String $ ascii "~"
         ]
