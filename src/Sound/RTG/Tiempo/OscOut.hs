@@ -28,28 +28,27 @@ patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
   port <- openUDP "127.0.0.1" 57120 :: IO UDP
-  container <- newEmptyMVar
+  onsetContainer <- newEmptyMVar
   index <- newMVar 0
-  -- write loop
+  -- pattern query
   forkIO . forever $ do
     i <- takeMVar index
-    putMVar container (cyclicPattern !! i)
+    putMVar onsetContainer (cyclicPattern !! i)
     putMVar index (i + 1)
-  -- open connection
-  -- output loop
+  -- output OSC event messages
   forever $ do
-    x <- takeMVar container
+    onset <- takeMVar onsetContainer
     cps <- readMVar globalCPS
     let send = sendMessage port
-        message = messageGen x sample
-        dur = eventDurationS cps (length pttrn)
-    send message
+        event = messageGen onset sample
+        dur = eventDuration cps (length pttrn)
+    send event
     pauseThread dur
 
 play :: Rhythmic a => SampleName -> a -> IO ()
 play sample pttrn = do
-  threadid <- patternStream sample . toInts . getRhythm . toRhythm $ pttrn
-  print threadid
+  threadId <- patternStream sample . toInts . getRhythm . toRhythm $ pttrn
+  print threadId
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
@@ -83,14 +82,8 @@ messageGen x sample =
           ASCII_String $ ascii "~"
         ]
 
-eventDurationMs :: Rational -> Int -> Int
-eventDurationMs cps pulses = round (microSecondsPerCycle / cyclePartition)
-  where
-    microSecondsPerCycle = (1 / cps) * 10 ^ 6
-    cyclePartition = fromIntegral pulses
-
-eventDurationS :: Rational -> Int -> Rational
-eventDurationS cps pulses = secondsPerCycle / cyclePartition
+eventDuration :: Rational -> Int -> Rational
+eventDuration cps pulses = secondsPerCycle / eventsPerCycle
   where
     secondsPerCycle = 1 / cps
-    cyclePartition = fromIntegral pulses
+    eventsPerCycle = fromIntegral pulses
