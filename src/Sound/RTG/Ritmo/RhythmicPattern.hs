@@ -58,7 +58,7 @@ instance Semigroup a => Semigroup (Rhythm a) where
 -- TODO: ¿Lista vacía, relación de equivalencia o lista infinita?
 -- Depende de la operación. Depende de la operación.
 instance (Semigroup a, Monoid a) => Monoid (Rhythm a) where
-  mempty = Rhythm $ repeat mempty
+  mempty = Rhythm []
 
 instance (Semigroup a, Monoid a, Group a) => Group (Rhythm a) where
   invert = fmap invert
@@ -75,7 +75,7 @@ type Meter = Int
 
 -- | The interface for rhythmic pattern types.
 -- It lifts instances to rhythmic patterns.
-class Semigroup a => Rhythmic a where
+class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   -- | Minimal complete definition
   toRhythm :: a -> RhythmicPattern
 
@@ -85,13 +85,11 @@ class Semigroup a => Rhythmic a where
   --
   -- prop> inv x & x = mempty
   inv :: a -> RhythmicPattern
-  inv = invert . toRhythm
+  inv = toRhythm . invert
 
-  -- | Group structure lifting
+  -- | Default group operation
   (&) :: Rhythmic b => a -> b -> RhythmicPattern
   x & y = toRhythm x <> toRhythm y
-  (!&) :: a -> a -> RhythmicPattern
-  x !& y = toRhythm (x <> y)
 
   -- | Complement. Exchange Onsets and Rests (One and Zero).
   --
@@ -137,7 +135,6 @@ class Semigroup a => Rhythmic a where
   -- (\/) = (/\) . co
 
 infixr 5 &
-infixr 6 !&
 infixr 5 |>
 infixl 5 <+>
 
@@ -151,9 +148,6 @@ instance Rhythmic Euclidean where
 
 instance Rhythmic RhythmicPattern where
   toRhythm = id
-
-instance Rhythmic (Pattern Binary) where
-  toRhythm = Rhythm
 
 -- TODO: La operación de grupo en Pattern es la concatenación de listas,
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
