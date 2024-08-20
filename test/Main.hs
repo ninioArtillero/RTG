@@ -30,10 +30,9 @@ instance Arbitrary (Rhythm Binary) where
                 -- Larger sizes might be needed to be check with either
                 -- n <- arbitrary `suchThat` (>= 0) :: Gen Int
                 -- n <- chooseInt (0,maxBound)
-                n <- chooseInt (1,100)
+                n <- chooseInt (0,100)
                 fmap Rhythm (vector n)
 
--- This instance lifts into OnsetPattern
 instance Arbitrary Binary where
   arbitrary :: Gen Binary
   arbitrary = oneof [return Zero, return One]
