@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs      #-}
 module Sound.RTG.Ritmo.RhythmicPattern where
 {-|
 Module      : RhythmicPattern
@@ -17,6 +18,7 @@ import           Sound.RTG.Geometria.Euclidean
 import           Sound.RTG.Ritmo.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Ritmo.Pattern
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
+import Sound.RTG.Ritmo.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)
@@ -36,6 +38,10 @@ instance Monoid Binary where
 instance Group Binary where
   invert  = id
 
+type Pattern a = [a]
+
+type Time = Rational
+
 -- | Pattern wrapper to define a new Subgroup instance
 newtype Rhythm a = Rhythm {getRhythm :: Pattern a} deriving (Eq,Show)
 
@@ -44,6 +50,7 @@ instance Functor Rhythm where
 
 -- | Two general posibilities for the applicative instances: ZipList or regular list
 instance Applicative Rhythm where
+  pure :: a -> Rhythm a
   pure xs = Rhythm $ pure xs
   Rhythm fs <*> Rhythm xs = Rhythm (zipWith ($) fs xs) --test
 
@@ -151,8 +158,8 @@ instance Rhythmic RhythmicPattern where
 
 -- TODO: La operación de grupo en Pattern es la concatenación de listas,
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
-instance Rhythmic (Pattern Time) where
-  toRhythm = Rhythm . timeToOnset
+instance Rhythmic TimePattern where
+  toRhythm = Rhythm . timeToOnset .getPattern
 
 -- Geometric structures
 

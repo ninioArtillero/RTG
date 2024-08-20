@@ -7,22 +7,12 @@ import           Sound.RTG.Ritmo.Bjorklund   (euclideanPattern)
 
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.
-type Time = Rational
 
-newtype Pattern a = Pattern {getPattern :: [a]}
-
-instance Functor Pattern where
-  fmap f (Pattern xs) = Pattern $ fmap f xs
-
-instance Semigroup (Pattern a) where
-  Pattern xs <> Pattern ys = Pattern (xs ++ ys)
-
--- Pattern zip functions
+-- List zip functions
 
 -- | Preserves the tail of the zip
-frontWideZip :: Semigroup a => Pattern a -> Pattern a -> Pattern a
-Pattern pttrn1 `frontWideZip` Pattern pttrn2 = Pattern $ zipWith (<>) pttrn1 pttrn2 ++ backDiffPattern pttrn1 pttrn2
-  where
+frontWideZip :: Semigroup a => [a] -> [a] -> [a]
+pttrn1 `frontWideZip` pttrn2 = zipWith (<>) pttrn1 pttrn2 ++ backDiffPattern pttrn1 pttrn2
 
 -- | Regular zipWith using the Semigroup operator
 frontNarrowZip :: Semigroup a => [a] -> [a] -> [a]
@@ -130,8 +120,8 @@ frontDiffPattern xs ys
 -- | A pattern of time values in ascending order and without duplicates,
 -- and wrapped inside the interval [0,1) with 1 is excluded.
 -- In effect, this normalizes cyclic time.
-stdForm :: Pattern Time -> Pattern Time
-stdForm = fmap $ sort . nub . map modOne
+stdForm :: [Rational] -> [Rational]
+stdForm = sort . nub . map modOne
 
 startPosition :: (Eq a, Monoid a) => [a] -> [a]
 startPosition [] = []

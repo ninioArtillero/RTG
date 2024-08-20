@@ -7,9 +7,12 @@
 -- Musical Scales and Meters".
 module Sound.RTG.Ritmo.PerfectBalance (evenness, balance, indicatorVector) where
 
-import Data.Complex (Complex (..), magnitude)
-import Data.Ratio (denominator, numerator, (%))
-import Sound.RTG.Ritmo.Pattern
+import           Data.Complex            (Complex (..), magnitude)
+import           Data.Ratio              (denominator, numerator, (%))
+import           Sound.RTG.Ritmo.Pattern (stdForm)
+
+type Pattern a = [a]
+type Time = Rational
 
 gcdRational :: Rational -> Rational -> Rational
 gcdRational x y =
