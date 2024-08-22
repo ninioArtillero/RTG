@@ -40,8 +40,6 @@ instance Group Binary where
 
 type Pattern a = [a]
 
-type Time = Rational
-
 -- | Pattern wrapper to define a new Subgroup instance
 newtype Rhythm a = Rhythm {getRhythm :: Pattern a} deriving (Eq,Show)
 
@@ -159,7 +157,7 @@ instance Rhythmic RhythmicPattern where
 -- TODO: La operación de grupo en Pattern es la concatenación de listas,
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
 instance Rhythmic TimePattern where
-  toRhythm = Rhythm . timeToOnset .getPattern
+  toRhythm = Rhythm . timeToOnset . queryPattern
 
 -- Geometric structures
 

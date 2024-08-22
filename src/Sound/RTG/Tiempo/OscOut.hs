@@ -4,9 +4,8 @@ import           Control.Concurrent
 import           Control.Monad                   (forM_, forever)
 import           GHC.IO                          (unsafePerformIO)
 import           Sound.OSC.FD
-import           Sound.RTG.Ritmo.Pattern         (Pattern)
-import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..),
-                                                  toInts)
+import           Sound.RTG.Ritmo.RhythmicPattern (Pattern, Rhythm (..),
+                                                  Rhythmic (..), toInts)
 import           System.Environment              (getArgs)
 
 type CPS = Rational

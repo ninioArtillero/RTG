@@ -1,12 +1,32 @@
 -- | A collection of predefined time patterns
 module Sound.RTG.Ritmo.TimePatterns where
 
+import Sound.RTG.Ritmo.RatioDecons (modOne)
+import Data.Group ( Group(invert) )
+import Data.List (nub, sort)
+
 type Time = Rational
 
-newtype TimePattern = TimePattern {getPattern :: [Time]}
+newtype TimePattern = TimePattern [Time]
 
+queryPattern :: TimePattern -> [Time]
+queryPattern (TimePattern ts) = map modOne ts
+
+getPattern :: TimePattern -> [Time]
+getPattern (TimePattern ts) = ts
+
+instance Show TimePattern where
+  show = show . nub . sort . queryPattern
+
+-- | This operation is isomorphic to the monadic bind for lists
 instance Semigroup TimePattern where
+  xs <> ys = TimePattern [x*y | x <- getPattern xs, y <- getPattern ys ]
 
+instance Monoid TimePattern where
+  mempty = TimePattern [1]
+
+instance Group TimePattern where
+  invert = TimePattern . map (\n -> if n /= 0 then 1 / n else 0) . getPattern
 
 -- | Twelve tone equal temperament scales.
 diatonic :: TimePattern
