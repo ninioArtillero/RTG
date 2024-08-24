@@ -159,6 +159,9 @@ instance Rhythmic RhythmicPattern where
 instance Rhythmic TimePattern where
   toRhythm = Rhythm . timeToOnset . queryPattern
 
+instance Integral a => Rhythmic [a] where
+  toRhythm = Rhythm . integralToOnset
+
 -- Geometric structures
 
 -- | Computes the mutual nearest neighbor graph of an onset pattern.
