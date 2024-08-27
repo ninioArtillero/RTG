@@ -4,12 +4,14 @@ module Main (main) where
 
 import           Control.Monad                   (unless)
 import           Sound.RTG.Ritmo.RhythmicPattern
+import Sound.RTG.Ritmo.RatioDecons (modOne)
 import           System.Exit                     (exitFailure)
 import           Test.QuickCheck
 
 main :: IO ()
 main = do
   let tests = [
+        quickCheckResult prop_rationalModulusIsomorphism,
         quickCheckResult prop_groupAssoc,
         quickCheckResult prop_groupLeftIdentity,
         quickCheckResult prop_groupRightIdentity,
@@ -31,6 +33,7 @@ instance Arbitrary (Rhythm Binary) where
                 -- n <- arbitrary `suchThat` (>= 0) :: Gen Int
                 -- n <- chooseInt (0,maxBound)
                 n <- chooseInt (0,100)
+                -- Type inference on vector produces Binary values
                 fmap Rhythm (vector n)
 
 instance Arbitrary Binary where
@@ -42,6 +45,13 @@ instance Arbitrary Binary where
 --   -- already accounted for on the Rhythmic instance.
 --   arbitrary :: Gen Sign
 --   arbitrary = frequency [(2, return $ Sign 1), (1, return $ Sign (-1))]
+
+newtype PositiveRatio = PositiveRatio {getRatio :: Rational} deriving Show
+
+instance Arbitrary PositiveRatio where
+  arbitrary :: Gen PositiveRatio
+  arbitrary = fmap (PositiveRatio . abs) (arbitrary :: Gen Rational)
+
 
 prop_groupAssoc :: Rhythm Binary -> Rhythm Binary -> Rhythm Binary -> Bool
 prop_groupAssoc rhythmA rhythmB rhythmC =
@@ -62,3 +72,9 @@ prop_groupLeftInverse rhythm =
 prop_groupRightInverse :: Rhythm Binary -> Bool
 prop_groupRightInverse rhythm =
   rhythm <> inv rhythm == mempty
+
+-- TODO: failing without explanation
+prop_rationalModulusIsomorphism :: PositiveRatio -> PositiveRatio -> Bool
+prop_rationalModulusIsomorphism z1 z2 = modOne (x + y) == (modOne x) + (modOne y)
+  where x = getRatio z1
+        y = getRatio z2
