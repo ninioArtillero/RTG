@@ -2,8 +2,8 @@
 module Sound.RTG.Ritmo.Pattern where
 
 import           Data.List                   (nub, sort)
-import           Sound.RTG.Ritmo.RatioDecons (modOne)
 import           Sound.RTG.Ritmo.Bjorklund   (euclideanPattern)
+import           Sound.RTG.Ritmo.RatioDecons (modOne)
 
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.
@@ -87,13 +87,20 @@ pttrn1 `euclideanZip` pttrn2
 
 rotateLeft :: Int -> [a] -> [a]
 rotateLeft _ [] = []
-rotateLeft n xs = zipWith const (drop n (cycle xs)) xs
+rotateLeft n xs =
+  if n >= 0
+  then zipWith const (drop n (cycle xs)) xs
+  else rotateRight (negate n) xs
+
+
 
 rotateRight :: Int -> [a] -> [a]
 rotateRight _ [] = []
-rotateRight n xs = take size $ drop (size - (n `mod` size)) (cycle xs)
-  where
-    size = length xs
+rotateRight n xs =
+  if n >= 0
+  then take size $ drop (size - (n `mod` size)) (cycle xs)
+  else rotateLeft (negate n) xs
+    where size = length xs
 
 patternSum :: Num a => [a] -> [a] -> [a]
 patternSum = zipWith (+)
