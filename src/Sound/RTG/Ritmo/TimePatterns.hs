@@ -18,7 +18,6 @@ getPattern (TimePattern ts) = ts
 instance Show TimePattern where
   show = show . nub . sort . queryPattern
 
--- | This operation is isomorphic to the monadic bind for lists
 instance Semigroup TimePattern where
   xs <> ys = TimePattern [x*y | x <- getPattern xs, y <- getPattern ys ]
 
