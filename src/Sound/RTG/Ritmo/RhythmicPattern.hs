@@ -18,7 +18,7 @@ import           Sound.RTG.Geometria.Euclidean
 import           Sound.RTG.Ritmo.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Ritmo.Pattern
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
-import Sound.RTG.Ritmo.TimePatterns
+import           Sound.RTG.Ritmo.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)
@@ -244,6 +244,9 @@ toInts = let toInt x = case x of Zero -> 0; One -> 1
 
 timeToOnset :: Pattern Time -> Pattern Binary
 timeToOnset xs = integralToOnset (indicatorVector xs)
+
+showTimePattern :: TimePattern -> Pattern Binary
+showTimePattern = timeToOnset . getPattern
 
 ioisToOnset :: [Int] -> Pattern Binary
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
