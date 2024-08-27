@@ -159,8 +159,8 @@ instance Rhythmic RhythmicPattern where
 instance Rhythmic TimePattern where
   toRhythm = Rhythm . timeToOnset . queryPattern
 
-instance Integral a => Rhythmic [a] where
-  toRhythm = Rhythm . integralToOnset
+-- instance Integral a => Rhythmic [a] where
+--   toRhythm = Rhythm . integralToOnset
 
 -- Geometric structures
 
