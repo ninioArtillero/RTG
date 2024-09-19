@@ -71,6 +71,7 @@ library
         Sound.RTG.Ritmo.RhythmicPattern
         Sound.RTG.Ritmo.TimePatterns
         Sound.RTG.Tiempo.OscOut
+        Sound.RTG.Tiempo.TemporalMonad
 
     -- Modules included in this library but not exported.
     other-modules:
@@ -85,7 +86,7 @@ library
         , base >=4.17.2.1
         , containers ^>=0.6.5
         , groups ^>=0.5.3
-        , hosc ^>=0.19.1
+        , hosc ^>=0.20
         , multiset-comb ^>=0.2.4.2
 
     -- Directories containing source files.
