@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Collapse lambdas" #-}
 -- | Temporal Monad implementation of Virtual Time Semantics from
 --
 -- Aaron, Samuel, Dominic Orchard, y Alan F. Blackwell. 2014.
@@ -8,22 +10,30 @@
 -- https://doi.org/10.1145/2633638.2633648.
 module Sound.RTG.Tiempo.TemporalMonad where
 
-import Sound.Osc.Time (currentTime)
-import Sound.Osc (pauseThread)
+import           Sound.Osc      (pauseThread)
+import           Sound.Osc.Time (currentTime)
 
 
 type Time = Double
 type VTime = Double
 
+-- | Output value type
 data Value = NoValue | Message deriving (Show, Eq)
 
 newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime)))
 
+-- First fmap composes, the seconds maps into the IO monad
+-- and the third into the first element of the pair.
 instance Functor Temporal where
-  f <$> T p = T (fmap (fmap (fmap f p)))
+  fmap f  (T p) = T ( \(startT,nowT) -> fmap (\(x,y) -> (f x,y)) . p (startT, nowT))
 
-instance Functor Applicative
-  pure a = T (\(_,_) -> \vt -> return (a,vt))
+instance Applicative Temporal where
+  pure a = T (\(_,_) -> \vT -> return (a,vT))
+  T f <*> T p = T (\(startT,nowT) -> \vT ->
+                    do (f, vT') <- f (startT,nowT) vT
+                       thenT <- currentTime
+                       (x,vT'') <- p (startT,thenT) vT'
+                       return (f x, vT''))
 
 instance Monad Temporal where
   return = pure
@@ -50,6 +60,8 @@ kernelSleep t = T (\(_,_) -> \vT ->
                       do pauseThread t
                          return ((), vT ))
 
+-- | Update virtual time and suspends computation
+-- if actual time does not overflows it.
 sleep :: VTime -> Temporal Value
 sleep delayT = do nowT <- time
                   vT <- getVirtualTime
@@ -57,10 +69,16 @@ sleep delayT = do nowT <- time
                   setVirtualTime vT'
                   startT <- start
                   let diffT = diffTime nowT startT
-                  if (vT' < diffT)
+                  if vT' < diffT
                     then return ()
                     else kernelSleep (vT' - diffT)
                   return NoValue
 
 diffTime :: Double -> Double -> Double
 diffTime x y = x - y
+
+-- | Executing a temporal computation/program
+runTime :: Temporal a -> IO a
+runTime (T c) = do startT <- currentTime
+                   (a, _) <- c (startT,startT) 0
+                   return a
