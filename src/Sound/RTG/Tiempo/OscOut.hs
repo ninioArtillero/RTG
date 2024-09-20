@@ -3,7 +3,9 @@ module Sound.RTG.Tiempo.OscOut where
 import           Control.Concurrent
 import           Control.Monad                   (forM_, forever)
 import           GHC.IO                          (unsafePerformIO)
-import           Sound.OSC.FD
+import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
+                                                  Udp, ascii, message, openUdp,
+                                                  pauseThread, sendMessage)
 import           Sound.RTG.Ritmo.Pattern         (Pattern)
 import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..),
                                                   toInts)
@@ -28,7 +30,7 @@ patternStream :: SampleName -> Pattern Int -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
-  port <- openUDP "127.0.0.1" 57120 :: IO UDP
+  port <- openUdp "127.0.0.1" 57120 :: IO Udp
   onsetContainer <- newEmptyMVar
   index <- newMVar 0
   -- pattern query
@@ -67,8 +69,8 @@ messageGen x sample =
           -- Float 0.0,
           -- ASCII_String $ ascii "delta",
           -- Float 1.7777760028839,
-          ASCII_String $ ascii "s",
-          ASCII_String $ ascii sample
+          AsciiString $ ascii "s",
+          AsciiString $ ascii sample
         ]
     else
       message
@@ -79,8 +81,8 @@ messageGen x sample =
           -- Float 0.0,
           -- ASCII_String $ ascii "delta",
           -- Float 1.7777760028839,
-          ASCII_String $ ascii "s",
-          ASCII_String $ ascii "~"
+          AsciiString $ ascii "s",
+          AsciiString $ ascii "~"
         ]
 
 eventDuration :: Rational -> Int -> Rational
