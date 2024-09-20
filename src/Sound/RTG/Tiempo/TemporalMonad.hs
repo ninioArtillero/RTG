@@ -15,7 +15,9 @@ import Sound.Osc (pauseThread)
 type Time = Double
 type VTime = Double
 
-newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime))) deriving
+data Value = NoValue | Message deriving (Show, Eq)
+
+newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime)))
 
 instance Functor Temporal where
   f <$> T p = T (fmap (fmap (fmap f p)))
@@ -25,11 +27,11 @@ instance Functor Applicative
 
 instance Monad Temporal where
   return = pure
-  T p >>= q = T (\(startT,nowT) -> \vt ->
-                    do (x,vt') <- p (startT,nowT) vt
+  T p >>= q = T (\(startT,nowT) -> \vT ->
+                    do (x,vT') <- p (startT,nowT) vT
                        let T q' = q x
                        thenT <- currentTime
-                       q' (startT,thenT) vt')
+                       q' (startT,thenT) vT')
 
 time :: Temporal Time
 time = T (\(_,nowT) -> \vT -> return (nowT,vT))
@@ -47,3 +49,18 @@ kernelSleep :: RealFrac a => a -> Temporal ()
 kernelSleep t = T (\(_,_) -> \vT ->
                       do pauseThread t
                          return ((), vT ))
+
+sleep :: VTime -> Temporal Value
+sleep delayT = do nowT <- time
+                  vT <- getVirtualTime
+                  let vT' = vT + delayT
+                  setVirtualTime vT'
+                  startT <- start
+                  let diffT = diffTime nowT startT
+                  if (vT' < diffT)
+                    then return ()
+                    else kernelSleep (vT' - diffT)
+                  return NoValue
+
+diffTime :: Double -> Double -> Double
+diffTime x y = x - y
