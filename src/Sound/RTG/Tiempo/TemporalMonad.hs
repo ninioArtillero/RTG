@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Collapse lambdas" #-}
--- | Temporal Monad implementation of Virtual Time Semantics from
+{-# HLINT ignore "Avoid lambda" #-}
+-- | Temporal Monad for virtual time semantics from
 --
 -- Aaron, Samuel, Dominic Orchard, y Alan F. Blackwell. 2014.
 -- “Temporal semantics for a live coding language”.
@@ -10,22 +11,29 @@
 -- https://doi.org/10.1145/2633638.2633648.
 module Sound.RTG.Tiempo.TemporalMonad where
 
-import           Sound.Osc      (pauseThread)
-import           Sound.Osc.Time (currentTime)
+import           Control.Concurrent              (forkIO)
+import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
+                                                  Transport (..), Udp, ascii,
+                                                  currentTime, message, openUdp,
+                                                  pauseThread, sendMessage)
+import           Sound.RTG.Ritmo.RhythmicPattern (Binary (..), Rhythm (..),
+                                                  Rhythmic (..), getRhythm,
+                                                  toRhythm)
+import Data.List (intersperse)
 
 
 type Time = Double
 type VTime = Double
 
 -- | Output value type
-data Value = NoValue | Message deriving (Show, Eq)
+data Value = NoValue | Output Message deriving (Show, Eq)
 
 newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime)))
 
 -- First fmap composes, the seconds maps into the IO monad
 -- and the third into the first element of the pair.
 instance Functor Temporal where
-  fmap f  (T p) = T ( \(startT,nowT) -> fmap (\(x,y) -> (f x,y)) . p (startT, nowT))
+  fmap f  (T p) = T ( \(startT,nowT) -> \vT -> fmap (\(x,y) -> (f x,y)) . p (startT, nowT) $ vT)
 
 instance Applicative Temporal where
   pure a = T (\(_,_) -> \vT -> return (a,vT))
@@ -82,3 +90,55 @@ runTime :: Temporal a -> IO a
 runTime (T c) = do startT <- currentTime
                    (a, _) <- c (startT,startT) 0
                    return a
+
+-- IMPLEMENTATION
+
+type Dur = Double
+type CPS = Double
+type SampleName = String
+
+-- NOTE: que dentro de un valor temporal, la mónada en cuestión es la IO
+playEvent :: Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
+playEvent port sample delayT x = T (\(_,_) -> \vT ->
+                                       do case x of
+                                            One -> do
+                                              sendMessage port (superDirtMessageGen sample);
+                                              return (Output $ superDirtMessageGen sample, vT)
+                                            Zero -> return (NoValue,vT))
+
+openSuperDirtPort :: Temporal Udp
+openSuperDirtPort = T (\(_,_) -> \vT ->
+                       do port <- openUdp "127.0.0.1" 57120
+                          return (port , vT))
+
+
+playPattern :: CPS -> SampleName -> [Binary] -> Temporal ()
+playPattern _ _ [] = return ()
+playPattern cps sample pttrn = do
+  let n = length pttrn
+      delayT = eventDuration cps n
+  port <- openSuperDirtPort
+  sequence_ . intersperse (sleep delayT) . map (playEvent port sample delayT) $ pttrn
+
+
+playM :: Rhythmic a => SampleName -> a -> IO ()
+playM sample rhythmic = do
+  forkIO $
+    runTime . playPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
+  return ()
+
+
+superDirtMessageGen :: SampleName -> Message
+superDirtMessageGen sample = message
+        "/dirt/play"
+        [
+          AsciiString $ ascii "s",
+          AsciiString $ ascii sample
+        ]
+
+
+eventDuration :: Double -> Int -> Double
+eventDuration cps pulses = secondsPerCycle / eventsPerCycle
+  where
+    secondsPerCycle = 1 / cps
+    eventsPerCycle = fromIntegral pulses
