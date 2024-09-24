@@ -1,18 +1,17 @@
 module Sound.RTG.Tiempo.OscOut where
 
 import           Control.Concurrent
-import           Control.Monad                   (forM_, forever)
+import           Control.Monad                   (forever)
 import           GHC.IO                          (unsafePerformIO)
 import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
-                                                  Udp, ascii, message, openUdp,
+                                                  ascii, message, openUdp,
                                                   pauseThread, sendMessage)
-import           Sound.RTG.Ritmo.Pattern         (Pattern)
-import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..),
-                                                  toInts)
-import           System.Environment              (getArgs)
+import           Sound.RTG.Ritmo.RhythmicPattern (Binary (..), Rhythm (..),
+                                                  Rhythmic (..))
 
 type CPS = Rational
 type SampleName = String
+type Pattern a = [a]
 
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
@@ -30,7 +29,7 @@ patternStream :: SampleName -> Pattern Binary -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
-  port <- openUdp "127.0.0.1" 57120 :: IO Udp
+  port <- openUdp "127.0.0.1" 57120
   onsetContainer <- newEmptyMVar
   index <- newMVar 0
   -- pattern query
@@ -66,10 +65,9 @@ messageGen One sample = message "/dirt/play"
    -- Float 0.0,
    -- ASCII_String $ ascii "delta",
    -- Float 1.7777760028839,
-   ASCII_String $ ascii "s",
-   ASCII_String $ ascii sample
+   AsciiString $ ascii "s",
+   AsciiString $ ascii sample
   ]
->>>>>>> origin/main
 
 eventDuration :: Rational -> Int -> Rational
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle
