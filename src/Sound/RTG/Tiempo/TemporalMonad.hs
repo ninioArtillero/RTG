@@ -12,21 +12,18 @@
 module Sound.RTG.Tiempo.TemporalMonad where
 
 import           Control.Concurrent              (forkIO)
-import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
-                                                  Transport (..), Udp, ascii,
-                                                  currentTime, message, openUdp,
-                                                  pauseThread, sendMessage)
+import           Control.Monad                   (forever)
+import qualified Sound.Osc.Fd                    as Osc
 import           Sound.RTG.Ritmo.RhythmicPattern (Binary (..), Rhythm (..),
                                                   Rhythmic (..), getRhythm,
                                                   toRhythm)
-import Data.List (intersperse)
 
 
 type Time = Double
 type VTime = Double
 
--- | Output value type
-data Value = NoValue | Output Message deriving (Show, Eq)
+-- | Output values
+data Value = NoValue | Output !Osc.Message deriving (Show, Eq)
 
 newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime)))
 
@@ -39,7 +36,7 @@ instance Applicative Temporal where
   pure a = T (\(_,_) -> \vT -> return (a,vT))
   T f <*> T p = T (\(startT,nowT) -> \vT ->
                     do (f, vT') <- f (startT,nowT) vT
-                       thenT <- currentTime
+                       thenT <- Osc.currentTime
                        (x,vT'') <- p (startT,thenT) vT'
                        return (f x, vT''))
 
@@ -48,7 +45,7 @@ instance Monad Temporal where
   T p >>= q = T (\(startT,nowT) -> \vT ->
                     do (x,vT') <- p (startT,nowT) vT
                        let T q' = q x
-                       thenT <- currentTime
+                       thenT <- Osc.currentTime
                        q' (startT,thenT) vT')
 
 time :: Temporal Time
@@ -65,7 +62,7 @@ setVirtualTime vT = T (\_ -> \_ -> return ((), vT ))
 
 kernelSleep :: RealFrac a => a -> Temporal ()
 kernelSleep t = T (\(_,_) -> \vT ->
-                      do pauseThread t
+                      do Osc.pauseThread t
                          return ((), vT ))
 
 -- | Update virtual time and suspends computation
@@ -87,57 +84,69 @@ diffTime x y = x - y
 
 -- | Executing a temporal computation/program
 runTime :: Temporal a -> IO a
-runTime (T c) = do startT <- currentTime
+runTime (T c) = do startT <- Osc.currentTime
                    (a, _) <- c (startT,startT) 0
                    return a
 
--- IMPLEMENTATION
+-- Play functions
 
 type Dur = Double
 type CPS = Double
 type SampleName = String
 
--- NOTE: que dentro de un valor temporal, la mónada en cuestión es la IO
-playEvent :: Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
-playEvent port sample delayT x = T (\(_,_) -> \vT ->
-                                       do case x of
-                                            One -> do
-                                              sendMessage port (superDirtMessageGen sample);
-                                              return (Output $ superDirtMessageGen sample, vT)
-                                            Zero -> return (NoValue,vT))
+playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
+playEvent port sample delayT x =
+  T (\(_,_) -> \vT -> do case x of
+                           One -> do Osc.sendMessage port (superDirtMessageGen sample);
+                                     return (Output $ superDirtMessageGen sample, vT)
+                           Zero -> return (NoValue,vT))
 
-openSuperDirtPort :: Temporal Udp
+openSuperDirtPort :: Temporal Osc.Udp
 openSuperDirtPort = T (\(_,_) -> \vT ->
-                       do port <- openUdp "127.0.0.1" 57120
+                       do port <- Osc.openUdp "127.0.0.1" 57120
                           return (port , vT))
 
 
-playPattern :: CPS -> SampleName -> [Binary] -> Temporal ()
-playPattern _ _ [] = return ()
-playPattern cps sample pttrn = do
+temporalPattern :: CPS -> SampleName -> [Binary] -> Temporal ()
+temporalPattern _ _ [] = return ()
+temporalPattern cps sample pttrn = do
   let n = length pttrn
       delayT = eventDuration cps n
   port <- openSuperDirtPort
-  sequence_ . intersperse (sleep delayT) . map (playEvent port sample delayT) $ pttrn
+  sequence_ . addSleeps delayT . map (playEvent port sample delayT) $ pttrn
 
 
-playM :: Rhythmic a => SampleName -> a -> IO ()
-playM sample rhythmic = do
+addSleeps :: Time -> [Temporal Value] -> [Temporal Value]
+addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
+
+
+-- | Play a rhythmic pattern once
+-- TODO: parametrize and hide CPS
+once :: Rhythmic a => SampleName -> a -> IO ()
+once sample rhythmic = do
   forkIO $
-    runTime . playPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
+    runTime . temporalPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
   return ()
 
+-- | Loop a rhythmic pattern
+-- TODO: parametrize and hide CPS
+loop :: Rhythmic a => SampleName -> a -> IO ()
+loop sample rhythmic = do
+  forkIO $ forever $
+    runTime . temporalPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
+  return ()
 
-superDirtMessageGen :: SampleName -> Message
-superDirtMessageGen sample = message
+-- AUX functions
+
+superDirtMessageGen :: SampleName -> Osc.Message
+superDirtMessageGen sample = Osc.message
         "/dirt/play"
         [
-          AsciiString $ ascii "s",
-          AsciiString $ ascii sample
+          Osc.AsciiString $ Osc.ascii "s",
+          Osc.AsciiString $ Osc.ascii sample
         ]
 
-
-eventDuration :: Double -> Int -> Double
+eventDuration :: CPS -> Int -> Dur
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle
   where
     secondsPerCycle = 1 / cps
