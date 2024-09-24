@@ -68,14 +68,14 @@ library
         Sound.RTG.Ritmo.PatronRegular
         Sound.RTG.Ritmo.Pattern
         Sound.RTG.Ritmo.PerfectBalance
+        Sound.RTG.Ritmo.RatioDecons
         Sound.RTG.Ritmo.RhythmicPattern
         Sound.RTG.Ritmo.TimePatterns
         Sound.RTG.Tiempo.OscOut
         Sound.RTG.Tiempo.TemporalMonad
 
     -- Modules included in this library but not exported.
-    other-modules:
-        Sound.RTG.Ritmo.RatioDecons
+    -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: PatternSynonyms ViewPatterns
