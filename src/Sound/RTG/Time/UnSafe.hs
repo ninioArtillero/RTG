@@ -1,13 +1,13 @@
-module Sound.RTG.Tiempo.OscOut where
+module Sound.RTG.Time.UnSafe where
 
 import           Control.Concurrent
-import           Control.Monad                   (forever)
-import           GHC.IO                          (unsafePerformIO)
-import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
-                                                  ascii, message, openUdp,
-                                                  pauseThread, sendMessage)
-import           Sound.RTG.Ritmo.RhythmicPattern (Binary (..), Rhythm (..),
-                                                  Rhythmic (..))
+import           Control.Monad                    (forever)
+import           GHC.IO                           (unsafePerformIO)
+import           Sound.Osc.Fd                     (Datum (AsciiString), Message,
+                                                   ascii, message, openUdp,
+                                                   pauseThread, sendMessage)
+import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
+                                                   Rhythmic (..))
 
 type CPS = Rational
 type SampleName = String

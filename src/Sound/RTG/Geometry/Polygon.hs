@@ -18,14 +18,14 @@ In Mathematics and computation in music: 5th international conference, MCM 2015;
 proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
 https://doi.org/10.1007/978-3-319-20603-5.
 -}
-module Sound.RTG.Geometria.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
+module Sound.RTG.Geometry.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
 
-import qualified Data.Set as Set
-import qualified Data.List  as List (subsequences)
+import qualified Data.List                   as List (subsequences)
+import qualified Data.Set                    as Set
 import qualified Math.Combinatorics.Multiset as MS
-import Sound.RTG.Ritmo.Pattern (rotateLeft, patternSum)
-import qualified Math.NumberTheory.Primes as Primes (unPrime, factorise)
-import Math.NumberTheory.Primes (UniqueFactorisation)
+import           Math.NumberTheory.Primes    (UniqueFactorisation)
+import qualified Math.NumberTheory.Primes    as Primes (factorise, unPrime)
+import           Sound.RTG.Rhythm.Pattern    (patternSum, rotateLeft)
 
 type Pattern a = [a]
 
@@ -40,7 +40,7 @@ type Pattern a = [a]
 -- la combinación lineal resultante sólo contenga 1 y 0.
 
 -- | The Polygon data type is used to represent regular polygons on a discrete space in the circle.
-data Polygon = Polygon Pulses Onsets Position
+data Polygon = Polygon !Pulses !Onsets !Position
 
 type Pulses = Int
 type Onsets = Int
@@ -207,7 +207,7 @@ equivBracelet xs ys = ys `elem` MS.bracelets (MS.fromList xs)
 
 -- | Eliminate redundant elements (bracelet-wise) in a pattern list.
 braceletNub :: Ord a => [[a]] -> [[a]]
-braceletNub [] = []
+braceletNub []     = []
 braceletNub (x:xs) = x : braceletNub ( filter (not . equivBracelet x) xs )
 
 braceletNub' :: Ord a => [[a]] -> [[a]]

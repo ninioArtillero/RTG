@@ -9,14 +9,14 @@
 -- Functional art, music, modeling & design, 37–47. FARM ’14.
 -- New York, NY, USA: Association for Computing Machinery.
 -- https://doi.org/10.1145/2633638.2633648.
-module Sound.RTG.Tiempo.TemporalMonad where
+module Sound.RTG.Time.TemporalMonad where
 
-import           Control.Concurrent              (forkIO)
-import           Control.Monad                   (forever)
-import qualified Sound.Osc.Fd                    as Osc
-import           Sound.RTG.Ritmo.RhythmicPattern (Binary (..), Rhythm (..),
-                                                  Rhythmic (..), getRhythm,
-                                                  toRhythm)
+import           Control.Concurrent               (forkIO)
+import           Control.Monad                    (forever)
+import qualified Sound.Osc.Fd                     as Osc
+import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
+                                                   Rhythmic (..), getRhythm,
+                                                   toRhythm)
 
 
 type Time = Double

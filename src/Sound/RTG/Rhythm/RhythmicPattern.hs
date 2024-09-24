@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs      #-}
-module Sound.RTG.Ritmo.RhythmicPattern where
+module Sound.RTG.Rhythm.RhythmicPattern where
 {-|
 Module      : RhythmicPattern
 Description : Main data type and its API helper functions
@@ -12,13 +12,13 @@ Stability   : experimental
 Rhythmic patterns are wrapped patterns with aditional structure.
 -}
 
-import           Data.Group                     (Group, invert)
-import qualified Data.List                      as List
-import           Sound.RTG.Geometria.Euclidean
-import           Sound.RTG.Ritmo.Bjorklund      (euclideanPattern)
-import           Sound.RTG.Ritmo.Pattern
-import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
-import           Sound.RTG.Ritmo.TimePatterns
+import           Data.Group                      (Group, invert)
+import qualified Data.List                       as List
+import           Sound.RTG.Geometry.Euclidean
+import           Sound.RTG.Rhythm.Bjorklund      (euclideanPattern)
+import           Sound.RTG.Rhythm.Pattern
+import           Sound.RTG.Rhythm.PerfectBalance (indicatorVector)
+import           Sound.RTG.Rhythm.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)

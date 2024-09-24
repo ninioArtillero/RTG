@@ -5,13 +5,13 @@
 -- 4. Los valores negativos de k se traducen por aritmética modular sobre n.
 -- 5. Los valores negativos de n significan un cambio de orientación en el ritmo,
 --    de manera que (k,-n,p) == (k, n, -p)
-module Sound.RTG.Geometria.Euclidean (Euclidean (..), e, invert) where
+module Sound.RTG.Geometry.Euclidean (Euclidean (..), e, invert) where
 
-import Data.Group
-import Sound.RTG.Ritmo.Pattern (rotateLeft)
-import Sound.RTG.Ritmo.Bjorklund (euclideanPattern)
+import           Data.Group
+import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
+import           Sound.RTG.Rhythm.Pattern   (rotateLeft)
 
-data Euclidean = Euclidean Onsets Pulses Position deriving (Ord)
+data Euclidean = Euclidean !Onsets !Pulses !Position deriving (Ord)
 
 type Onsets = Int
 

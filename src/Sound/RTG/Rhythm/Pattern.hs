@@ -1,9 +1,9 @@
 -- | The pattern type and some basic operation
-module Sound.RTG.Ritmo.Pattern where
+module Sound.RTG.Rhythm.Pattern where
 
-import           Data.List                   (nub, sort)
-import           Sound.RTG.Ritmo.Bjorklund   (euclideanPattern)
-import           Sound.RTG.Ritmo.RatioDecons (modOne)
+import           Data.List                    (nub, sort)
+import           Sound.RTG.Rhythm.Bjorklund   (euclideanPattern)
+import           Sound.RTG.Rhythm.RatioDecons (modOne)
 
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.

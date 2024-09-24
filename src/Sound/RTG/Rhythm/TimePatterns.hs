@@ -1,9 +1,9 @@
 -- | A collection of predefined time patterns
-module Sound.RTG.Ritmo.TimePatterns where
+module Sound.RTG.Rhythm.TimePatterns where
 
-import Sound.RTG.Ritmo.RatioDecons (modOne)
-import Data.Group ( Group(invert) )
-import Data.List (nub, sort)
+import           Data.Group                   (Group (invert))
+import           Data.List                    (nub, sort)
+import           Sound.RTG.Rhythm.RatioDecons (modOne)
 
 type Time = Rational
 

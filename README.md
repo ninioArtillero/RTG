@@ -1,4 +1,4 @@
-# Ritmo, Tiempo y Geometría
+# Rhythm, Time and Geometry
 
 RTG (Rhythm, Time and Geometry) is a Haskell library for the creation and manipulation of rhythmic patterns
 implementing a creative interface exploring

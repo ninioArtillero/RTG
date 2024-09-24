@@ -1,12 +1,12 @@
 module Sound.RTG.Context where
 
-import           Sound.RTG.Geometria.Euclidean
-import           Sound.RTG.Geometria.Polygon
-import           Sound.RTG.Ritmo.Bjorklund
-import           Sound.RTG.Ritmo.PatronRegular
-import           Sound.RTG.Ritmo.Pattern
-import           Sound.RTG.Ritmo.PerfectBalance
-import           Sound.RTG.Ritmo.RhythmicPattern
-import           Sound.RTG.Ritmo.TimePatterns
-import           Sound.RTG.Tiempo.OscOut
-import           Sound.RTG.Tiempo.TemporalMonad
+import           Sound.RTG.Geometry.Euclidean
+import           Sound.RTG.Geometry.Polygon
+import           Sound.RTG.Rhythm.Bjorklund
+import           Sound.RTG.Rhythm.PatronRegular
+import           Sound.RTG.Rhythm.Pattern
+import           Sound.RTG.Rhythm.PerfectBalance
+import           Sound.RTG.Rhythm.RhythmicPattern
+import           Sound.RTG.Rhythm.TimePatterns
+import           Sound.RTG.Time.UnSafe
+import           Sound.RTG.Time.TemporalMonad

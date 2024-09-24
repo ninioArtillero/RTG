@@ -1,15 +1,15 @@
--- | Patrones perfectamente balanceados con periodos irreducibles.
--- Propiedades: Tienen tantas trasposiciones/rotaciones como posiciones
--- en su universo cromático. Cada grado de la escala/patrón está rodeado
--- por una secuencia de intervalos diferentes.
--- Basado en Milne et. al. 2015
+-- | Irreducible perfectly balanced rhythmic patterns
+-- Properties: The number of different rotations of a pattern
+-- matches the cardinality of the chromatic universe,
+-- as each element is surrounded by a unique interval sequence.
+-- From Milne et. al. 2015
 -- "Perfect Balance: A Novel Principle for the Construction of
 -- Musical Scales and Meters".
-module Sound.RTG.Ritmo.PerfectBalance (evenness, balance, indicatorVector) where
+module Sound.RTG.Rhythm.PerfectBalance (evenness, balance, indicatorVector) where
 
-import           Data.Complex            (Complex (..), magnitude)
-import           Data.Ratio              (denominator, numerator, (%))
-import           Sound.RTG.Ritmo.Pattern (stdForm)
+import           Data.Complex             (Complex (..), magnitude)
+import           Data.Ratio               (denominator, numerator, (%))
+import           Sound.RTG.Rhythm.Pattern (stdForm)
 
 type Pattern a = [a]
 type Time = Rational

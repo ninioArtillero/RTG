@@ -1,4 +1,4 @@
-module Sound.RTG.Ritmo.Bjorklund (euclideanPattern) where
+module Sound.RTG.Rhythm.Bjorklund (euclideanPattern) where
 
 euclideanPattern :: Int -> Int -> [Int]
 euclideanPattern onsets pulses = bjorklund front back

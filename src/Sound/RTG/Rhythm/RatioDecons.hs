@@ -1,14 +1,13 @@
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns    #-}
 
--- | Pattern synonym para desestructurar rationales
--- Ocupa las extensiones PatternSynonyms y ViewPatterns.
--- Referencias:
+-- | Pattern synonym to decompose rationals
+-- References:
 -- https://gitlab.haskell.org/ghc/ghc/-/wikis/view-patterns
 -- https://gitlab.haskell.org/ghc/ghc/-/wikis/pattern-synonyms
-module Sound.RTG.Ritmo.RatioDecons (modOne) where
+module Sound.RTG.Rhythm.RatioDecons (modOne) where
 
-import Data.Ratio (Ratio, denominator, numerator, (%))
+import           Data.Ratio (Ratio, denominator, numerator, (%))
 
 numDenum :: Integral a => Ratio a -> (a, a)
 numDenum x = (numerator x, denominator x)

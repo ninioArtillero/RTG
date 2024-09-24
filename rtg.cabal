@@ -62,17 +62,17 @@ library
     -- so the context is used as an entry point for the library.
     exposed-modules:
         Sound.RTG.Context
-        Sound.RTG.Geometria.Euclidean
-        Sound.RTG.Geometria.Polygon
-        Sound.RTG.Ritmo.Bjorklund
-        Sound.RTG.Ritmo.PatronRegular
-        Sound.RTG.Ritmo.Pattern
-        Sound.RTG.Ritmo.PerfectBalance
-        Sound.RTG.Ritmo.RatioDecons
-        Sound.RTG.Ritmo.RhythmicPattern
-        Sound.RTG.Ritmo.TimePatterns
-        Sound.RTG.Tiempo.OscOut
-        Sound.RTG.Tiempo.TemporalMonad
+        Sound.RTG.Geometry.Euclidean
+        Sound.RTG.Geometry.Polygon
+        Sound.RTG.Rhythm.Bjorklund
+        Sound.RTG.Rhythm.PatronRegular
+        Sound.RTG.Rhythm.Pattern
+        Sound.RTG.Rhythm.PerfectBalance
+        Sound.RTG.Rhythm.RatioDecons
+        Sound.RTG.Rhythm.RhythmicPattern
+        Sound.RTG.Rhythm.TimePatterns
+        Sound.RTG.Time.UnSafe
+        Sound.RTG.Time.TemporalMonad
 
     -- Modules included in this library but not exported.
     -- other-modules:
