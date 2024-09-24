@@ -23,9 +23,11 @@ module Sound.RTG.Geometria.Polygon (disjointPolygonRhythm, irreducibleBalancedDi
 import qualified Data.Set as Set
 import qualified Data.List  as List (subsequences)
 import qualified Math.Combinatorics.Multiset as MS
-import Sound.RTG.Ritmo.Pattern ( Pattern, rotateLeft, patternSum )
+import Sound.RTG.Ritmo.Pattern (rotateLeft, patternSum)
 import qualified Math.NumberTheory.Primes as Primes (unPrime, factorise)
 import Math.NumberTheory.Primes (UniqueFactorisation)
+
+type Pattern a = [a]
 
 -- TODO:
 -- Al definir un polígono hay que ver la manera de generalizar su posición

@@ -4,9 +4,8 @@ import           Control.Concurrent
 import           Control.Monad                   (forM_, forever)
 import           GHC.IO                          (unsafePerformIO)
 import           Sound.OSC.FD
-import           Sound.RTG.Ritmo.Pattern         (Pattern)
-import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..),
-                                                  toInts)
+import           Sound.RTG.Ritmo.RhythmicPattern (Pattern, Rhythm (..),
+                                                  Rhythmic (..), Binary(..), RhythmicPattern)
 import           System.Environment              (getArgs)
 
 type CPS = Rational
@@ -24,7 +23,7 @@ setcps newcps = do
   swapMVar globalCPS newcps
   return ()
 
-patternStream :: SampleName -> Pattern Int -> IO ThreadId
+patternStream :: SampleName -> Pattern Binary -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
@@ -48,40 +47,25 @@ patternStream sample pttrn = forkIO $ do
 
 play :: Rhythmic a => SampleName -> a -> IO ()
 play sample pttrn = do
-  threadId <- patternStream sample . toInts . getRhythm . toRhythm $ pttrn
+  threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
   print threadId
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
 -- Esta estructura esta definida en el módulo Sound.Tidal.Stream
 -- De esta manera, tengo un mensaje que SuperDirt entiende para producir sonido.
-messageGen :: Integral a => a -> SampleName -> Message
-messageGen x sample =
-  if x == 1
-    then
-      message
-        "/dirt/play"
-        [ -- ASCII_String $ ascii "cps",
-          -- Float 0.5,
-          -- ASCII_String $ ascii "cycle",
-          -- Float 0.0,
-          -- ASCII_String $ ascii "delta",
-          -- Float 1.7777760028839,
-          ASCII_String $ ascii "s",
-          ASCII_String $ ascii sample
-        ]
-    else
-      message
-        "/dirt/play"
-        [ -- ASCII_String $ ascii "cps",
-          -- Float 0.5,
-          -- ASCII_String $ ascii "cycle",
-          -- Float 0.0,
-          -- ASCII_String $ ascii "delta",
-          -- Float 1.7777760028839,
-          ASCII_String $ ascii "s",
-          ASCII_String $ ascii "~"
-        ]
+messageGen :: Binary -> SampleName -> Message
+messageGen Zero _ = message "/dirt/play" []
+messageGen One sample = message "/dirt/play"
+ [ -- ASCII_String $ ascii "cps",
+   -- Float 0.5,
+   -- ASCII_String $ ascii "cycle",
+   -- Float 0.0,
+   -- ASCII_String $ ascii "delta",
+   -- Float 1.7777760028839,
+   ASCII_String $ ascii "s",
+   ASCII_String $ ascii sample
+  ]
 
 eventDuration :: Rational -> Int -> Rational
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle

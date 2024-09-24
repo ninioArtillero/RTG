@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs      #-}
 module Sound.RTG.Ritmo.RhythmicPattern where
 {-|
 Module      : RhythmicPattern
@@ -17,6 +18,7 @@ import           Sound.RTG.Geometria.Euclidean
 import           Sound.RTG.Ritmo.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Ritmo.Pattern
 import           Sound.RTG.Ritmo.PerfectBalance (indicatorVector)
+import           Sound.RTG.Ritmo.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)
@@ -36,6 +38,8 @@ instance Monoid Binary where
 instance Group Binary where
   invert  = id
 
+type Pattern a = [a]
+
 -- | Pattern wrapper to define a new Subgroup instance
 newtype Rhythm a = Rhythm {getRhythm :: Pattern a} deriving (Eq,Show)
 
@@ -44,6 +48,7 @@ instance Functor Rhythm where
 
 -- | Two general posibilities for the applicative instances: ZipList or regular list
 instance Applicative Rhythm where
+  pure :: a -> Rhythm a
   pure xs = Rhythm $ pure xs
   Rhythm fs <*> Rhythm xs = Rhythm (zipWith ($) fs xs) --test
 
@@ -58,7 +63,7 @@ instance Semigroup a => Semigroup (Rhythm a) where
 -- TODO: ¿Lista vacía, relación de equivalencia o lista infinita?
 -- Depende de la operación. Depende de la operación.
 instance (Semigroup a, Monoid a) => Monoid (Rhythm a) where
-  mempty = Rhythm $ repeat mempty
+  mempty = Rhythm []
 
 instance (Semigroup a, Monoid a, Group a) => Group (Rhythm a) where
   invert = fmap invert
@@ -75,7 +80,7 @@ type Meter = Int
 
 -- | The interface for rhythmic pattern types.
 -- It lifts instances to rhythmic patterns.
-class Semigroup a => Rhythmic a where
+class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   -- | Minimal complete definition
   toRhythm :: a -> RhythmicPattern
 
@@ -85,13 +90,11 @@ class Semigroup a => Rhythmic a where
   --
   -- prop> inv x & x = mempty
   inv :: a -> RhythmicPattern
-  inv = invert . toRhythm
+  inv = toRhythm . invert
 
-  -- | Group structure lifting
+  -- | Default group operation
   (&) :: Rhythmic b => a -> b -> RhythmicPattern
   x & y = toRhythm x <> toRhythm y
-  (!&) :: a -> a -> RhythmicPattern
-  x !& y = toRhythm (x <> y)
 
   -- | Complement. Exchange Onsets and Rests (One and Zero).
   --
@@ -137,7 +140,6 @@ class Semigroup a => Rhythmic a where
   -- (\/) = (/\) . co
 
 infixr 5 &
-infixr 6 !&
 infixr 5 |>
 infixl 5 <+>
 
@@ -152,13 +154,13 @@ instance Rhythmic Euclidean where
 instance Rhythmic RhythmicPattern where
   toRhythm = id
 
-instance Rhythmic (Pattern Binary) where
-  toRhythm = Rhythm
-
 -- TODO: La operación de grupo en Pattern es la concatenación de listas,
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
-instance Rhythmic (Pattern Time) where
-  toRhythm = Rhythm . timeToOnset
+instance Rhythmic TimePattern where
+  toRhythm = Rhythm . timeToOnset . queryPattern
+
+-- instance Integral a => Rhythmic [a] where
+--   toRhythm = Rhythm . integralToOnset
 
 -- Geometric structures
 
@@ -242,6 +244,9 @@ toInts = let toInt x = case x of Zero -> 0; One -> 1
 
 timeToOnset :: Pattern Time -> Pattern Binary
 timeToOnset xs = integralToOnset (indicatorVector xs)
+
+showTimePattern :: TimePattern -> Pattern Binary
+showTimePattern = timeToOnset . getPattern
 
 ioisToOnset :: [Int] -> Pattern Binary
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
