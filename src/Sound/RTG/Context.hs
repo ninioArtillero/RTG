@@ -9,3 +9,4 @@ import           Sound.RTG.Ritmo.PerfectBalance
 import           Sound.RTG.Ritmo.RhythmicPattern
 import           Sound.RTG.Ritmo.TimePatterns
 import           Sound.RTG.Tiempo.OscOut
+import           Sound.RTG.Tiempo.TemporalMonad

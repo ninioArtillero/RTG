@@ -3,9 +3,12 @@ module Sound.RTG.Tiempo.OscOut where
 import           Control.Concurrent
 import           Control.Monad                   (forM_, forever)
 import           GHC.IO                          (unsafePerformIO)
-import           Sound.OSC.FD
-import           Sound.RTG.Ritmo.RhythmicPattern (Pattern, Rhythm (..),
-                                                  Rhythmic (..), Binary(..), RhythmicPattern)
+import           Sound.Osc.Fd                    (Datum (AsciiString), Message,
+                                                  Udp, ascii, message, openUdp,
+                                                  pauseThread, sendMessage)
+import           Sound.RTG.Ritmo.Pattern         (Pattern)
+import           Sound.RTG.Ritmo.RhythmicPattern (Rhythm (..), Rhythmic (..),
+                                                  toInts)
 import           System.Environment              (getArgs)
 
 type CPS = Rational
@@ -27,7 +30,7 @@ patternStream :: SampleName -> Pattern Binary -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
-  port <- openUDP "127.0.0.1" 57120 :: IO UDP
+  port <- openUdp "127.0.0.1" 57120 :: IO Udp
   onsetContainer <- newEmptyMVar
   index <- newMVar 0
   -- pattern query
@@ -66,6 +69,7 @@ messageGen One sample = message "/dirt/play"
    ASCII_String $ ascii "s",
    ASCII_String $ ascii sample
   ]
+>>>>>>> origin/main
 
 eventDuration :: Rational -> Int -> Rational
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle
