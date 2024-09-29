@@ -18,9 +18,13 @@ pattern a :% b <-
   where
     a :% b = a % b
 
--- |Rationals projected onto [0,1)
-modOne :: Rational -> Rational
-modOne = modOne' . abs
-
 modOne' :: Rational -> Rational
-modOne' (x :% y) = if x < y then x % y else modOne' $ (x - y) % y
+modOne' = modOne'' . abs
+
+modOne'' :: Rational -> Rational
+modOne'' (x :% y) = if x < y then x % y else modOne' $ (x - y) % y
+
+-- |Rationals wrapped onto [0,1)
+modOne :: Rational -> Rational
+modOne = go . snd . properFraction
+  where go x = if x >= 0 then x else 1 + x
