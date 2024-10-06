@@ -64,6 +64,7 @@ library
         Sound.RTG.Context
         Sound.RTG.Geometry.Euclidean
         Sound.RTG.Geometry.Polygon
+        Sound.RTG.Music
         Sound.RTG.Rhythm.Bjorklund
         Sound.RTG.Rhythm.PatronRegular
         Sound.RTG.Rhythm.Pattern
@@ -71,6 +72,7 @@ library
         Sound.RTG.Rhythm.RatioDecons
         Sound.RTG.Rhythm.RhythmicPattern
         Sound.RTG.Rhythm.TimePatterns
+        Sound.RTG.TiledStreams
         Sound.RTG.Time.UnSafe
         Sound.RTG.Time.TemporalMonad
 
