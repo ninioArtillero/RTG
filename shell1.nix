@@ -20,7 +20,7 @@ let
   # Alternative 1: inheriting packages
   #project = pkgs.haskellPackages.callPackage ./project.nix { inherit pkgs };
   # Alternative 1: calling release.nix
-  #project = (import ./release.nix).project.env
+  #project = (import ./release.nix).project.env;
 
   # Path to SuperCollider startup script
   scSetup = ./superdirt_startup.scd;
@@ -28,6 +28,7 @@ let
 in mkShellNoCC {
   # List of packages to be available in the shell
   buildInputs = [
+    pkgs.git # for SuperCollider Quarks
     #pkgs.haskellPackages.ghc
     #pkgs.haskellPackages.cabal-install
     project
@@ -38,7 +39,7 @@ in mkShellNoCC {
   shellHook = ''
     # Start SuperCollider in the background and redirect output
     echo -e "Installing, configuring and starting SuperDirt.\nThis might take a while depending on your internet connection..."
-    sclang $scSetup > /temp/sclang.log 2>&1 &
+    sclang $scSetup > /dev/null 2>&1 &
 
     # Ensure that SuperCollider is stopped when exiting the shell
     sclang_pid=$!
