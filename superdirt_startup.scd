@@ -4,6 +4,7 @@
 (
 
 Quarks.install("SuperDirt", "v1.7.4");
+s.sync;
 thisProcess.recompile();
 
 s.reboot { // server options are only updated on reboot
