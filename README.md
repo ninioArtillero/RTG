@@ -74,7 +74,7 @@ Open a terminal at the repository root (where `this` file is located) and run `n
 
 ## Development
 
-The project is being developed with GHC 9.4.8 and has been successfully built also with GHC v.9.6.5.
+The project is being developed with GHC 9.4.8
 
 Use `nix-shell` to load a development environment using nix.
 
@@ -94,7 +94,11 @@ For comparison, a default `shell.nix` file can be created with
 cabal2nix . --shell > shell.nix
 ```
 
+To build the project using nix:
 
+``` sh
+nix-build --attr project release.nix
+```
 
 The compiler can be given as an argument for the build:
 
