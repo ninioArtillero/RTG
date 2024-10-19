@@ -1,3 +1,5 @@
+{ compiler ? "ghc948" }:
+
 let
   # Pinning nixpkgs with nixpkgs tools
   bootstrap = import <nixpkgs> { };
@@ -16,4 +18,9 @@ let
 
   pkgs = import src { };
 
-in { project = pkgs.haskellPackages.callPackage ./project.nix { }; }
+  haskellPackages = if compiler == "default" then
+    pkgs.haskellPackages
+  else
+    pkgs.haskell.packages.${compiler};
+
+in { project = haskellPackages.callPackage ./project.nix { }; }
