@@ -13,7 +13,7 @@ It addresses the following question: how programming language expressiveness tra
 
 Alternative implementations and options:
 
-* [ ] FRP implementations. 
+* [ ] FRP implementations.
   * [ ] MUIs from "The Haskell School of Music"
   * [ ] Tidal Cycles
   * [ ] AFRP: Yampa
@@ -22,7 +22,7 @@ Alternative implementations and options:
 * [ ] Audio
   * [ ] OSC: hosc
   * [ ] MIDI: Euterpea
-  
+
 Current implementation:
 
 * [x] Asynchronous evaluation of patterns
@@ -63,7 +63,7 @@ it will compile the library and open a Haskell interpreter (`ghci`) session with
 
 ### Preparations
 
-Start the SuperDirt: Open SuperCollider (or run `sclang` from a terminal) and runt (Ctrl+Enter) `SuperDirt.start`. 
+Start the SuperDirt: Open SuperCollider (or run `sclang` from a terminal) and runt (Ctrl+Enter) `SuperDirt.start`.
 This will load the audio engine and load its standard samples.
 Alternatively, or in case of SuperCollider error messages regarding the buffer or late messages, run the following SuperDirt configuration file containing optimization options:
 [archivo](https://raw.githubusercontent.com/musikinformatik/SuperDirt/develop/superdirt_startup.scd)
@@ -71,3 +71,33 @@ Alternatively, or in case of SuperCollider error messages regarding the buffer o
 Open a terminal at the repository root (where `this` file is located) and run `nix-shell --run 'cabal repl'` to open an interpreter loaded with the library.
 
 ### TODO: Current API functions
+
+## Development
+
+The project is being developed with GHC 9.4.8 and has been successfully built also with GHC v.9.6.5.
+
+Use `nix-shell` to load a development environment using nix.
+
+The current `shell.nix` has depends on the files created by the following sequence of commands
+
+``` sh
+cabal2nix . > project.nix
+
+REV = nix-instantiate --eval --expr 'builtins.readFile <nixpkgs/.git-revision>'
+
+nix-prefetch-git https://github.com/NixOS/nixpkgs.git $REV > nixpkgs.json
+```
+
+For comparison, a default `shell.nix` file can be created with
+
+```sh
+cabal2nix . --shell > shell.nix
+```
+
+
+
+The compiler can be given as an argument for the build:
+
+```sh
+nix-build --argstr compiler ghc965 --attr project release.nix
+```
