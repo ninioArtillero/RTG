@@ -391,4 +391,4 @@ TSWLatexianTemp*
 #*Notes.bib
 
 # Nix garbage collection root
-.nix-gc-root
+.nix-gc-roots
