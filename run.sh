@@ -50,13 +50,14 @@ create_gc_root() {
             printf "Failed to create GC_ROOTS directory\n"
             exit 1
         }
-        nix-instantiate --add-root "$shell_root" "$nix_file_path" &&
+        nix-instantiate "$nix_file_path" --add-root "$shell_root" --indirect &&
             printf "A new GC root has been created\n"
     elif [ ! -L "$shell_root" ]; then
-        nix-instantiate --add-root "$shell_root" "$nix_file_path" &&
+        nix-instantiate "$nix_file_path" --add-root "$shell_root" --indirect &&
             printf "A new GC root has been created\n"
     else
-        printf "A GC root already exists, use 'make overwrite-roots' to create a new one\n"
+        printf "A GC root already exists, use 'make clean' to erase all previous gc roots" &&
+            printf "in case the cabal file is modified or the pinned nixpkgs is updated\n"
     fi
 }
 
