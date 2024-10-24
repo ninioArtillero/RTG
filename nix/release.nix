@@ -1,4 +1,4 @@
-{ compiler ? "ghc948" }:
+{ compiler ? "default" }:
 
 let
   # Pinning nixpkgs with nixpkgs tools
