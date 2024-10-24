@@ -2,12 +2,12 @@
 
 # Ensure that there's a persistent GC root for the Nix environment
 # and launch cabal repl
-GC_ROOT="$(pwd)/.nix-gc-roots/"
+GC_ROOTS="$(pwd)/.nix-gc-roots/"
 
-if [ ! -d "$GC_ROOT" ]; then
-    mkdir -p "$GC_ROOT" && echo "A gc-root directory has been created"
+if [ ! -d "$GC_ROOTS" ]; then
+    mkdir -p "$GC_ROOTS" && echo "A gc-root directory has been created"
 fi
 
 echo "Launching RTG inside a nix-shell with a persistent GC root" &&
-    nix-instantiate --add-root "$GC_ROOT"/RTG ./nix/shell0.nix &&
+    nix-instantiate --add-root "$GC_ROOTS"/RTG ./nix/shell0.nix &&
     nix-shell ./nix/shell0.nix --run 'cabal repl'
