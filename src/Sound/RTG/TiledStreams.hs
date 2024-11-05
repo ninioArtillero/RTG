@@ -7,7 +7,7 @@
 
 module Sound.RTG.TiledStreams where
 
-import Sound.RTG.Music (Pitch, NoteName(..) )
+import Euterpea.Music
 import Data.Monoid (Sum(..))
 
 -- | Tiled streams are bi-infinite sequences indexed by integers,
@@ -140,8 +140,11 @@ liftInt n = liftVal (Sum n)
 liftPitch :: Pitch -> TiledStream [Pitch]
 liftPitch p = liftVal [p]
 
-query :: TiledStream a -> [(a,String)]
-query t = [(stream t k, "Index:" ++ show k) | let (a,b) = active t, k <- [a..b]]
+queryActive :: TiledStream a -> [(a,String)]
+queryActive t = [(stream t k, show k) | let (a,b) = active t, k <- [a..b]]
+
+query :: Int -> TiledStream a -> [(a,String)]
+query n t = [(stream t k, show k) | k <- [-n..n]]
 
 -- Test examples
 
@@ -152,3 +155,7 @@ c4,d5,g4 :: TiledStream Pitches
 c4 = liftPitch (C,4)
 d5 = liftPitch (D,5)
 g4 = liftPitch (G,4)
+
+s1 = c4 <> d5 <> g4
+
+repPitchStream p =liftPitch p <> repPitchStream p

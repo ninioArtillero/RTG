@@ -1,0 +1,10 @@
+packages: ./rtg.cabal
+
+optimization: False
+
+jobs: $ncpus
+
+source-repository-package
+    type: git
+    location: https://github.com/ninioArtillero/Euterpea2
+    tag: 68d0ba3d7a8014fdb87558a58a982c528ab1a61c
