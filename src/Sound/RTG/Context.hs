@@ -1,5 +1,6 @@
 module Sound.RTG.Context where
 
+import           Euterpea.IO.MIDI
 import           Euterpea.Music
 import           Sound.RTG.Geometry.Euclidean
 import           Sound.RTG.Geometry.Polygon

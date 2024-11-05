@@ -5,7 +5,7 @@
 -- 4. Los valores negativos de k se traducen por aritmética modular sobre n.
 -- 5. Los valores negativos de n significan un cambio de orientación en el ritmo,
 --    de manera que (k,-n,p) == (k, n, -p)
-module Sound.RTG.Geometry.Euclidean (Euclidean (..), e, invert) where
+module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert) where
 
 import           Data.Group
 import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
@@ -96,7 +96,7 @@ instance Group Euclidean where
 
 -- | The interface function to construct euclidean rhythms
 -- (the value constructor is not exported).
-e :: (Int, Int,  Int) -> Euclidean
-e (x,y,z) = Euclidean x y z
+e' :: (Int, Int,  Int) -> Euclidean
+e' (x,y,z) = Euclidean x y z
 
 -- TODO: Aplicar patrón de "smart constructor" y utilizar newtype para evitar errores de argumentos

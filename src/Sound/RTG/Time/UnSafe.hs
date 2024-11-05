@@ -1,4 +1,4 @@
-module Sound.RTG.Time.UnSafe where
+module Sound.RTG.Time.UnSafe (playU) where
 
 import           Control.Concurrent
 import           Control.Monad                    (forever)
@@ -47,8 +47,8 @@ patternStream sample pttrn = forkIO $ do
     send event
     pauseThread dur
 
-play :: Rhythmic a => SampleName -> a -> IO ()
-play sample pttrn = do
+playU :: Rhythmic a => SampleName -> a -> IO ()
+playU sample pttrn = do
   threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
   print threadId
 
