@@ -4,6 +4,7 @@ import           Euterpea.IO.MIDI
 import           Euterpea.Music
 import           Sound.RTG.Geometry.Euclidean
 import           Sound.RTG.Geometry.Polygon
+import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Rhythm.Bjorklund
 import           Sound.RTG.Rhythm.PatronRegular
 import           Sound.RTG.Rhythm.Pattern

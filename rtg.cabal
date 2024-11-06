@@ -64,6 +64,7 @@ library
         Sound.RTG.Context
         Sound.RTG.Geometry.Euclidean
         Sound.RTG.Geometry.Polygon
+        Sound.RTG.ReactivePattern
         Sound.RTG.Rhythm.Bjorklund
         Sound.RTG.Rhythm.PatronRegular
         Sound.RTG.Rhythm.Pattern
@@ -90,6 +91,7 @@ library
         , groups ^>=0.5.3
         , hosc ^>=0.20
         , multiset-comb ^>=0.2.4.2
+        , Yampa ^>=0.14.8
 
     -- Directories containing source files.
     hs-source-dirs:   src
