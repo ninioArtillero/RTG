@@ -1,10 +1,10 @@
+{-# LANGUAGE Arrows #-}
 -- | FRP pattern implementation for on-the-fly pattern transformation
-
 module Sound.RTG.ReactivePattern where
 
 import Control.Concurrent (threadDelay)
 import FRP.Yampa
-import Sound.OSC
+import Sound.Osc hiding (Time)
 
 -- Signal Function
 
@@ -18,7 +18,7 @@ patternToSF pat bpm = proc time -> do
         interval = 60.0 / bpm             -- Convert BPM to seconds per beat
         index = floor (time / interval) `mod` cycleLen
         isOnset = pat !! index == 1
-        messages = if isOnset then [oscMessage time] else []
+        messages = ([oscMessage time | isOnset])
     returnA -< messages
 
 -- Function to generate an OSC message
