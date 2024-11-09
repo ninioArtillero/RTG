@@ -2,11 +2,11 @@
 -- | FRP pattern implementation for on-the-fly pattern transformation
 module Sound.RTG.ReactivePattern where
 
-import Control.Concurrent (threadDelay)
-import FRP.Yampa
-import qualified Sound.Osc as Osc hiding (Time)
-import Sound.RTG.Time.Messages
-import Sound.RTG.Rhythm.RhythmicPattern
+import           Control.Concurrent               (threadDelay)
+import           FRP.Yampa
+import qualified Sound.Osc                        as Osc hiding (Time)
+import           Sound.RTG.Rhythm.RhythmicPattern
+import           Sound.RTG.Time.Messages
 
 -- Signal Function
 

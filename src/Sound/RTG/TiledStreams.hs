@@ -7,8 +7,8 @@
 
 module Sound.RTG.TiledStreams where
 
-import Euterpea.Music
-import Data.Monoid (Sum(..))
+import           Data.Monoid    (Sum (..))
+import           Euterpea.Music
 
 -- | Tiled streams are bi-infinite sequences indexed by integers,
 -- paremetrized by a type representing musical values.
@@ -48,7 +48,7 @@ instance Monoid a => Monoid (TiledStream a) where
 -- | The tiled product for spatio-temporal combination of tiled streams,
 -- generalizing sequential and parallel composition
 (+*) :: TiledStream a -> TiledStream b -> TiledStream (a,b)
-t1 +* t2 = 
+t1 +* t2 =
   TiledStream { active = productRealization t1 t2
               , sync   = sync t1 + sync t2
               , stream = \k -> ( stream t1 k , stream t2 $ k - sync t1 ) }

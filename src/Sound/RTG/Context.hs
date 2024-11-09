@@ -12,5 +12,5 @@ import           Sound.RTG.Rhythm.PerfectBalance
 import           Sound.RTG.Rhythm.RhythmicPattern
 import           Sound.RTG.Rhythm.TimePatterns
 import           Sound.RTG.TiledStreams
-import           Sound.RTG.Time.UnSafe
 import           Sound.RTG.Time.TemporalMonad
+import           Sound.RTG.Time.UnSafe
