@@ -17,7 +17,10 @@ import qualified Sound.Osc.Fd                     as Osc
 import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
                                                    Rhythmic (..), getRhythm,
                                                    toRhythm)
-
+import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
+                                                   eventDuration,
+                                                   superDirtMessage,
+                                                   superDirtPort)
 
 type Time = Double
 type VTime = Double
@@ -90,20 +93,16 @@ runTime (T c) = do startT <- Osc.currentTime
 
 -- Play functions
 
-type Dur = Double
-type CPS = Double
-type SampleName = String
-
 playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
 playEvent port sample delayT x =
   T (\(_,_) -> \vT -> do case x of
-                           One -> do Osc.sendMessage port (superDirtMessageGen sample);
-                                     return (Output $ superDirtMessageGen sample, vT)
+                           One -> do Osc.sendMessage port (superDirtMessage sample);
+                                     return (Output $ superDirtMessage sample, vT)
                            Zero -> return (NoValue,vT))
 
 openSuperDirtPort :: Temporal Osc.Udp
 openSuperDirtPort = T (\(_,_) -> \vT ->
-                       do port <- Osc.openUdp "127.0.0.1" 57120
+                       do port <- superDirtPort
                           return (port , vT))
 
 
@@ -135,19 +134,3 @@ loop sample rhythmic = do
   forkIO $ forever $
     runTime . temporalPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
   return ()
-
--- AUX functions
-
-superDirtMessageGen :: SampleName -> Osc.Message
-superDirtMessageGen sample = Osc.message
-        "/dirt/play"
-        [
-          Osc.AsciiString $ Osc.ascii "s",
-          Osc.AsciiString $ Osc.ascii sample
-        ]
-
-eventDuration :: CPS -> Int -> Dur
-eventDuration cps pulses = secondsPerCycle / eventsPerCycle
-  where
-    secondsPerCycle = 1 / cps
-    eventsPerCycle = fromIntegral pulses
