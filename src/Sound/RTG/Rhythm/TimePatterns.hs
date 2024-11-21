@@ -1,7 +1,11 @@
 -- | A collection of predefined time patterns
-module Sound.RTG.Rhythm.TimePatterns where
+module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time, getPattern, queryPattern,
+                                      diatonic, diminished, wholeTone, gypsy, japanese,
+                                      fiveB, shiko, clave, soukous, rumba, bossa, gahu,
+                                      amiotScale, firstQuart, crowded)
+where
 
-import           Data.Group                   (Group (invert))
+import           Data.Group                   (Group (..))
 import           Data.List                    (nub, sort)
 import           Sound.RTG.Rhythm.RatioDecons (modOne)
 

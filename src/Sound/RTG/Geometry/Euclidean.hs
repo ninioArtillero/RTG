@@ -7,7 +7,7 @@
 --    de manera que (k,-n,p) == (k, n, -p)
 module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert) where
 
-import           Data.Group
+import           Data.Group                 (Group (..))
 import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
 import           Sound.RTG.Rhythm.Pattern   (rotateLeft)
 

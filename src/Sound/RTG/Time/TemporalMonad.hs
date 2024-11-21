@@ -9,7 +9,7 @@
 -- Functional art, music, modeling & design, 37–47. FARM ’14.
 -- New York, NY, USA: Association for Computing Machinery.
 -- https://doi.org/10.1145/2633638.2633648.
-module Sound.RTG.Time.TemporalMonad where
+module Sound.RTG.Time.TemporalMonad (once, loop) where
 
 import           Control.Concurrent               (forkIO)
 import           Control.Monad                    (forever)
