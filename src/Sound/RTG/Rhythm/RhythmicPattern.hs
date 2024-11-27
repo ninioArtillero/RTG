@@ -194,35 +194,20 @@ mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBui
               (_,True)   -> One : replicate (n-1) Zero ++ [One] ++ longClusterBuilder nbs
               (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
 
+-- | A list of pairs where the second value indicates whether
+-- its neighbors first values are bigger
+type Neighborhood = [(Int, (Bool,Bool))]
 
--- | Takes a IOIs pattern and returns a list of lists with minimal IOIs in the same list
--- and neighboorhood information.
-parseNeighborhoods :: Pattern Int -> [[(Int,(Bool,Bool))]]
--- | Applicative style is used on the input, which means that
--- the pattern is evaluated on both functions surrounding @<*>@ before zipping)
-parseNeighborhoods bs = reverse $ map reverse $ parseNeighborhoodsIter (zip <$> id <*> biggerNeighbor $ bs) [] []
+-- | Takes an IOI pattern and transforms it into a list of neighborhoods
+-- joining the intervals of mutual nearest neighbors
+parseNeighborhoods :: Pattern Int -> [Neighborhood]
+parseNeighborhoods bs = reverse $ map reverse $ parseNeighborhoodsIter (toNeighborhood bs) [] []
 
--- | Helper function with an extra parameter to join the intervals of nearest neighbors
-parseNeighborhoodsIter :: [(Int, (Bool,Bool))] -> [(Int, (Bool,Bool))] -> [[(Int, (Bool,Bool))]] -> [[(Int, (Bool,Bool))]]
-parseNeighborhoodsIter [] [] clusters = clusters
-parseNeighborhoodsIter [] acc clusters = acc:clusters
-parseNeighborhoodsIter (n@(_,bs):ns) acc clusters =
-  case bs of
-    -- A local minimum forms its own cluster.
-    -- Conditional to avoid passing empty list
-    (True,True) -> if null acc
-      then parseNeighborhoodsIter ns [] ([n]:clusters)
-      else parseNeighborhoodsIter ns [] ([n]:acc:clusters)
-    -- Start a new cluster without passing empty lists
-    (True,False) -> if null acc
-      then parseNeighborhoodsIter ns [n] clusters
-      else parseNeighborhoodsIter ns [n] (acc:clusters)
-    -- Add interval to cluster
-    (False,False) ->
-           parseNeighborhoodsIter ns (n:acc) clusters
-    -- | Close a cluster
-    (False,True) ->
-           parseNeighborhoodsIter ns [] ((n:acc):clusters)
+
+toNeighborhood :: [Int] -> Neighborhood
+-- Applicative style is used on the input, which means that
+-- the pattern is evaluated on both functions surrounding @<*>@ before zipping
+toNeighborhood = zip <$> id <*> biggerNeighbor
 
 -- | Compare an element's left and right neighbors. True means its bigger.
 biggerNeighbor :: [Int] -> [(Bool,Bool)]
@@ -230,9 +215,31 @@ biggerNeighbor xs = let leftNeighbors = zipWith (>) (rotateRight 1 xs) xs
                         rightNeighbors = zipWith (>) (rotateLeft 1 xs) xs
                     in zip leftNeighbors rightNeighbors
 
+-- | Iterative helper function for 'parseNeighborhoods'
+parseNeighborhoodsIter :: Neighborhood -> Neighborhood -> [Neighborhood] -> [Neighborhood]
+parseNeighborhoodsIter [] [] neighborhoods = neighborhoods
+parseNeighborhoodsIter [] acc neighborhoods = acc:neighborhoods
+parseNeighborhoodsIter (n@(_,bs):ns) acc neighborhoods =
+  case bs of
+    -- A local minimum forms its own cluster.
+    -- Conditional to avoid passing empty list
+    (True,True) -> if null acc
+      then parseNeighborhoodsIter ns [] ([n]:neighborhoods)
+      else parseNeighborhoodsIter ns [] ([n]:acc:neighborhoods)
+    -- Start a new neighborhood without passing empty lists
+    (True,False) -> if null acc
+      then parseNeighborhoodsIter ns [n] neighborhoods
+      else parseNeighborhoodsIter ns [n] (acc:neighborhoods)
+    -- Add interval to cluster
+    (False,False) ->
+           parseNeighborhoodsIter ns (n:acc) neighborhoods
+    -- | Close a cluster
+    (False,True) ->
+           parseNeighborhoodsIter ns [] ((n:acc):neighborhoods)
+
 -- | Compute the Inter-Onset-Intervals of an onset pattern
 iois :: Pattern Binary -> [Int]
--- Intervals are calculated by counting the times the scan doesn't add another onset
+-- Intervals are calculated by counting the times scanl doesn't add another onset
 iois = let intervals = List.group . drop 1 . scanl pickOnsets [] . startPosition
            pickOnsets acc x = if x == One then x:acc else acc
        in map length . intervals
