@@ -200,25 +200,29 @@ mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBui
 parseNeighborhoods :: Pattern Int -> [[(Int,(Bool,Bool))]]
 -- | Applicative style is used on the input, which means that
 -- the pattern is evaluated on both functions surrounding @<*>@ before zipping)
-parseNeighborhoods bs = map reverse $ parseNeighborhoodsIter (zip <$> id <*> biggerNeighbor $ bs) []
+parseNeighborhoods bs = reverse $ map reverse $ parseNeighborhoodsIter (zip <$> id <*> biggerNeighbor $ bs) [] []
 
 -- | Helper function with an extra parameter to join the intervals of nearest neighbors
-parseNeighborhoodsIter :: [(Int, (Bool,Bool))] -> [(Int, (Bool,Bool))] -> [[(Int, (Bool,Bool))]]
-parseNeighborhoodsIter [] [] = []
-parseNeighborhoodsIter [] xs = [xs]
-parseNeighborhoodsIter (m@(int,ns):bs) xs = case ns of
-  -- A local minimum is its own cluster. Avoid passing empty list.
-  (True,True) -> if null xs
-    then [m] : parseNeighborhoodsIter bs []
-    else xs : [m] : parseNeighborhoodsIter bs []
-  -- Start a new cluster without passing empty lists
-  (True,False) -> if null xs
-    then parseNeighborhoodsIter bs [m]
-    else xs : parseNeighborhoodsIter bs [m]
-  -- Add interval to cluster
-  (False,False) -> parseNeighborhoodsIter bs (m:xs)
-  -- | Close a cluster
-  (False,True) -> (m:xs) : parseNeighborhoodsIter bs []
+parseNeighborhoodsIter :: [(Int, (Bool,Bool))] -> [(Int, (Bool,Bool))] -> [[(Int, (Bool,Bool))]] -> [[(Int, (Bool,Bool))]]
+parseNeighborhoodsIter [] [] clusters = clusters
+parseNeighborhoodsIter [] acc clusters = acc:clusters
+parseNeighborhoodsIter (n@(_,bs):ns) acc clusters =
+  case bs of
+    -- A local minimum forms its own cluster.
+    -- Conditional to avoid passing empty list
+    (True,True) -> if null acc
+      then parseNeighborhoodsIter ns [] ([n]:clusters)
+      else parseNeighborhoodsIter ns [] ([n]:acc:clusters)
+    -- Start a new cluster without passing empty lists
+    (True,False) -> if null acc
+      then parseNeighborhoodsIter ns [n] clusters
+      else parseNeighborhoodsIter ns [n] (acc:clusters)
+    -- Add interval to cluster
+    (False,False) ->
+           parseNeighborhoodsIter ns (n:acc) clusters
+    -- | Close a cluster
+    (False,True) ->
+           parseNeighborhoodsIter ns [] ((n:acc):clusters)
 
 -- | Compare an element's left and right neighbors. True means its bigger.
 biggerNeighbor :: [Int] -> [(Bool,Bool)]
