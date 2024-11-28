@@ -9,6 +9,11 @@ module Sound.RTG.Rhythm.RatioDecons (modOne) where
 
 import           Data.Ratio (Ratio, denominator, numerator, (%))
 
+-- TODO: This module is mostly deprecated and should be cleaned of
+-- unnecessary functions. Nevertheless, they might still be used as a
+-- show cased of the imported language extensions and might provide
+-- a faster implementation.
+
 numDenum :: Integral a => Ratio a -> (a, a)
 numDenum x = (numerator x, denominator x)
 
