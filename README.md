@@ -9,9 +9,23 @@ implementing a creative interface exploring
 It is part of my doctoral research project on the affordances of programming language abstractions in music language design and implementation, particularly in the context of live coding.
 It addresses the following question: how programming language expressiveness translates to musical expressiveness for composition and live performance.
 
-## GENERAL TODO
+## TODO
 
-Alternative implementations and options:
+**Current implementation**
+
+* [x] Asynchronous evaluation of patterns
+* [ ] Make patterns addressable so they can be stopped and updated(¿in global state?)
+* [ ] Implement pattern sync alternatives
+* [ ] A syntax to make new scheduled patterns affect current playing patterns
+* [ ] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately and include geometric properties info.
+* [ ] Implement well-formed rhythms (¿3 parameters?)
+* [ ] Continuous morphing of well-formed rhythms using ratio parameter
+* [ ] Have _signals_ for parameter control (for morphing)
+* [ ] Geometrically informed continuous morphing between two arbitrary rhythms
+* [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
+
+
+**Alternative implementations and options**
 
 * [ ] FRP implementations.
   * [ ] MUIs from "The Haskell School of Music"
@@ -20,21 +34,14 @@ Alternative implementations and options:
 * [ ] API design
   * [ ] Parsing: parsec library
 * [ ] Audio
-  * [ ] OSC: hosc
-  * [ ] MIDI: Euterpea
+  * [x] OSC: `hosc`
+  * [x] MIDI: `Euterpea` 
+  * [ ] Embed MIDI functionality using `fluidsynth`
 
-Current implementation:
+**Midterm**
 
-* [x] Asynchronous evaluation of patterns
-* [ ] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately
-* [ ] Scheduling options for event streams: homogeneous using the binary representation (congruent with the rhythmic pattern abstraction) or heterogeneous using a rationals (to avoid sending _silence_ messages)
-* [ ] Implement pattern sync
-* [ ] Make patterns addressable so they can be stopped (¿in global state?)
-* [ ] A switch to make new scheduled patterns affect current playing patterns
-* [ ] Implement well-formed rhythms (¿3 parameters?)
-* [ ] Continuous morphing of well-formed rhythms using ratio parameter
-* [ ] Have signals for parameter control (for morphing)
-* [ ] Geometrically informed continuous morphing between two arbitrary rhythms
+* [ ] Expose options to change/modify message streams to make the system modular (regarding changing sound engine or using other digital instrument).
+* [ ] Create a Tidal Cycles module version.
 
 ## Installation
 

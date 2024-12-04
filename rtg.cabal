@@ -58,8 +58,7 @@ extra-source-files:
 
 library
     -- Modules exported by the library.
-    -- The first is automatically loaded by `cabal repl`,
-    -- so the context is used as an entry point for the library.
+    -- The first is automatically loaded by `cabal repl`.
     exposed-modules:
         Sound.RTG
         Sound.RTG.Geometry
