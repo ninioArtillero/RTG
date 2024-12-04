@@ -15,6 +15,7 @@ Rhythmic patterns are wrapped patterns with aditional structure.
 
 import           Data.Group                      (Group, invert)
 import qualified Data.List                       as List
+import           Euterpea.Music                  hiding (invert)
 import           Sound.RTG.Geometry.Euclidean
 import           Sound.RTG.Rhythm.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Rhythm.Pattern
@@ -271,3 +272,45 @@ showTimePattern = timeToOnset . getPattern
 
 ioisToOnset :: [Int] -> Pattern Binary
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
+
+-- Use patterns simultaneaously as rhythms and scales.
+
+type CPS = Rational
+type Root = Pitch
+type Scale = [Pitch]
+
+-- | Plays a give scale in the form of a TimePattern along the events
+-- of the rhythm.
+-- TODO: Take the CPS and root values into a State Monad to stop passing then arround
+-- TODO: Look for time and timing issues (Euterpea management of duration)
+patternToMusic :: Rhythmic a => CPS -> Root -> TimePattern -> a -> Music Pitch
+patternToMusic cps root timePttrn rhythm  =
+  let pttrn = getRhythm . toRhythm $ rhythm
+      scale = toScale root timePttrn
+      eventDur = 1/(fromIntegral (length pttrn) * cps)
+   in line $ matchEvents eventDur pttrn scale
+
+
+matchEvents :: Dur -> Pattern Binary -> Scale -> [Music Pitch]
+matchEvents 0 _ _  = []
+matchEvents _ [] _ = []
+matchEvents _ _ [] = []
+matchEvents duration pttrn scale =
+  let (x:xs) = cycle pttrn
+      (p:ps) = cycle scale
+   in case x of
+     Zero -> rest duration : matchEvents duration xs (p:ps)
+     One  -> note duration p : matchEvents duration xs ps
+
+-- TODO: Allow microtonal scales
+
+toScale :: Root -> TimePattern -> Scale
+toScale root = semitonesToScale root . timeToSemitoneIntervals
+
+timeToSemitoneIntervals :: TimePattern -> [Int]
+timeToSemitoneIntervals pttrn =
+  let intervals = iois. getRhythm . toRhythm $ pttrn
+   in reverse $ foldl (\acc x -> (head acc + x):acc) [0] intervals
+
+semitonesToScale :: Root -> [Int] -> Scale
+semitonesToScale root = map (pitch . (+ absPitch root))
