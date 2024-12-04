@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs      #-}
+{-# LANGUAGE LambdaCase        #-}
 module Sound.RTG.Rhythm.RhythmicPattern where
 {-|
 Module      : RhythmicPattern
@@ -104,7 +105,7 @@ class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   --
   co :: a -> RhythmicPattern
   co x = let rhythm = toRhythm x
-         in fmap (\x -> case x of Zero -> One; One -> Zero) rhythm
+         in fmap (\case Zero -> One; One -> Zero) rhythm
 
   -- | Reverse. Play pattern backwards, different from Inverse.
   --
@@ -164,24 +165,24 @@ instance Rhythmic TimePattern where
 
 -- Geometric structures
 
--- | Computes the mutual nearest neighbor graph of an onset pattern.
+-- | Computes the /mutual nearest neighbor graph/ of an onset pattern.
+-- List wrap around as if embedded in a circle.
+-- The result is a list of patterns formed by the clustering of
+-- mutually neares onsets.
 -- For example:
 --
--- >>> cluster rumba
+-- >>> mnng rumba
 -- [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
 --
--- TODO: Decide what to do with clusters that wrap pass the cycle border
--- For example, bossa has only one cluster sourrounding the 3 rest interval:
---
--- >>> clusters bossa
+-- >>> mnng bossa
 -- [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
-mutualNNG :: Pattern Binary -> [Pattern Binary]
-mutualNNG xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilder neighborhood) neighborhoods
+mnng :: Pattern Binary -> [Pattern Binary]
+mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilder neighborhood) neighborhoods
   where neighborhoods = parseNeighborhoods $ iois xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
-            -- True signals the presense of a One
+            -- True signals the presense of an onset (One)
             (n, (b1,b2)) : nbs -> case (b1,b2) of
               (True,True)   -> One : replicate (n-1) Zero ++ [One]
               (True,False)  -> One : replicate (n-1) Zero
@@ -201,8 +202,17 @@ type Neighborhood = [(Int, (Bool,Bool))]
 -- | Takes an IOI pattern and transforms it into a list of neighborhoods
 -- joining the intervals of mutual nearest neighbors
 parseNeighborhoods :: Pattern Int -> [Neighborhood]
-parseNeighborhoods bs = reverse $ map reverse $ parseNeighborhoodsIter (toNeighborhood bs) [] []
+parseNeighborhoods bs = reverse . map reverse $ parseNeighborhoodsIter (clusterStart . toNeighborhood $ bs) [] []
 
+-- | Look for a starting neighbor for the cluster to avoid cluster wrapping
+-- around the list in 'parseNeighborhoods'
+clusterStart :: Neighborhood -> Neighborhood
+clusterStart [] = []
+clusterStart n
+  | not $ any (fst . snd) n = n
+  | otherwise = lookStart n
+    where
+      lookStart n = if (fst . snd . head) n then n else lookStart $ rotateLeft 1 n
 
 toNeighborhood :: [Int] -> Neighborhood
 -- Applicative style is used on the input, which means that
