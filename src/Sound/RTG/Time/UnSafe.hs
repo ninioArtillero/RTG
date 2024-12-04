@@ -1,4 +1,4 @@
-module Sound.RTG.Time.UnSafe (playU, setcps, setbpm, globalCPS) where
+module Sound.RTG.Time.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
 
 import           Control.Concurrent
 import           Control.Monad                    (forever)
@@ -57,10 +57,14 @@ patternStream sample pttrn = forkIO $ do
     send event
     pauseThread dur
 
-playU :: Rhythmic a => SampleName -> a -> IO ()
+playU :: Rhythmic a => SampleName -> a -> IO ThreadId
 playU sample pttrn = do
   threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
-  print threadId
+  putStrLn $ "New pattern running at " ++ show threadId
+  return threadId
+
+stop :: ThreadId -> IO ()
+stop = killThread
 
 -- Usé OSCFunc.trace(true) en SuperCollider para ver la estructura
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
