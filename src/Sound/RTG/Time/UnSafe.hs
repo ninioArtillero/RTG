@@ -1,4 +1,4 @@
-module Sound.RTG.Time.UnSafe (playU, setcps, globalCPS) where
+module Sound.RTG.Time.UnSafe (playU, setcps, setbpm, globalCPS) where
 
 import           Control.Concurrent
 import           Control.Monad                    (forever)
@@ -12,6 +12,9 @@ import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
 type CPS = Rational
 type SampleName = String
 type Pattern a = [a]
+type BPM = Int
+-- | Beats per cycle
+type BPC = Int
 
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
@@ -24,6 +27,13 @@ setcps :: CPS -> IO ()
 setcps newcps = do
   swapMVar globalCPS newcps
   return ()
+
+setbpm :: BPC -> BPM -> IO ()
+setbpm bpc bpm = do
+  let newcps = (fromIntegral bpm / 60)/ fromIntegral bpc
+  swapMVar  globalCPS newcps
+  return ()
+
 
 patternStream :: SampleName -> Pattern Binary -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
