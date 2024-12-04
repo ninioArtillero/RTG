@@ -1,4 +1,4 @@
-module Sound.RTG.Time.UnSafe (playU) where
+module Sound.RTG.Time.UnSafe (playU, setcps, globalCPS) where
 
 import           Control.Concurrent
 import           Control.Monad                    (forever)

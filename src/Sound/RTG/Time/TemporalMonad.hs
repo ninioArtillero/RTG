@@ -11,7 +11,7 @@
 -- https://doi.org/10.1145/2633638.2633648.
 module Sound.RTG.Time.TemporalMonad (once, loop) where
 
-import           Control.Concurrent               (forkIO)
+import           Control.Concurrent               (forkIO, readMVar)
 import           Control.Monad                    (forever)
 import qualified Sound.Osc.Fd                     as Osc
 import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
@@ -21,6 +21,7 @@ import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
                                                    eventDuration,
                                                    superDirtMessage,
                                                    superDirtPort)
+import           Sound.RTG.Time.UnSafe
 
 type Time = Double
 type VTime = Double
@@ -123,14 +124,16 @@ addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
 -- TODO: parametrize and hide CPS
 once :: Rhythmic a => SampleName -> a -> IO ()
 once sample rhythmic = do
-  forkIO $
-    runTime . temporalPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
+  forkIO $ do
+    cps <- readMVar globalCPS
+    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
   return ()
 
 -- | Loop a rhythmic pattern
 -- TODO: parametrize and hide CPS
 loop :: Rhythmic a => SampleName -> a -> IO ()
 loop sample rhythmic = do
-  forkIO $ forever $
-    runTime . temporalPattern 0.4 sample . getRhythm . toRhythm $ rhythmic
+  forkIO $ forever $ do
+    cps <- readMVar globalCPS
+    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
   return ()
