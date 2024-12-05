@@ -9,9 +9,9 @@
 -- Functional art, music, modeling & design, 37–47. FARM ’14.
 -- New York, NY, USA: Association for Computing Machinery.
 -- https://doi.org/10.1145/2633638.2633648.
-module Sound.RTG.Time.TemporalMonad (once, loop) where
+module Sound.RTG.Time.TemporalMonad (o, l) where
 
-import           Control.Concurrent               (forkIO, readMVar)
+import           Control.Concurrent               (forkIO, readMVar, ThreadId)
 import           Control.Monad                    (forever)
 import qualified Sound.Osc.Fd                     as Osc
 import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
@@ -23,6 +23,8 @@ import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
                                                    superDirtPort)
 import           Sound.RTG.Time.UnSafe
 
+-- TODO: Change real types to rationals (to have use the same number type across modules)?
+-- efficiency gain?
 type Time = Double
 type VTime = Double
 
@@ -122,18 +124,16 @@ addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
 
 -- | Play a rhythmic pattern once
 -- TODO: parametrize and hide CPS
-once :: Rhythmic a => SampleName -> a -> IO ()
-once sample rhythmic = do
+o :: Rhythmic a => SampleName -> a -> IO ThreadId
+o sample rhythmic = do
   forkIO $ do
     cps <- readMVar globalCPS
     runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
-  return ()
 
 -- | Loop a rhythmic pattern
 -- TODO: parametrize and hide CPS
-loop :: Rhythmic a => SampleName -> a -> IO ()
-loop sample rhythmic = do
+l :: Rhythmic a => SampleName -> a -> IO ThreadId
+l sample rhythmic = do
   forkIO $ forever $ do
     cps <- readMVar globalCPS
     runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
-  return ()
