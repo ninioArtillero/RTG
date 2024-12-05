@@ -310,6 +310,10 @@ showTimePattern = timeToOnset . getPattern
 ioisToOnset :: [Int] -> Pattern Binary
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
 
+onsetCount :: Pattern Binary -> Int
+onsetCount = foldl (\acc x -> case x of Zero -> acc; One -> acc + 1) 0
+
+
 -- Use patterns simultaneaously as rhythms and scales
 -- for Euterpea MIDI output
 
@@ -325,8 +329,12 @@ patternToMusic :: (Rhythmic a, Rhythmic b) => CPS -> Root -> a -> b -> Music Pit
 patternToMusic cps root scalePttrn rhythm =
   let binaryPttrn = getRhythm . toRhythm $ rhythm
       scale = scalePitches root scalePttrn
+      -- TODO: aux function to count onsets (faster?)
+      n = length scale
+      m = onsetCount binaryPttrn
+      sync = m * (lcm n m `div` m)
       eventDur = 1/(fromIntegral (length binaryPttrn) * cps)
-   in line $ matchEvents eventDur binaryPttrn scale
+   in line $ take sync $ matchEvents eventDur binaryPttrn scale
 
 scale :: Rhythmic a => Dur -> Root -> a -> Music Pitch
 scale dur root = line . map (note dur) . scalePitches root
