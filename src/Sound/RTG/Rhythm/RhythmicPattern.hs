@@ -279,16 +279,16 @@ type CPS = Rational
 type Root = Pitch
 type Scale = [Pitch]
 
--- | Plays a give scale in the form of a TimePattern along the events
--- of the rhythm.
+-- | Transforms the first rhythm into a scale to be played at the second.
+-- Produces an infinite 'Music Pitch' value.
 -- TODO: Take the CPS and root values into a State Monad to stop passing then arround
 -- TODO: Look for time and timing issues (Euterpea management of duration)
-patternToMusic :: Rhythmic a => CPS -> Root -> TimePattern -> a -> Music Pitch
-patternToMusic cps root timePttrn rhythm  =
-  let pttrn = getRhythm . toRhythm $ rhythm
-      scale = toScale root timePttrn
-      eventDur = 1/(fromIntegral (length pttrn) * cps)
-   in line $ matchEvents eventDur pttrn scale
+patternToMusic :: (Rhythmic a, Rhythmic b) => CPS -> Root -> a -> b -> Music Pitch
+patternToMusic cps root scalePttrn rhythm =
+  let binaryPttrn = getRhythm . toRhythm $ rhythm
+      scale = toScale root scalePttrn
+      eventDur = 1/(fromIntegral (length binaryPttrn) * cps)
+   in line $ matchEvents eventDur binaryPttrn scale
 
 
 matchEvents :: Dur -> Pattern Binary -> Scale -> [Music Pitch]
@@ -304,10 +304,12 @@ matchEvents duration pttrn scale =
 
 -- TODO: Allow microtonal scales
 
-toScale :: Root -> TimePattern -> Scale
+-- | Transforms a given rhythm into an scale begining at a root note
+-- up to its octave.
+toScale :: Rhythmic a => Root -> a -> Scale
 toScale root = semitonesToScale root . timeToSemitoneIntervals
 
-timeToSemitoneIntervals :: TimePattern -> [Int]
+timeToSemitoneIntervals :: Rhythmic a => a -> [Int]
 timeToSemitoneIntervals pttrn =
   let intervals = iois. getRhythm . toRhythm $ pttrn
    in reverse $ foldl (\acc x -> (head acc + x):acc) [0] intervals
