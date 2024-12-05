@@ -273,7 +273,8 @@ showTimePattern = timeToOnset . getPattern
 ioisToOnset :: [Int] -> Pattern Binary
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
 
--- Use patterns simultaneaously as rhythms and scales.
+-- Use patterns simultaneaously as rhythms and scales
+-- for Euterpea MIDI output
 
 type CPS = Rational
 type Root = Pitch
@@ -286,10 +287,12 @@ type Scale = [Pitch]
 patternToMusic :: (Rhythmic a, Rhythmic b) => CPS -> Root -> a -> b -> Music Pitch
 patternToMusic cps root scalePttrn rhythm =
   let binaryPttrn = getRhythm . toRhythm $ rhythm
-      scale = toScale root scalePttrn
+      scale = scalePitches root scalePttrn
       eventDur = 1/(fromIntegral (length binaryPttrn) * cps)
    in line $ matchEvents eventDur binaryPttrn scale
 
+scale :: Rhythmic a => Dur -> Root -> a -> Music Pitch
+scale dur root = line . map (note dur) . scalePitches root
 
 matchEvents :: Dur -> Pattern Binary -> Scale -> [Music Pitch]
 matchEvents 0 _ _  = []
@@ -306,8 +309,8 @@ matchEvents duration pttrn scale =
 
 -- | Transforms a given rhythm into an scale begining at a root note
 -- up to its octave.
-toScale :: Rhythmic a => Root -> a -> Scale
-toScale root = semitonesToScale root . timeToSemitoneIntervals
+scalePitches :: Rhythmic a => Root -> a -> Scale
+scalePitches root = semitonesToScale root . timeToSemitoneIntervals
 
 timeToSemitoneIntervals :: Rhythmic a => a -> [Int]
 timeToSemitoneIntervals pttrn =
