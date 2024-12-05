@@ -167,54 +167,58 @@ instance Rhythmic TimePattern where
 -- Geometric structures
 
 -- | Computes the /mutual nearest neighbor graph/ of an onset pattern.
--- List wrap around as if embedded in a circle.
+-- Lists wrap as if embedded in a circle.
 -- The result is a list of patterns formed by the clustering of
--- mutually neares onsets.
+-- mutually nearest onsets.
 -- For example:
 --
 -- >>> mnng rumba
--- [[1,0,0,1], [0,0,0], [1,0,0], [1,0,1], [0,0,0]]
+-- [[1,0,0,1], [0,0,0], [1], [0,0], [1,0,1], [0,0,0]]
 --
 -- >>> mnng bossa
--- [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
+-- [[1,0,0,1,0,0,1,0,0,1,0,0,1],[0,0,0]]
+
+-- >>> mnng diatonic
+-- [[1,1],[0],[1,0,1],[0],[1,1],[0],[1],[0]]
 --
 -- NOTE: Isochronous rhythms are collapsed to trival pulses (all onset lists)
 --
 -- >>> mnng wholeTone
 -- [1,1,1,1,1,1]
 --
--- TODO: Still some weird errors with gahu.
+-- TODO: formulate properties
+-- TODO: optmize recursion
 mnng :: Rhythmic a => a -> [Pattern Binary]
-mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilderIter neighborhood []) neighborhoods
+mnng xs = concatMap (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else reverse $ longClusterBuilderIter neighborhood [] []) neighborhoods
   where neighborhoods = parseNeighborhoods . iois . getRhythm . toRhythm $ xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
             (n, (c1,c2)) : nbs -> case (c1,c2) of
-              (GT,GT)   -> One : replicate (n-1) Zero ++ [One]
-              (LT,LT) -> replicate (n-1) Zero
-              (GT,LT)  -> One : replicate (n-1) Zero
-              (LT,GT)  -> replicate (n-1) Zero ++ [One]
-              -- The previous exhaust all possible singleton neighborhoods
-              -- so this wildcard case is just to avoid warnings.
-              (_,_) -> replicate (n-1) Zero
-        longClusterBuilderIter neighborhood acc =
+              (GT,GT)   -> [One: replicate (n-1) Zero ++ [One]]
+              (LT,LT) -> [replicate (n-1) Zero]
+              (GT,LT)  -> [[One], replicate (n-1) Zero]
+              (LT,GT)  -> [replicate (n-1) Zero, [One]]
+              -- The only singleton case left is one interval rhythms (EQ,EQ)
+              (_,_) -> [[One]]
+        longClusterBuilderIter [] [] cluster = cluster
+        longClusterBuilderIter [] acc cluster = acc:cluster
+        longClusterBuilderIter neighborhood acc cluster =
           case neighborhood of
-            [] -> acc
             (n, (c1,c2)) : nbs -> case (c1,c2) of
               (EQ,EQ)  -> if not (null nbs) && (snd . head) nbs == (EQ,LT)
-                then longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One] )
-                else longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
+                then longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One] ) cluster
+                else longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero)) cluster
               (LT,EQ)  ->
-                if (snd . head) nbs == (EQ,EQ)
-                then longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero)
-                else longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero ++ [One])
+                if (snd . head) nbs == (EQ,LT)
+                then longClusterBuilderIter nbs (acc ++ [One]) (replicate (n-1) Zero : cluster)
+                else longClusterBuilderIter nbs acc (replicate (n-1) Zero : cluster)
               (EQ,LT)   ->
-                     longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero)
+                     longClusterBuilderIter nbs []  (replicate (n-1) Zero : acc : cluster)
               (GT,EQ)  ->
-                     longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
-              (_,GT)   ->
-                     longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One])
+                     longClusterBuilderIter nbs (One : replicate (n-1) Zero) cluster
+              (EQ,GT)   ->
+                     longClusterBuilderIter nbs [] ((acc ++ (One : replicate (n-1) Zero ++ [One])) : cluster)
 
 -- | A list of pairs where the second value indicates whether
 -- its neighbors first values are bigger
