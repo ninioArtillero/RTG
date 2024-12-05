@@ -177,8 +177,10 @@ instance Rhythmic TimePattern where
 --
 -- >>> mnng bossa
 -- [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
+-- TODO: fix bug in diatonic (use Ordering for finer granularity in Neighbors)
+-- and make each cluster be bounded by 1
 mnng :: Pattern Binary -> [Pattern Binary]
-mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilder neighborhood) neighborhoods
+mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilderIter neighborhood []) neighborhoods
   where neighborhoods = parseNeighborhoods $ iois xs
         clusterBuilder neighborhood =
           case neighborhood of
@@ -189,12 +191,17 @@ mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder 
               (True,False)  -> One : replicate (n-1) Zero
               (False,False) -> replicate (n-1) Zero
               (False,True)  -> replicate (n-1) Zero ++ [One]
-        longClusterBuilder neighborhood =
+        -- Recursive case
+        longClusterBuilderIter neighborhood acc =
           case neighborhood of
-            [] -> []
+            -- [] -> []
+            [] -> acc
             (n, (b1,b2)) : nbs -> case (b1,b2) of
-              (_,True)   -> One : replicate (n-1) Zero ++ [One] ++ longClusterBuilder nbs
-              (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
+              -- (_,True)   -> One : replicate (n-1) Zero ++ [One] ++ longClusterBuilder nbs
+              (_,True)   -> longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One])
+              -- (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
+              (_,False)  -> longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
+              -- (False,False)  -> longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero ++ [One])
 
 -- | A list of pairs where the second value indicates whether
 -- its neighbors first values are bigger
