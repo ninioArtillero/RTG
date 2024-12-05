@@ -177,35 +177,48 @@ instance Rhythmic TimePattern where
 --
 -- >>> mnng bossa
 -- [[1,0,0,1,0,0,1],[0,0,0],[1,0,0,1,0,0]]
--- TODO: fix bug in diatonic (use Ordering for finer granularity in Neighbors)
--- and make each cluster be bounded by 1
-mnng :: Pattern Binary -> [Pattern Binary]
+--
+-- NOTE: Isochronous rhythms are collapsed to trival pulses (all onset lists)
+--
+-- >>> mnng wholeTone
+-- [1,1,1,1,1,1]
+--
+-- TODO: Still some weird errors with gahu.
+mnng :: Rhythmic a => a -> [Pattern Binary]
 mnng xs = map (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else longClusterBuilderIter neighborhood []) neighborhoods
-  where neighborhoods = parseNeighborhoods $ iois xs
+  where neighborhoods = parseNeighborhoods . iois . getRhythm . toRhythm $ xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
-            -- True signals the presense of an onset (One)
-            (n, (b1,b2)) : nbs -> case (b1,b2) of
-              (True,True)   -> One : replicate (n-1) Zero ++ [One]
-              (True,False)  -> One : replicate (n-1) Zero
-              (False,False) -> replicate (n-1) Zero
-              (False,True)  -> replicate (n-1) Zero ++ [One]
-        -- Recursive case
+            (n, (c1,c2)) : nbs -> case (c1,c2) of
+              (GT,GT)   -> One : replicate (n-1) Zero ++ [One]
+              (LT,LT) -> replicate (n-1) Zero
+              (GT,LT)  -> One : replicate (n-1) Zero
+              (LT,GT)  -> replicate (n-1) Zero ++ [One]
+              -- The previous exhaust all possible singleton neighborhoods
+              -- so this wildcard case is just to avoid warnings.
+              (_,_) -> replicate (n-1) Zero
         longClusterBuilderIter neighborhood acc =
           case neighborhood of
-            -- [] -> []
             [] -> acc
-            (n, (b1,b2)) : nbs -> case (b1,b2) of
-              -- (_,True)   -> One : replicate (n-1) Zero ++ [One] ++ longClusterBuilder nbs
-              (_,True)   -> longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One])
-              -- (_,False)  -> One : replicate (n-1) Zero ++ longClusterBuilder nbs
-              (_,False)  -> longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
-              -- (False,False)  -> longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero ++ [One])
+            (n, (c1,c2)) : nbs -> case (c1,c2) of
+              (EQ,EQ)  -> if not (null nbs) && (snd . head) nbs == (EQ,LT)
+                then longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One] )
+                else longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
+              (LT,EQ)  ->
+                if (snd . head) nbs == (EQ,EQ)
+                then longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero)
+                else longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero ++ [One])
+              (EQ,LT)   ->
+                     longClusterBuilderIter nbs (acc ++ replicate (n-1) Zero)
+              (GT,EQ)  ->
+                     longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) )
+              (_,GT)   ->
+                     longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One])
 
 -- | A list of pairs where the second value indicates whether
 -- its neighbors first values are bigger
-type Neighborhood = [(Int, (Bool,Bool))]
+type Neighborhood = [(Int, (Ordering,Ordering))]
 
 -- | Takes an IOI pattern and transforms it into a list of neighborhoods
 -- joining the intervals of mutual nearest neighbors
@@ -217,21 +230,21 @@ parseNeighborhoods bs = reverse . map reverse $ parseNeighborhoodsIter (clusterS
 clusterStart :: Neighborhood -> Neighborhood
 clusterStart [] = []
 clusterStart n
-  | not $ any (fst . snd) n = n
+  | not $ any ((== GT) . fst . snd) n = n
   | otherwise = lookStart n
     where
-      lookStart n = if (fst . snd . head) n then n else lookStart $ rotateLeft 1 n
+      lookStart n = if (fst . snd . head $ n) == GT then n else lookStart $ rotateLeft 1 n
 
 toNeighborhood :: [Int] -> Neighborhood
 -- Applicative style is used on the input, which means that
 -- the pattern is evaluated on both functions surrounding @<*>@ before zipping
-toNeighborhood = zip <$> id <*> biggerNeighbor
+toNeighborhood = zip <$> id <*> compareNeighbor
 
 -- | Compare an element's left and right neighbors. True means its bigger.
-biggerNeighbor :: [Int] -> [(Bool,Bool)]
-biggerNeighbor xs = let leftNeighbors = zipWith (>) (rotateRight 1 xs) xs
-                        rightNeighbors = zipWith (>) (rotateLeft 1 xs) xs
-                    in zip leftNeighbors rightNeighbors
+compareNeighbor :: [Int] -> [(Ordering,Ordering)]
+compareNeighbor xs = let leftNeighbors = zipWith compare (rotateRight 1 xs) xs
+                         rightNeighbors = zipWith compare (rotateLeft 1 xs) xs
+                     in zip leftNeighbors rightNeighbors
 
 -- | Iterative helper function for 'parseNeighborhoods'
 parseNeighborhoodsIter :: Neighborhood -> Neighborhood -> [Neighborhood] -> [Neighborhood]
@@ -239,20 +252,33 @@ parseNeighborhoodsIter [] [] neighborhoods = neighborhoods
 parseNeighborhoodsIter [] acc neighborhoods = acc:neighborhoods
 parseNeighborhoodsIter (n@(_,bs):ns) acc neighborhoods =
   case bs of
-    -- A local minimum forms its own cluster.
-    -- Conditional to avoid passing empty list
-    (True,True) -> if null acc
+    -- Singleton neighborhoods:
+    -- Local minimum
+    (GT,GT) -> if null acc
       then parseNeighborhoodsIter ns [] ([n]:neighborhoods)
       else parseNeighborhoodsIter ns [] ([n]:acc:neighborhoods)
-    -- Start a new neighborhood without passing empty lists
-    (True,False) -> if null acc
+    -- Local maximum
+    (LT,LT) -> if null acc
+      then parseNeighborhoodsIter ns [] ([n]:neighborhoods)
+      else parseNeighborhoodsIter ns [] ([n]:acc:neighborhoods)
+    -- Decrement
+    (GT,LT) -> if null acc
+      then parseNeighborhoodsIter ns [] ([n]:neighborhoods)
+      else parseNeighborhoodsIter ns [] ([n]:acc:neighborhoods)
+    -- Increment
+    (LT,GT) -> if null acc
+      then parseNeighborhoodsIter ns [] ([n]:neighborhoods)
+      else parseNeighborhoodsIter ns [] ([n]:acc:neighborhoods)
+    -- Composite neighborhoods:
+    -- Add interval to cluster
+    (EQ,EQ) ->
+           parseNeighborhoodsIter ns (n:acc) neighborhoods
+    -- Begin cluster
+    (_,EQ) -> if null acc
       then parseNeighborhoodsIter ns [n] neighborhoods
       else parseNeighborhoodsIter ns [n] (acc:neighborhoods)
-    -- Add interval to cluster
-    (False,False) ->
-           parseNeighborhoodsIter ns (n:acc) neighborhoods
-    -- | Close a cluster
-    (False,True) ->
+    -- End a cluster
+    (EQ,_) ->
            parseNeighborhoodsIter ns [] ((n:acc):neighborhoods)
 
 -- | Compute the Inter-Onset-Intervals of an onset pattern
