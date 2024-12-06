@@ -15,10 +15,12 @@ module Sound.RTG
 where
 
 
-import           Control.Concurrent        (ThreadId, forkIO, readMVar)
+import           Control.Concurrent        (ThreadId, forkIO, killThread,
+                                            myThreadId, readMVar)
 import           Control.Monad             (forever)
 import           Euterpea.IO.MIDI
 import           Euterpea.Music            hiding (forever, invert)
+import           GHC.Conc                  (listThreads, threadStatus)
 import           Sound.RTG.Geometry
 import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Rhythm
@@ -64,3 +66,9 @@ help = putStrLn $ unlines [
                           "and the ghci session needs to be ended to kill all active pattern. \n",
                           "λ> :quit"
                           ]
+
+-- Requires GHC.Conc.listThreads available since base 4.18.0.0
+-- Still not working as expected and imposes a conservative upperbound on
+-- base due the instability of the module (as mentioned in the documentation).
+stopAll :: IO ()
+stopAll = listThreads >>= mapM_ killThread
