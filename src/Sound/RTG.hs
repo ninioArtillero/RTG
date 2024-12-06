@@ -2,6 +2,8 @@
 module Sound.RTG
   (
     p
+  , s
+  , readcps
     -- * Re-exported modules
   , module Euterpea.IO.MIDI
   , module Euterpea.Music
@@ -23,8 +25,19 @@ import           Sound.RTG.Rhythm
 import           Sound.RTG.TiledStreams
 import           Sound.RTG.Time
 
+-- | Play r1 as scale over r2
 p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId
 p root r1 r2 =
-  forkIO $ forever $ do
+  forkIO . forever $ do
     cps <- readMVar globalCPS
     playS $ patternToMusic cps root r1 r2
+
+-- | Play as scale
+s :: Rhythmic a => Root -> a -> IO ThreadId
+s root rhythm =
+  forkIO . forever $ do
+    cps <- readMVar globalCPS
+    playS $ scale cps root rhythm
+
+readcps :: IO CPS
+readcps = readMVar globalCPS

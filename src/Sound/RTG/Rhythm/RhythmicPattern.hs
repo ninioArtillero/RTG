@@ -332,12 +332,15 @@ patternToMusic cps root scalePttrn rhythm =
       -- TODO: aux function to count onsets (faster?)
       n = length scale
       m = onsetCount binaryPttrn
-      sync = m * (lcm n m `div` m)
-      eventDur = 1/(fromIntegral (length binaryPttrn) * cps)
+      l = length binaryPttrn
+      sync = l * (lcm n m `div` m)
+      eventDur = 1/(fromIntegral l * cps)
    in line $ take sync $ matchEvents eventDur binaryPttrn scale
 
-scale :: Rhythmic a => Dur -> Root -> a -> Music Pitch
-scale dur root = line . map (note dur) . scalePitches root
+scale :: Rhythmic a => CPS -> Root -> a -> Music Pitch
+scale cps root rhythm = line . map (note dur) $ scalePttrn
+  where scalePttrn = scalePitches root rhythm
+        dur = 1/ fromIntegral (length scalePttrn) * cps
 
 matchEvents :: Dur -> Pattern Binary -> Scale -> [Music Pitch]
 matchEvents 0 _ _  = []
