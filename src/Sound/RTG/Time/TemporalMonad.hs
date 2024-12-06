@@ -9,20 +9,21 @@
 -- Functional art, music, modeling & design, 37–47. FARM ’14.
 -- New York, NY, USA: Association for Computing Machinery.
 -- https://doi.org/10.1145/2633638.2633648.
-module Sound.RTG.Time.TemporalMonad (o, l) where
+module Sound.RTG.Time.TemporalMonad (o, l, s') where
 
-import           Control.Concurrent               (forkIO, readMVar, ThreadId)
+import           Control.Concurrent               (ThreadId, forkIO, readMVar)
 import           Control.Monad                    (forever)
+import           Euterpea                         (Pitch, note, play)
 import qualified Sound.Osc.Fd                     as Osc
 import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
-                                                   Rhythmic (..), getRhythm,
+                                                   Rhythmic (..), Root,
+                                                   getRhythm, scalePitches,
                                                    toRhythm)
 import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
                                                    eventDuration,
                                                    superDirtMessage,
                                                    superDirtPort)
-import           Sound.RTG.Time.UnSafe
-
+import           Sound.RTG.Time.UnSafe            (globalCPS)
 -- TODO: Change real types to rationals (to have use the same number type across modules)?
 -- efficiency gain?
 type Time = Double
@@ -117,6 +118,17 @@ temporalPattern cps sample pttrn = do
   port <- openSuperDirtPort
   sequence_ . addSleeps delayT . map (playEvent port sample delayT) $ pttrn
 
+scalePattern :: CPS -> [Pitch] -> Temporal ()
+scalePattern _ [] = return ()
+scalePattern cps scale = do
+  let n = length scale
+      delayT = eventDuration cps n
+  sequence_ . addSleeps delayT . map (playMusic $ delayT/2) $ scale
+
+playMusic :: CPS -> Pitch ->  Temporal Value
+playMusic dur p =
+  T (\(_,_) -> \vT -> do forkIO . play $ note (toRational dur) p; return (NoValue,vT))
+
 
 addSleeps :: Time -> [Temporal Value] -> [Temporal Value]
 addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
@@ -137,3 +149,10 @@ l sample rhythmic = do
   forkIO $ forever $ do
     cps <- readMVar globalCPS
     runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
+
+-- | Play as scale
+s' :: Rhythmic a => Root -> a -> IO ThreadId
+s' root rhythm =
+  forkIO . forever $ do
+    cps <- readMVar globalCPS
+    runTime . scalePattern (fromRational cps) . scalePitches root $ rhythm

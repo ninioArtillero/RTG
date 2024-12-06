@@ -30,14 +30,14 @@ p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId
 p root r1 r2 =
   forkIO . forever $ do
     cps <- readMVar globalCPS
-    playS $ patternToMusic cps root r1 r2
+    play $ patternToMusic cps root r1 r2
 
 -- | Play as scale
 s :: Rhythmic a => Root -> a -> IO ThreadId
 s root rhythm =
   forkIO . forever $ do
     cps <- readMVar globalCPS
-    playS $ scale cps root rhythm
+    play $ scale cps root rhythm
 
 readcps :: IO CPS
 readcps = readMVar globalCPS
