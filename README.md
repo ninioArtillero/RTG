@@ -23,6 +23,7 @@ It addresses the following question: how programming language expressiveness tra
 * [ ] Have _signals_ for parameter control (for morphing)
 * [ ] Geometrically informed continuous morphing between two arbitrary rhythms
 * [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
+* [ ] Fix haddocks (see Polygon module for example header)
 
 
 **Alternative implementations and options**
