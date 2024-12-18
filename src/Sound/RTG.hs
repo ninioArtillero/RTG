@@ -10,6 +10,7 @@ module Sound.RTG
   , module Sound.RTG.Geometry
   , module Sound.RTG.ReactivePattern
   , module Sound.RTG.Rhythm
+  , module Sound.RTG.TiledMusic
   , module Sound.RTG.Time
   )
 where
@@ -24,6 +25,7 @@ import           GHC.Conc                  (listThreads, threadStatus)
 import           Sound.RTG.Geometry
 import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Rhythm
+import           Sound.RTG.TiledMusic
 import           Sound.RTG.TiledStreams
 import           Sound.RTG.Time
 

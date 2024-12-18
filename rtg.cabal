@@ -74,6 +74,7 @@ library
         Sound.RTG.Rhythm.RhythmicPattern
         Sound.RTG.Rhythm.TimePatterns
         Sound.RTG.TiledStreams
+        Sound.RTG.TiledMusic
         Sound.RTG.Time
         Sound.RTG.Time.Messages
         Sound.RTG.Time.UnSafe

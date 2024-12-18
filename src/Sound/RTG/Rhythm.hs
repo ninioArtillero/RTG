@@ -13,5 +13,5 @@ import           Sound.RTG.Rhythm.Bjorklund
 import           Sound.RTG.Rhythm.PatronRegular
 import           Sound.RTG.Rhythm.Pattern
 import           Sound.RTG.Rhythm.PerfectBalance
-import           Sound.RTG.Rhythm.RhythmicPattern
+import           Sound.RTG.Rhythm.RhythmicPattern hiding (co, inv)
 import           Sound.RTG.Rhythm.TimePatterns
