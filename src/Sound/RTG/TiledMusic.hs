@@ -8,7 +8,7 @@ Stability   : experimental
 
 Types and operations for music tile composition, using Euterpea library for
 music types and functions. This module's code come from the following paper,
-unless indicated by NOTE or REVIEW marking modifications or additions.
+unless indicated by a NOTE.
 
 Hudak, Paul, and David Janin. 2014. “Tiled Polymorphic Temporal Media.”
 In Proceedings of the 2nd ACM SIGPLAN International Workshop on Functional
@@ -22,17 +22,17 @@ but infinite tiles are considered towards the future (positive rationals).
 -}
 module Sound.RTG.TiledMusic ((%), r, t, re, co, inv, mToT, iMToT, tempoT, liftT, tToM, playT, resync, coresync, stretch, costretch, repeatT, shiftT, iterateT, fixT, forceSync, tileReProd) where
 
-import Euterpea
-import Control.Exception (assert)
+import           Control.Exception (assert)
+import           Euterpea
 
 -- | A tile is a music value together with /sincronización marks/
 -- used in the tiled product '%' to compose them spacetime-wise.
 -- @preT@ is the duration before the /logical start/ of the music
 -- while @postT@ is the duration until the /logical end/.
 -- It is posible for the Music to be non-silent afterwards.
-data Tile a = Tile { preT :: Dur,
+data Tile a = Tile { preT  :: Dur,
                      postT :: Dur,
-                     musT :: Music a}
+                     musT  :: Music a}
 
 -- | The /distance/ between the sinchronization marks of a tile.
 durT :: Tile a -> Dur
@@ -50,12 +50,12 @@ Tile pr1 po1 m1 % Tile pr2 po2 m2 =
 -- The negative case is not used, but defined (simetrically) to exhaust all cases.
 mDelay :: Dur -> Music a -> Music a
 mDelay d m = case signum d of
-  1 -> rest d :+: m
-  0 -> m
+  1  -> rest d :+: m
+  0  -> m
   -1 -> m :+: rest (-d)
 
 -- | Create a silent tile with the given duration.
--- __Corrected from the paper__.
+-- NOTE:__Corrected from the paper__.
 r :: Dur -> Tile a
 r d = if d < 0 then Tile (-d) 0 (rest (-d))
                else Tile 0 d (rest d)
@@ -112,7 +112,6 @@ mToT m = Tile 0 (dur m) m
 -- prop> iMToT (m1 :=: m2) `equiv` iMToT m1 % iMToT m2
 iMToT :: Music a -> Tile a
 iMToT m = Tile 0 0 m
-
 
 -- | Construct a one note ('Music Pitch') tile from a
 -- Euterpea API convinience function.
@@ -180,7 +179,7 @@ coresync s (Tile pre post m) = let npre = pre + s
 
 -- | Parallel fork: Sincronize by placing the second tile pre mark
 -- at the given duration /after/ the pre mark of the second tile
--- __Corrected from the paper__.
+-- NOTE:__Corrected from the paper__.
 --
 -- It can derived, up to observation equivalence,
 -- from silent tiles, the tiled product and reset function:
@@ -192,7 +191,7 @@ insertT d t1 t2 = coresync (-d) (re t2 % coresync d t1)
 
 -- | Parallel join: Sincronize by placing the second tile post mark
 -- at the given duration __before__ the post mark of the second tile
--- __Corrected from the paper__.
+-- NOTE:__Corrected from the paper__.
 --
 -- It can derived, up to observation equivalence,
 -- from silent tiles, the tiled product and co-reset function:
@@ -310,7 +309,7 @@ fixT f = let pr = preT (f (r 0))
 forceSync :: Dur -> Dur -> Tile a -> Tile a
 forceSync npr npo ~(Tile pr po m) =
   if npr < npo
-  then (inv (forceSync npo npr (Tile po pr m)))
+  then inv (forceSync npo npr (Tile po pr m))
   else Tile npr npo (if npr < pr
                      then remove (pr - npr) m
                      else rest (npr - pr) :+: m)
