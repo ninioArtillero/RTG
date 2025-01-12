@@ -40,7 +40,7 @@ create_gc_root() {
     local shell_root
     shell_root="$GC_ROOTS/$SHELL"
     if [[ "$SHELL" == "default" ]]; then
-        nix_file_path="$(pwd)/$SHELL.nix" # Special case: default.nix needs to be at the project root
+        nix_file_path="$(pwd)/nix/shell0.nix" # Currently working default shell
     else
         nix_file_path="$NIX_DIR/$SHELL.nix"
     fi
