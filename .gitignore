@@ -9,6 +9,8 @@
 
 !LICENSE
 
+!Makefile
+
 # Test sub-directories and files other that test suite #
 ########################################################
 test*
