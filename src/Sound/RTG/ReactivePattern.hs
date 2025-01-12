@@ -3,6 +3,8 @@
 module Sound.RTG.ReactivePattern where
 
 import           Control.Concurrent               (forkIO, threadDelay)
+import           Euterpea.IO.MIDI                 (play)
+import           Euterpea.Music
 import           FRP.Yampa
 import qualified Sound.Osc                        as Osc hiding (Time)
 import           Sound.Osc.Fd                     (sendMessage)
@@ -11,7 +13,6 @@ import           Sound.RTG.Time.Messages
 
 -- Signal Function
 
-type Pattern = [Int]      -- Binary list of 1s (onset) and 0s (rests)
 type PatternSF = SF Time [Osc.Message]
 type Beat = Double
 type BPM = Double
@@ -32,6 +33,12 @@ patternToSF sample beat bpm pttrn = proc time -> do
   messages <- arr (\e -> [superDirtMessage sample | isEvent e]) -< event
   --messages <- arr (\(t, e) -> case e of NoEvent -> []; Event _ -> [oscMessage t]) -< (time,event)
   returnA -< messages
+
+playNote :: Music Pitch -> SF [Osc.Message] (IO ())
+playNote note = proc oscMessage -> do
+  n <- arr (\m -> if null m then play (rest 0.01 :: Music Pitch) else play note) -< oscMessage
+  returnA -< n
+
 
 {-
 silence :: PatternSF
@@ -80,8 +87,16 @@ actuate _ messages = do
     mapM_ (sendMessage port) messages
     return False
 
--- Run a pattern with a given BPM
+-- Run a pattern with a given beat value and BPM (OSC to SuperDirt)
 runPattern :: Rhythmic a => SampleName -> Beat -> BPM -> a -> IO ()
 runPattern sample beat bpm pat = do
-  forkIO $ reactimate initSense sense actuate (time >>> patternToSF sample beat bpm pat )
+  forkIO $ reactimate initSense sense actuate (time >>> patternToSF sample beat bpm pat)
+  return ()
+
+actuate' :: Bool -> IO () -> IO Bool
+actuate' _ _ = return False
+
+runPattern' :: Rhythmic a => SampleName -> Beat -> BPM -> a -> IO ()
+runPattern' sample beat bpm pat = do
+  forkIO $ reactimate initSense sense actuate' (time >>> patternToSF sample beat bpm pat >>> playNote (c 4 qn))
   return ()
