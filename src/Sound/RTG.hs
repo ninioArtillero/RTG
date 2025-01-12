@@ -21,7 +21,7 @@ import           Control.Concurrent        (ThreadId, forkIO, killThread,
 import           Control.Monad             (forever)
 import           Euterpea.IO.MIDI
 import           Euterpea.Music            hiding (forever, invert)
-import           GHC.Conc                  (listThreads, threadStatus)
+-- import           GHC.Conc                  (listThreads, threadStatus) -- since base-4.18.0.0
 import           Sound.RTG.Geometry
 import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Rhythm
@@ -72,8 +72,10 @@ help = putStrLn $ unlines [
                           "λ> :quit"
                           ]
 
--- Requires GHC.Conc.listThreads available since base 4.18.0.0
--- Still not working as expected and imposes a conservative upperbound on
--- base due the instability of the module (as mentioned in the documentation).
-stopAll :: IO ()
-stopAll = listThreads >>= mapM_ killThread
+-- Requires GHC.Conc.listThreads available since base-4.18.0.0
+-- Still not working as expected and imposes a conservative upperbound base-4.21.0.0)
+-- due the instability of the module (as mentioned in the documentation).
+-- NOTE: Not working for unknown reason. Modify base dependency bounds as mentioned before
+-- for testing.
+-- stopAll :: IO ()
+-- stopAll = listThreads >>= mapM_ killThread
