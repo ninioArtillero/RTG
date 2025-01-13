@@ -10,6 +10,11 @@ It is part of my doctoral research project on the affordances of programming lan
 It addresses the following general question:
 How programming language expressiveness translates to musical expressiveness for composition and live performance?
 
+> [!IMPORTANT]
+> The library is in a _provisional_ state and still not released on [Hackage](https://hackage.haskell.org/).
+> The API is bloated (most module functions are exported for experimentation)
+> and still subject to redesign.
+
 ## Papers
 
 * [Rhythm, Time and Geometry](https://doi.org/10.21428/108765d1.e65cd604) @ Algorithmic Pattern Salon (2023)
@@ -41,16 +46,20 @@ In case of error, please [open an issue](https://github.com/ninioArtillero/ritmo
 1. Exit with the `:quit` command.
 1. Follow the [usage](#usage) instructions below to use RTG.
 
-> [!NOTE]
+> [!WARNING]
 > Nix will download (and, if necessary, build) all the library dependencies.
 > This process may take a while to finish, but subsequent invocations will be almost immediate
 > as long as the Nix store is not cleaned (with `nix-collect-garbage` or `nix-store --gc` for example).
-> If you want to clean the store to free up some space,
-> notice that nix garbage-collection root is created by the `run.sh` script
-> but for the build to be persistent you need to
-> add the following lines to your nix configuration file (in Linux systems this is located at `/etc/nix/nix.conf`):
+> If you need to clean the store to free up some space and avoid a subsequent rebuild,
+> add the following lines to your system's nix configuration file (in Linux this is located at `/etc/nix/nix.conf`):
+>
+> ```
 > keep-outputs = true
 > keep-derivation = true
+> ```
+>
+> With this options, the garbage-collection root created automatically by the `run.sh` script
+> at `.nix-gc-roots/` will make the build persistent.
 
 ### Audio dependencies
 
@@ -58,6 +67,7 @@ In case of error, please [open an issue](https://github.com/ninioArtillero/ritmo
    1. Install [SuperCollider](https://supercollider.github.io/downloads.html) and, to have all the predefined synths, the [sc3-plugins](https://supercollider.github.io/sc3-plugins/). Both are accessible through the package manager in various Linux distributions.
    1. In the SuperCollider IDE (or in a terminal at the `sclang` shell prompt) run: `Quarks.checkForUpdates({Quarks.install("SuperDirt", "v1.7.4"); thisProcess.recompile()})`.
 1. [Install FluidSynth](https://github.com/FluidSynth/fluidsynth/wiki/Download) (virtual midi synth).
+1. You might need a (virtual) MIDI connection and routing application, such as `qjackctl` (for Jack or Pipewire on Linux), `qpwgraph` (Pipewire on Linux) or Audio MIDI Setup (default on MacOS). For Windows, this [article](https://www.donyaquick.com/midi-on-windows/#x1-80002.3) suggests to the "loopMIDI" application (which currently support Windows 7 to 10). 
 
 ## Usage
 
@@ -73,6 +83,8 @@ This will load the audio engine and load its standard samples.
 * Open a terminal at the repository root (where _this_ file is located)
   * Run `cabal repl` or
   * If installed using Nix: run `./run.sh`, select `default` and wait for the input prompt.
+* Sample names used in some pattern functions match those of the `DirtSamples` quark installed by `SuperDirt`.
+a list of them can be printed by running `~dirt.postSampleInfo;` in SuperCollider.
 
 ### Current API functions
 
