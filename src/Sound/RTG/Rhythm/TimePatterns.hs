@@ -1,8 +1,8 @@
 -- | A collection of predefined time patterns
 module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time, getPattern, queryPattern,
                                       diatonic, diminished, wholeTone, gypsy, japanese,
-                                      fiveB, shiko, clave, soukous, rumba, bossa, gahu,
-                                      amiotScale, firstQuart, crowded)
+                                      fiveBalance, shiko, clave, soukous, rumba, bossa, gahu,
+                                      amiotScale, firstQuart, crowded, patternLibrary)
 where
 
 import           Data.Group                   (Group (..))
@@ -52,8 +52,8 @@ japanese = TimePattern [0/12, 1/12, 5/12, 7/12, 8/12]
 
 -- | Unique 5-pattern in a 12-space
 -- both perfectly balanced and irreducibly periodic.
-fiveB :: TimePattern
-fiveB = TimePattern [0/12, 4/12, 5/12, 8/12, 11/12]
+fiveBalance :: TimePattern
+fiveBalance = TimePattern [0/12, 4/12, 5/12, 8/12, 11/12]
 
 -- | Toussaint's five onset in sixteen pulse distinguished timelines.
 -- from chap. 7 of "The Geometry of Musical Rhythm", G. Toussaint.
@@ -85,3 +85,27 @@ firstQuart = TimePattern [0/16, 1/16, 2/16, 3/16]
 
 crowded :: TimePattern
 crowded = TimePattern [1, 1, 1, 1]
+
+patternLibrary :: IO ()
+patternLibrary = mapM_ putStrLn ["12-TET SCALES:",
+                                  "",
+                                  "diatonic",
+                                  "diminished",
+                                  "wholeTone",
+                                  "gypsy",
+                                  "japanese",
+                                  "fiveB",
+                                  "",
+                                  "DISTIGUISHED TOUSSAINT RHYTHMS",
+                                  "",
+                                  "syiko",
+                                  "clave",
+                                  "rumba",
+                                  "bossa",
+                                  "gahu",
+                                  "",
+                                  "UNIQUE PATTERNS",
+                                  "",
+                                  "fiveBalance",
+                                  "amiotScale"
+                                  ]
