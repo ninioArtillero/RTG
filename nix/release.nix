@@ -19,7 +19,8 @@ let
   pkgs = import src { };
 
   haskellPackages = if compiler == "default" then
-    pkgs.haskellPackages
+    #pkgs.haskellPackages # Use the default ghc version shipped with nixpkgs
+    pkgs.haskell.packages.ghc948 # Use this project's development ghc version
   else
     pkgs.haskell.packages.${compiler};
 
