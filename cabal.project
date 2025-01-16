@@ -1,6 +1,6 @@
-packages: ./rtg.cabal
+packages: ./*.cabal
 
-optimization: False
+optimization: 2
 
 jobs: $ncpus
 
@@ -8,3 +8,7 @@ source-repository-package
     type: git
     location: https://github.com/ninioArtillero/Euterpea2
     tag: master
+
+-- https://cabal.readthedocs.io/en/stable/cabal-project-description-file.html#dynamic-linking-options
+library-for-ghci: True
+
