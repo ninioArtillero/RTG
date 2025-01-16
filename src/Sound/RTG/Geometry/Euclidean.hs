@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 -- | Esta implementación obedece a la siguiente especificacion:
 -- 1. (0,1,0) es la identidad
 -- 2. (0,n,0) sólo módifica la granularidad al transformar a otro ritmo.
@@ -5,7 +6,7 @@
 -- 4. Los valores negativos de k se traducen por aritmética modular sobre n.
 -- 5. Los valores negativos de n significan un cambio de orientación en el ritmo,
 --    de manera que (k,-n,p) == (k, n, -p)
-module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert) where
+module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert, IsEuclideanArgument (..)) where
 
 import           Data.Group                 (Group (..))
 import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
@@ -13,11 +14,11 @@ import           Sound.RTG.Rhythm.Pattern   (rotateLeft)
 
 data Euclidean = Euclidean !Onsets !Pulses !Position deriving (Ord)
 
-type Onsets = Int
+type Onsets = Integer
 
-type Pulses = Int
+type Pulses = Integer
 
-type Position = Int
+type Position = Integer
 
 -- | Implements an equivalence relation for euclidean rhythms
 -- at the type level, based on a representation function.
@@ -26,7 +27,12 @@ instance Eq Euclidean where
     simpleForm (k, n, p) == simpleForm (k', n', p')
 
 instance Show Euclidean where
-  show (Euclidean k n p) = show $ rotateLeft p $ euclideanPattern k n
+  show (Euclidean k n p) = (description ++) . show . rotateLeft (fromIntegral p) $
+      euclideanPattern (fromIntegral k) (fromIntegral n)
+    where description = if p' == 0
+                        then "Euclidean Rhythm: "
+                        else "Euclidean Rhythm (in position " ++ show p' ++ "):"
+          p' = p `mod` n
 
 -- Euclidean rhythms in its stardard semantics are elements of
 -- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
@@ -36,7 +42,7 @@ instance Show Euclidean where
 
 -- | A simple representation based on standard semantics and modular aritmetic.
 -- It excludes full isocronous rhythms (FIR) where all pulses are onsets.
-simpleForm :: (Int, Int, Int) -> (Int, Int, Int)
+simpleForm :: (Integer, Integer, Integer) -> (Integer, Integer, Integer)
 simpleForm (k, n, p) = (k', n', p')
   where
     k' = k `mod` n'
@@ -55,7 +61,7 @@ simpleForm (k, n, p) = (k', n', p')
 
 -- | A modified representation to make the identity unique and
 -- allow full isochronous rhythms(FIR).
-altForm :: (Int, Int, Int) -> (Int, Int, Int)
+altForm :: (Integer, Integer, Integer) -> (Integer, Integer, Integer)
 altForm (k, n, p) = (k', n', p')
   where
     k'
@@ -94,9 +100,18 @@ instance Monoid Euclidean where
 instance Group Euclidean where
   invert (Euclidean a b c) = Euclidean (- a) b (- c)
 
+-- | An ad-hoc class to fit
+class IsEuclideanArgument a where
+  arg :: a -> (Integer,Integer,Integer)
+
+instance IsEuclideanArgument (Integer,Integer,Integer) where
+  arg = id
+
+instance IsEuclideanArgument (Integer,Integer) where
+  arg (x,y) = (x,y,0)
+
 -- | The interface function to construct euclidean rhythms
 -- (the value constructor is not exported).
-e' :: (Int, Int,  Int) -> Euclidean
-e' (x,y,z) = Euclidean x y z
-
--- TODO: Aplicar patrón de "smart constructor" y utilizar newtype para evitar errores de argumentos
+e' :: IsEuclideanArgument a => a -> Euclidean
+e' tripleOrDuple = Euclidean x y z
+  where (x,y,z) = arg tripleOrDuple

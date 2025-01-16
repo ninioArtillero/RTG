@@ -151,7 +151,7 @@ infixl 5 <+>
 -- Check this ideas after reading Toussaint chapters 20 and 21
 
 instance Rhythmic Euclidean where
-  toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft p $ euclideanPattern k n
+  toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
 
 instance Rhythmic RhythmicPattern where
   toRhythm = id
