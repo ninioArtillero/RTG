@@ -1,0 +1,2 @@
+:set prompt "rtg> "
+:set prompt-cont "   | "
