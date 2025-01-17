@@ -1,26 +1,25 @@
 -- | A collection of predefined time patterns
-module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time, getPattern, queryPattern,
+module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time,  queryPattern,
                                       diatonic, diminished, wholeTone, gypsy, japanese,
                                       fiveBalance, shiko, clave, soukous, rumba, bossa, gahu,
                                       amiotScale, firstQuart, crowded, patternLibrary)
 where
 
 import           Data.Group                   (Group (..))
-import           Data.List                    (nub, sort)
+import qualified Data.Set                     as Set
 import           Sound.RTG.Rhythm.RatioDecons (modOne)
 
 type Time = Rational
 
-newtype TimePattern = TimePattern [Time]
+newtype TimePattern = TimePattern {getPattern :: [Time]}
 
 queryPattern :: TimePattern -> [Time]
 queryPattern (TimePattern ts) = map modOne ts
 
-getPattern :: TimePattern -> [Time]
-getPattern (TimePattern ts) = ts
-
 instance Show TimePattern where
-  show = show . nub . sort . queryPattern
+  show = ("Time pattern: " ++) . show . myNub . queryPattern
+    -- TODO: Move helper fuction to a module. This is implemented as well in Polygon
+    where myNub = Set.toAscList . Set.fromList
 
 instance Semigroup TimePattern where
   xs <> ys = TimePattern [x*y | x <- getPattern xs, y <- getPattern ys ]
