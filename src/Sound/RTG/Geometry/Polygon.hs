@@ -25,6 +25,7 @@ import qualified Data.Set                    as Set
 import qualified Math.Combinatorics.Multiset as MS
 import           Math.NumberTheory.Primes    (UniqueFactorisation)
 import qualified Math.NumberTheory.Primes    as Primes (factorise, unPrime)
+import           Sound.RTG.Internal.Utils    (setNub)
 import           Sound.RTG.Rhythm.Pattern    (patternSum, rotateLeft)
 
 type Pattern a = [a]
@@ -168,10 +169,6 @@ uniqueFactorisationList = concatMap unfold . Primes.factorise
 
 
 -- AUX: Necklaces. Using the Data.Set module
-
--- | Eliminates duplicate entries in a list but forgets original order.
-setNub :: Ord a => [a] -> [a]
-setNub = Set.toList . Set.fromList
 
 -- | Generates the set of all rotations of a pattern or,
 -- in other words, the orbit under the cyclic group action.

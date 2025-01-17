@@ -7,6 +7,7 @@ where
 
 import           Data.Group                   (Group (..))
 import qualified Data.Set                     as Set
+import           Sound.RTG.Internal.Utils     (setNub)
 import           Sound.RTG.Rhythm.RatioDecons (modOne)
 
 type Time = Rational
@@ -17,9 +18,8 @@ queryPattern :: TimePattern -> [Time]
 queryPattern (TimePattern ts) = map modOne ts
 
 instance Show TimePattern where
-  show = ("Time pattern: " ++) . show . myNub . queryPattern
+  show = ("Time pattern: " ++) . show . setNub . queryPattern
     -- TODO: Move helper fuction to a module. This is implemented as well in Polygon
-    where myNub = Set.toAscList . Set.fromList
 
 instance Semigroup TimePattern where
   xs <> ys = TimePattern [x*y | x <- getPattern xs, y <- getPattern ys ]

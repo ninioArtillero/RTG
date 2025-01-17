@@ -82,7 +82,8 @@ library
         Sound.RTG.Time.TemporalMonad
 
     -- Modules included in this library but not exported.
-    -- other-modules:
+    other-modules:
+        Sound.RTG.Internal.Utils
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: PatternSynonyms ViewPatterns Arrows
