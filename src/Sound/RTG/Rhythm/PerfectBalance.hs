@@ -11,7 +11,6 @@ import           Data.Complex             (Complex (..), magnitude)
 import           Data.Ratio               (denominator, numerator, (%))
 import           Sound.RTG.Rhythm.Pattern (stdForm)
 
-type Pattern a = [a]
 type Time = Rational
 
 gcdRational :: Rational -> Rational -> Rational
@@ -23,14 +22,14 @@ gcdRationals = foldr gcdRational 0
 
 -- | Mínima subdivisión regular discreta del intervalo [0,1)
 -- que contiene a un patrón.
-chromaticUniverse :: Pattern Time -> Pattern Time
+chromaticUniverse :: [Time] -> [Time]
 chromaticUniverse xs =
   let n = denominator $ gcdRationals xs in [k % n | k <- [0 .. (n - 1)]]
 
 -- | Representa un patrón como lista de ceros y unos
 -- que denotan, respectivamente, ataques y silencios
 -- dentro del universo cromático del patrón.
-indicatorVector :: Pattern Time -> [Int]
+indicatorVector :: [Time] -> [Int]
 indicatorVector xs =
   [if x `elem` stdForm xs then 1 else 0 | x <- chromaticUniverse xs]
 
@@ -39,7 +38,7 @@ i :: Complex Double
 i = 0 :+ 1
 
 -- | Mapea un patrón en el círculo unitario (del plano Complejo).
-scaleVector :: Pattern Time -> [Complex Double]
+scaleVector :: [Time] -> [Complex Double]
 scaleVector = map (exp . (2 * pi * i *) . fromRational)
 
 -- | Coeficiente t de la Transformada de Fourier Discreta (DFT)
@@ -61,16 +60,16 @@ indexList = zip [0 ..]
 
 -- | La magnitud del primer coeficiente de la DFT
 -- mide la paridad de un patrón.
-evenness :: Pattern Time -> Double
+evenness :: [Time] -> Double
 evenness = magnitude . dft 1 . scaleVector
 
 -- | El balance se define como la diferencia entre 1 y la magnitud
 -- del coeficiente 0 de la DFT.
-balance :: Pattern Time -> Double
+balance :: [Time] -> Double
 balance = (1 -) . magnitude . dft 0 . scaleVector
 
 -- | Variante utilizando el indicatorVector. Posible optimización.
-balance' :: Pattern Time -> Double
+balance' :: [Time] -> Double
 balance' pat =
   let indicator = map fromIntegral $ indicatorVector pat
       elements = fromIntegral $ length (stdForm pat)
