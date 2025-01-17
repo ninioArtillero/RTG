@@ -40,10 +40,8 @@ instance Monoid Binary where
 instance Group Binary where
   invert  = id
 
-type Pattern a = [a]
-
--- | Pattern wrapper to define a new Subgroup instance
-newtype Rhythm a = Rhythm {getRhythm :: Pattern a} deriving (Eq,Show)
+-- | Rhythm wrapper to define a new custom instances for lists
+newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq,Show)
 
 instance Functor Rhythm where
   fmap f (Rhythm xs) = Rhythm (fmap f xs)
@@ -150,13 +148,18 @@ infixl 5 <+>
 -- And in this way rhythm generation might be abstracted.
 -- Check this ideas after reading Toussaint chapters 20 and 21
 
+-- | Access the binary pattern underlying a rhythmic type
+rhythm :: Rhythmic a => a -> [Binary]
+rhythm = getRhythm . toRhythm
+
+
 instance Rhythmic Euclidean where
   toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
 
 instance Rhythmic RhythmicPattern where
   toRhythm = id
 
--- TODO: La operación de grupo en Pattern es la concatenación de listas,
+-- TODO: La operación de grupo en [] es la concatenación,
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
 instance Rhythmic TimePattern where
   toRhythm = Rhythm . timeToOnset . queryPattern
@@ -188,9 +191,9 @@ instance Rhythmic TimePattern where
 --
 -- TODO: formulate properties
 -- TODO: optmize recursion
-mnng :: Rhythmic a => a -> [Pattern Binary]
+mnng :: Rhythmic a => a -> [[Binary]]
 mnng xs = concatMap (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else reverse $ longClusterBuilderIter neighborhood [] []) neighborhoods
-  where neighborhoods = parseNeighborhoods . iois . getRhythm . toRhythm $ xs
+  where neighborhoods = parseNeighborhoods . iois $ xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
@@ -226,7 +229,7 @@ type Neighborhood = [(Int, (Ordering,Ordering))]
 
 -- | Takes an IOI pattern and transforms it into a list of neighborhoods
 -- joining the intervals of mutual nearest neighbors
-parseNeighborhoods :: Pattern Int -> [Neighborhood]
+parseNeighborhoods :: [Int] -> [Neighborhood]
 parseNeighborhoods bs = reverse . map reverse $ parseNeighborhoodsIter (clusterStart . toNeighborhood $ bs) [] []
 
 -- | Look for a starting neighbor for the cluster to avoid cluster wrapping
@@ -286,31 +289,31 @@ parseNeighborhoodsIter (n@(_,bs):ns) acc neighborhoods =
            parseNeighborhoodsIter ns [] ((n:acc):neighborhoods)
 
 -- | Compute the Inter-Onset-Intervals of an onset pattern
-iois :: Pattern Binary -> [Int]
+iois :: Rhythmic a => a -> [Int]
 -- Intervals are calculated by counting the times scanl doesn't add another onset
 iois = let intervals = List.group . drop 1 . scanl pickOnsets [] . startPosition
            pickOnsets acc x = if x == One then x:acc else acc
-       in map length . intervals
+       in map length . intervals . rhythm
 
 -- Conversion functions
 
-integralToOnset :: Integral a => Pattern a -> Pattern Binary
+integralToOnset :: Integral a => [a] -> [Binary]
 integralToOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
 
-toInts :: Pattern Binary -> Pattern Int
+toInts :: [Binary] -> [Int]
 toInts = let toInt x = case x of Zero -> 0; One -> 1
          in map toInt
 
-timeToOnset :: Pattern Time -> Pattern Binary
+timeToOnset :: [Time] -> [Binary]
 timeToOnset xs = integralToOnset (indicatorVector xs)
 
-showTimePattern :: TimePattern -> Pattern Binary
+showTimePattern :: TimePattern -> [Binary]
 showTimePattern = timeToOnset . getPattern
 
-ioisToOnset :: [Int] -> Pattern Binary
+ioisToOnset :: [Int] -> [Binary]
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
 
-onsetCount :: Pattern Binary -> Int
+onsetCount :: [Binary] -> Int
 onsetCount = foldl (\acc x -> case x of Zero -> acc; One -> acc + 1) 0
 
 
@@ -342,7 +345,7 @@ scale cps root rhythm = line . map (note dur) $ scalePttrn
   where scalePttrn = scalePitches root rhythm
         dur = 1/ fromIntegral (length scalePttrn) * cps
 
-matchEvents :: Dur -> Pattern Binary -> Scale -> [Music Pitch]
+matchEvents :: Dur -> [Binary] -> Scale -> [Music Pitch]
 matchEvents 0 _ _  = []
 matchEvents _ [] _ = []
 matchEvents _ _ [] = []
@@ -362,7 +365,7 @@ scalePitches root = semitonesToScale root . timeToSemitoneIntervals
 
 timeToSemitoneIntervals :: Rhythmic a => a -> [Int]
 timeToSemitoneIntervals pttrn =
-  let intervals = iois. getRhythm . toRhythm $ pttrn
+  let intervals = iois pttrn
    in reverse $ foldl (\acc x -> (head acc + x):acc) [0] intervals
 
 semitonesToScale :: Root -> [Int] -> Scale
