@@ -1,17 +1,20 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs      #-}
 {-# LANGUAGE LambdaCase        #-}
-module Sound.RTG.Rhythm.RhythmicPattern where
+
 {-|
 Module      : RhythmicPattern
-Description : Main data type and its API helper functions
+Description : Main data type and transformations
 Copyright   : (c) Xavier Góngora, 2024
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 
-Rhythmic patterns are wrapped patterns with aditional structure.
+A 'RhythmicPattern' is a binary lists in a newtype wrapper.
+Other types with a ''Rhythmic' instance can be converted to a 'RhythmicPattern'.
 -}
+module Sound.RTG.Rhythm.RhythmicPattern where
+
 
 import           Data.Group                      (Group, invert)
 import qualified Data.List                       as List
