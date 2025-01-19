@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE LambdaCase                 #-}
 
 {-|
@@ -49,7 +48,6 @@ newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq,Show,Functor)
 
 -- | Two general posibilities for the applicative instances: ZipList or regular list
 instance Applicative Rhythm where
-  pure :: a -> Rhythm a
   pure xs = Rhythm $ pure xs
   Rhythm fs <*> Rhythm xs = Rhythm (zipWith ($) fs xs) --test
 
