@@ -5,10 +5,9 @@ module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time,  queryPattern,
                                       amiotScale, firstQuart, crowded, patternLibrary)
 where
 
-import           Data.Group                   (Group (..))
-import qualified Data.Set                     as Set
-import           Sound.RTG.Internal.Utils     (setNub)
-import           Sound.RTG.Rhythm.RatioDecons (modOne)
+import           Data.Group               (Group (..))
+import qualified Data.Set                 as Set
+import           Sound.RTG.Internal.Utils (modOne, setNub)
 
 type Time = Rational
 

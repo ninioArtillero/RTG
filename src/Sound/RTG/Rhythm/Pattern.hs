@@ -1,9 +1,8 @@
 -- | The pattern type and some basic operation
 module Sound.RTG.Rhythm.Pattern where
 
-import           Data.List                    (nub, sort)
-import           Sound.RTG.Rhythm.Bjorklund   (euclideanPattern)
-import           Sound.RTG.Rhythm.RatioDecons (modOne)
+import           Sound.RTG.Internal.Utils   (modOne, setNub)
+import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
 
 -- | Se utiliza tiempo racional para aprovechar su correlación con el pensamiento musical y
 -- para preservar la precisión, postergando los cálculos con flotantes.
@@ -128,7 +127,7 @@ frontDiffPattern xs ys
 -- and wrapped inside the interval [0,1) with 1 is excluded.
 -- In effect, this normalizes cyclic time.
 stdForm :: [Rational] -> [Rational]
-stdForm = sort . nub . map modOne
+stdForm = setNub . map modOne
 
 startPosition :: (Eq a, Monoid a) => [a] -> [a]
 startPosition [] = []
