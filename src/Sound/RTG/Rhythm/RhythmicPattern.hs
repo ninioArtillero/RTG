@@ -1,6 +1,7 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE InstanceSigs      #-}
-{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs               #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 {-|
 Module      : RhythmicPattern
@@ -44,10 +45,7 @@ instance Group Binary where
   invert  = id
 
 -- | Rhythm wrapper to define a new custom instances for lists
-newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq,Show)
-
-instance Functor Rhythm where
-  fmap f (Rhythm xs) = Rhythm (fmap f xs)
+newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq,Show,Functor)
 
 -- | Two general posibilities for the applicative instances: ZipList or regular list
 instance Applicative Rhythm where
@@ -201,12 +199,12 @@ mnng xs = concatMap (\neighborhood -> if length neighborhood <= 1 then clusterBu
           case neighborhood of
             [] -> []
             (n, (c1,c2)) : nbs -> case (c1,c2) of
-              (GT,GT)   -> [One: replicate (n-1) Zero ++ [One]]
+              (GT,GT) -> [One: replicate (n-1) Zero ++ [One]]
               (LT,LT) -> [replicate (n-1) Zero]
-              (GT,LT)  -> [[One], replicate (n-1) Zero]
-              (LT,GT)  -> [replicate (n-1) Zero, [One]]
+              (GT,LT) -> [[One], replicate (n-1) Zero]
+              (LT,GT) -> [replicate (n-1) Zero, [One]]
               -- The only singleton case left is one interval rhythms (EQ,EQ)
-              (_,_) -> [[One]]
+              (_,_)   -> [[One]]
         longClusterBuilderIter [] [] cluster = cluster
         longClusterBuilderIter [] acc cluster = acc:cluster
         longClusterBuilderIter neighborhood acc cluster =
