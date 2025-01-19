@@ -8,7 +8,7 @@ implementing a geometrically informed API exploring:
 
 It is part of my doctoral research project on the affordances of programming language abstractions in music language design and implementation, particularly in the context of live coding.
 It addresses the following general question:
-How programming language expressiveness translates to musical expressiveness for composition and live performance?
+How programming language design and features translate to musical expressiveness for composition and live performance?
 
 > [!IMPORTANT]
 > The library is in a _provisional_ state and still not released on [Hackage](https://hackage.haskell.org/).
