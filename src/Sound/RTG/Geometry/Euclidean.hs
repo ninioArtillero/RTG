@@ -1,17 +1,32 @@
 {-# LANGUAGE FlexibleInstances #-}
--- | Esta implementación obedece a la siguiente especificacion:
--- 1. (0,1,0) es la identidad
--- 2. (0,n,0) sólo módifica la granularidad al transformar a otro ritmo.
--- 3. El inverso de (k,n,p) es (-k,n,-p)
--- 4. Los valores negativos de k se traducen por aritmética modular sobre n.
--- 5. Los valores negativos de n significan un cambio de orientación en el ritmo,
---    de manera que (k,-n,p) == (k, n, -p)
-module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert, IsEuclideanArgument (..)) where
+
+{-|
+Module      : Euclidean
+Description : An euclidean rhythm type using an abstract tuplet
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+
+The implementation of the group instance for euclidean rhythms has the following specification:
+
+  1. @(0,1,0)@ in the identity element
+  2. @(0,n,0)@ modifies the granularity of another rhythm
+  3. The invers of @(k,n,p)@ is (-k,n,-p)
+  4. Onset (@k@) and position (@p@) values are converted to their representation /modulo/ $n$
+  5. Negative values of @n@ mean a change in orientation of the position value @p@,
+  such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
+  a negative tile.
+-}
+module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert) where
 
 import           Data.Group                 (Group (..))
 import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
-import           Sound.RTG.Rhythm.Pattern   (rotateLeft)
+import           Sound.RTG.Internal.List   (rotateLeft)
 
+-- | Euclidean rhythms, in its stardard semantics, are elements of
+-- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
+-- Analogous to the "prime form" in pitch-class theory.
 data Euclidean = Euclidean !Onsets !Pulses !Position deriving (Ord)
 
 type Onsets = Integer
@@ -34,14 +49,11 @@ instance Show Euclidean where
                         else "Euclidean Rhythm (in position " ++ show p' ++ "):"
           p' = p `mod` n
 
--- Euclidean rhythms in its stardard semantics are elements of
--- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
--- Analogous to the "prime form" in pitch-class theory.
 -- The following functions are used to try different equivalence
 -- relantions among euclidean rhythms in terms of form representation.
 
--- | A simple representation based on standard semantics and modular aritmetic.
--- It excludes full isocronous rhythms (FIR) where all pulses are onsets.
+-- | A simple representation based on common euclidean rhythm usage and modular aritmetic.
+-- It excludes full isocronous rhythms, /i.e./ where all pulses are onsets.
 simpleForm :: (Integer, Integer, Integer) -> (Integer, Integer, Integer)
 simpleForm (k, n, p) = (k', n', p')
   where
@@ -60,7 +72,7 @@ simpleForm (k, n, p) = (k', n', p')
 -- the identity would not be unique.
 
 -- | A modified representation to make the identity unique and
--- allow full isochronous rhythms(FIR).
+-- allow full isochronous rhythms.
 altForm :: (Integer, Integer, Integer) -> (Integer, Integer, Integer)
 altForm (k, n, p) = (k', n', p')
   where
@@ -101,17 +113,17 @@ instance Group Euclidean where
   invert (Euclidean a b c) = Euclidean (- a) b (- c)
 
 -- | An ad-hoc class to fit
-class IsEuclideanArgument a where
+class EuclideanArgument a where
   arg :: a -> (Integer,Integer,Integer)
 
-instance IsEuclideanArgument (Integer,Integer,Integer) where
+instance EuclideanArgument (Integer,Integer,Integer) where
   arg = id
 
-instance IsEuclideanArgument (Integer,Integer) where
+instance EuclideanArgument (Integer,Integer) where
   arg (x,y) = (x,y,0)
 
 -- | The interface function to construct euclidean rhythms
 -- (the value constructor is not exported).
-e' :: IsEuclideanArgument a => a -> Euclidean
+e' :: EuclideanArgument a => a -> Euclidean
 e' tripleOrDuple = Euclidean x y z
   where (x,y,z) = arg tripleOrDuple

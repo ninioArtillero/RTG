@@ -1,5 +1,24 @@
+{-|
+Module      : Bjorklund
+Description : The Björklund algorithmic for generating euclidean rhytms
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+
+The Björklund algorithm is described in:
+
+Toussaint, Godfried. 2005. “The Euclidean Algorithm Generates Traditional Musical Rhythms.”
+In Renaissance Banff: Mathematics, Music, Art, Culture,
+edited by Reza Sarhangi and Robert V. Moody, 47–56.
+Southwestern College, Winfield, Kansas: Bridges Conference.
+http://archive.bridgesmathart.org/2005/bridges2005-47.html.
+-}
 module Sound.RTG.Rhythm.Bjorklund (euclideanPattern) where
 
+import           Sound.RTG.Internal.List (backDiff)
+
+-- | Generates the euclidean pattern \((k,n)\) in default position.
 euclideanPattern :: Int -> Int -> [Int]
 euclideanPattern onsets pulses = bjorklund front back
   where
@@ -11,7 +30,7 @@ euclideanPattern onsets pulses = bjorklund front back
 
 euclideanPattern' :: Int -> Int -> [Int]
 euclideanPattern' onsets pulses =
-  case (compare onsets pulses) of
+  case compare onsets pulses of
     LT -> bjorklund front back
     GT -> replicate pulses 1
     EQ -> replicate onsets 1
@@ -36,7 +55,7 @@ bjorklund front back
   | otherwise = concat (front ++ back)
   where
     newFront = zipWith (++) front back
-    newBack = diffList front back
+    newBack = backDiff front back
 
 -- Versión previa, sin concat
 bjorklund' :: [[Int]] -> [[Int]] -> [[Int]]
@@ -46,13 +65,4 @@ bjorklund' front back =
     else front ++ back
   where
     newFront = zipWith (++) front back
-    newBack = diffList front back
-
--- Función auxiliar para bjorklund
-diffList :: [a] -> [a] -> [a]
-diffList xs ys
-  | lx > ly = drop ly xs
-  | otherwise = drop lx ys
-  where
-    lx = length xs
-    ly = length ys
+    newBack = backDiff front back

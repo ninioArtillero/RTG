@@ -82,6 +82,7 @@ library
     -- Modules included in this library but not exported.
     other-modules:
         Sound.RTG.Internal.Utils
+        Sound.RTG.Internal.List
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: Arrows, FlexibleInstances, GeneralizedNewtypeDeriving, LambdaCase

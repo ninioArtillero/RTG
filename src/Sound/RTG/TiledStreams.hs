@@ -1,10 +1,19 @@
--- | Tiled streams and tiled product based on
--- Janin, David, Florent Berthaut, Myriam Desainte-Catherine, Yann Orlarey,
--- and Sylvain Salvati. 2013. “The T-Calculus: Towards a Structured Programing
--- of (Musical) Time and Space.” In Proceedings of the First ACM SIGPLAN Workshop
--- on Functional Art, Music, Modeling & Design, 23–34.
--- Boston Massachusetts USA: ACM. https://doi.org/10.1145/2505341.2505347.
+{-|
+Module      : TiledStreams
+Description : Tiled streams and tiled product
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
 
+Tiled streams and tiled product based on the specification found in:
+
+Janin, David, Florent Berthaut, Myriam Desainte-Catherine, Yann Orlarey,
+and Sylvain Salvati. 2013. “The T-Calculus: Towards a Structured Programing
+of (Musical) Time and Space.” In Proceedings of the First ACM SIGPLAN Workshop
+on Functional Art, Music, Modeling & Design, 23–34.
+Boston Massachusetts USA: ACM. https://doi.org/10.1145/2505341.2505347.
+-}
 module Sound.RTG.TiledStreams where
 
 import           Data.Monoid    (Sum (..))

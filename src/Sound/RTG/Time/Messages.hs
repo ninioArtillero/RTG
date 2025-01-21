@@ -1,5 +1,11 @@
--- | Output messages types and utility functions
-
+{-|
+Module      : Messages
+Description : Output messages types and utility functions
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+-}
 module Sound.RTG.Time.Messages where
 
 import qualified Sound.Osc as Osc

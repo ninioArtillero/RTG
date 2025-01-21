@@ -1,4 +1,12 @@
--- | A collection of predefined time patterns
+{-|
+Module      : TimePatterns
+Description : A collection of (rational) patterns representing scales and rhythms
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+-}
+
 module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time,  queryPattern,
                                       diatonic, diminished, wholeTone, gypsy, japanese,
                                       fiveBalance, shiko, clave, soukous, rumba, bossa, gahu,

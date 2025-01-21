@@ -4,14 +4,14 @@
 
 {-|
 Module      : RhythmicPattern
-Description : Main data type and transformations
+Description : Main rhythm data type and transformations
 Copyright   : (c) Xavier Góngora, 2024
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 
-A 'RhythmicPattern' is a binary lists in a newtype wrapper.
-Other types with a ''Rhythmic' instance can be converted to a 'RhythmicPattern'.
+A 'RhythmicPattern' is a binary list in a newtype wrapper.
+Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
 -}
 module Sound.RTG.Rhythm.RhythmicPattern where
 
@@ -20,6 +20,8 @@ import           Data.Group                      (Group, invert)
 import qualified Data.List                       as List
 import           Euterpea.Music                  hiding (invert)
 import           Sound.RTG.Geometry.Euclidean
+import           Sound.RTG.Internal.List         (rotateLeft, rotateRight,
+                                                  startPosition)
 import           Sound.RTG.Rhythm.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Rhythm.Pattern
 import           Sound.RTG.Rhythm.PerfectBalance (indicatorVector)

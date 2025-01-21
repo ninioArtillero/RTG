@@ -1,14 +1,15 @@
 {-|
 Module      : TiledMusic
-Description : Types and operations for music tile composition
+Description : "Tiled Polymorphic Temporal Media" article transcription/implementation
 Copyright   : (c) Paul Hudak, 2014
                   David Janin, 2014
+License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 
 Types and operations for music tile composition, using Euterpea library for
-music types and functions. This module's code come from the following paper,
-unless indicated by a NOTE.
+music types and functions.
+Most code in this module's comes from the following paper:
 
 Hudak, Paul, and David Janin. 2014. “Tiled Polymorphic Temporal Media.”
 In Proceedings of the 2nd ACM SIGPLAN International Workshop on Functional
@@ -16,7 +17,9 @@ Art, Music, Modeling & Design, 49–60. FARM ’14.
 Gothenburg, Sweden: Association for Computing Machinery.
 https://doi.org/10.1145/2633638.2633649.
 
-In constrast to previous work by Janin et al. (2013) on the "T-Calculus",
+A NOTE indicates modifications and additions where appropiate.
+
+In constrast to previous work by Janin et al. (2013) on the "T-Calculus" (see module 'TiledStream'),
 here the tiles are not pressumed to be /bi-infinite/ (as streams indexed by integers),
 but infinite tiles are considered towards the future (positive rationals).
 -}

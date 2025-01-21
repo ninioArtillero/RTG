@@ -1,14 +1,28 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Collapse lambdas" #-}
 {-# HLINT ignore "Avoid lambda" #-}
--- | Temporal Monad for virtual time semantics from
---
--- Aaron, Samuel, Dominic Orchard, y Alan F. Blackwell. 2014.
--- “Temporal semantics for a live coding language”.
--- In Proceedings of the 2nd ACM SIGPLAN international workshop on
--- Functional art, music, modeling & design, 37–47. FARM ’14.
--- New York, NY, USA: Association for Computing Machinery.
--- https://doi.org/10.1145/2633638.2633648.
+
+{-|
+Module      : TemporalMonad
+Description : "Temporal Semantics for a Live Coding Language" article transcription/implementation
+Copyright   : (c) Samuel Aaron, 2014
+                  Dominic Orchard, 2014
+                  Alan F. Blackwell, 2014
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+
+Temporal Monad for virtual time semantics.
+Most code in this module's comes from the following paper:
+Aaron, Samuel, Dominic Orchard, y Alan F. Blackwell. 2014.
+“Temporal semantics for a live coding language”.
+In Proceedings of the 2nd ACM SIGPLAN international workshop on
+Functional art, music, modeling & design, 37–47. FARM ’14.
+New York, NY, USA: Association for Computing Machinery.
+https://doi.org/10.1145/2633638.2633648.
+
+A NOTE indicates modifications and additions where appropiate.
+-}
 module Sound.RTG.Time.TemporalMonad (o, l, s') where
 
 import           Control.Concurrent               (ThreadId, forkIO, readMVar)
@@ -24,6 +38,7 @@ import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
                                                    superDirtMessage,
                                                    superDirtPort)
 import           Sound.RTG.Time.UnSafe            (globalCPS)
+
 -- TODO: Change real types to rationals (to have use the same number type across modules)?
 -- efficiency gain?
 type Time = Double
@@ -86,16 +101,18 @@ sleep delayT = do nowT <- time
                     else kernelSleep (vT' - diffT)
                   return NoValue
 
+-- | NOTE: Implementation absent in the paper, but obvious from context.
 diffTime :: Double -> Double -> Double
 diffTime x y = x - y
 
--- | Executing a temporal computation/program
+-- | Executing a temporal computation/program.
 runTime :: Temporal a -> IO a
 runTime (T c) = do startT <- Osc.currentTime
                    (a, _) <- c (startT,startT) 0
                    return a
 
--- Play functions
+-- * NOTE: The following functions are implemented to use the above.
+-- TODO: Move to a separate module.
 
 playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
 playEvent port sample delayT x =
@@ -134,23 +151,21 @@ addSleeps :: Time -> [Temporal Value] -> [Temporal Value]
 addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
 
 
--- | Play a rhythmic pattern once
--- TODO: parametrize and hide CPS
+-- | Play a rhythmic pattern once.
 o :: Rhythmic a => SampleName -> a -> IO ThreadId
 o sample rhythmic = do
   forkIO $ do
     cps <- readMVar globalCPS
     runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
 
--- | Loop a rhythmic pattern
--- TODO: parametrize and hide CPS
+-- | Loop a rhythmic pattern.
 l :: Rhythmic a => SampleName -> a -> IO ThreadId
 l sample rhythmic = do
   forkIO $ forever $ do
     cps <- readMVar globalCPS
     runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
 
--- | Play as scale
+-- | Play as scale.
 s' :: Rhythmic a => Root -> a -> IO ThreadId
 s' root rhythm =
   forkIO . forever $ do

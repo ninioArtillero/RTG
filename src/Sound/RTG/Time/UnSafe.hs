@@ -1,3 +1,11 @@
+{-|
+Module      : UnSafe
+Description : Operations manipulating global mutable state in non-functional style using 'unsafePerformIO'.
+Copyright   : (c) Xavier Góngora, 2023
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+-}
 module Sound.RTG.Time.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
 
 import           Control.Concurrent

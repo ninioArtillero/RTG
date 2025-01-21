@@ -3,12 +3,28 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
--- | Implementation of the paper:
--- Janin, David. 2020. “A Timed IO Monad.”
--- In Practical Aspects of Declarative Languages,
--- edited by Ekaterina Komendantskaya and Yanhong Annie Liu, 12007:131–47.
--- Lecture Notes in Computer Science. Cham: Springer International Publishing.
--- https://doi.org/10.1007/978-3-030-39197-3_9.
+
+{-|
+Module      : TimedMonad
+Description : "A Timed IO Monad" article transcription/implementation
+Copyright   : (c) David Janin, 2020
+License     : GPL-3
+Maintainer  : ixbalanque@protonmail.ch
+Stability   : experimental
+
+The Timed Monad extends the IO monad to include timestamps
+such that the semantics match the time specification of programs,
+Most code in this module's comes from the following paper:
+
+Janin, David. 2020. “A Timed IO Monad.”
+In Practical Aspects of Declarative Languages,
+edited by Ekaterina Komendantskaya and Yanhong Annie Liu, 12007:131–47.
+Lecture Notes in Computer Science. Cham: Springer International Publishing.
+https://doi.org/10.1007/978-3-030-39197-3_9.
+
+A NOTE indicates modifications and additions where appropiate.
+-}
+
 
 module Sound.RTG.Time.TimedMonad where
 
