@@ -1,12 +1,12 @@
 {-|
-Module      : Pattern
-Description : Pattern zip operations
+Module      : Zip
+Description : Various list zipping operations
 Copyright   : (c) Xavier Góngora, 2023
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Rhythm.Pattern where
+module Sound.RTG.Rhythm.Zip where
 
 import           Sound.RTG.Internal.List    (backDiff)
 import           Sound.RTG.Internal.Utils   (modOne, setNub)

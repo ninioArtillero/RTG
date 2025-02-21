@@ -9,7 +9,7 @@ import           FRP.Yampa
 import qualified Sound.Osc                        as Osc hiding (Time)
 import           Sound.Osc.Fd                     (sendMessage)
 import           Sound.RTG.Rhythm.RhythmicPattern
-import           Sound.RTG.Time.Messages
+import           Sound.RTG.Time.OscMessages
 
 -- Signal Function
 

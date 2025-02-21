@@ -23,7 +23,7 @@ import           Sound.RTG.Geometry.Euclidean
 import           Sound.RTG.Internal.List         (rotateLeft, rotateRight,
                                                   startPosition)
 import           Sound.RTG.Rhythm.Bjorklund      (euclideanPattern)
-import           Sound.RTG.Rhythm.Pattern
+import           Sound.RTG.Rhythm.Zip
 import           Sound.RTG.Rhythm.PerfectBalance (indicatorVector)
 import           Sound.RTG.Rhythm.TimePatterns
 

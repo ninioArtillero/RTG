@@ -26,7 +26,7 @@ import           Sound.RTG.Geometry
 import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Rhythm
 import           Sound.RTG.TiledMusic
-import           Sound.RTG.TiledStreams
+import           Sound.RTG.TiledStream
 import           Sound.RTG.Time
 
 -- | Play r1 as scale over r2

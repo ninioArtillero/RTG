@@ -68,14 +68,14 @@ library
         Sound.RTG.ReactivePattern
         Sound.RTG.Rhythm
         Sound.RTG.Rhythm.Bjorklund
-        Sound.RTG.Rhythm.Pattern
         Sound.RTG.Rhythm.PerfectBalance
         Sound.RTG.Rhythm.RhythmicPattern
         Sound.RTG.Rhythm.TimePatterns
-        Sound.RTG.TiledStreams
+        Sound.RTG.Rhythm.Zip
+        Sound.RTG.TiledStream
         Sound.RTG.TiledMusic
         Sound.RTG.Time
-        Sound.RTG.Time.Messages
+        Sound.RTG.Time.OscMessages
         Sound.RTG.Time.UnSafe
         Sound.RTG.Time.TemporalMonad
 

@@ -1,6 +1,6 @@
 {-|
-Module      : TiledStreams
-Description : Tiled streams and tiled product
+Module      : TiledStream
+Description : Tiled stream type and tiled product
 Copyright   : (c) Xavier Góngora, 2023
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
@@ -14,7 +14,7 @@ of (Musical) Time and Space.” In Proceedings of the First ACM SIGPLAN Workshop
 on Functional Art, Music, Modeling & Design, 23–34.
 Boston Massachusetts USA: ACM. https://doi.org/10.1145/2505341.2505347.
 -}
-module Sound.RTG.TiledStreams where
+module Sound.RTG.TiledStream where
 
 import           Data.Monoid    (Sum (..))
 import           Euterpea.Music

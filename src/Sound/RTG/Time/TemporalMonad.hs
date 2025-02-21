@@ -33,7 +33,7 @@ import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
                                                    Rhythmic (..), Root,
                                                    getRhythm, scalePitches,
                                                    toRhythm)
-import           Sound.RTG.Time.Messages          (CPS, Dur, SampleName,
+import           Sound.RTG.Time.OscMessages       (CPS, Dur, SampleName,
                                                    eventDuration,
                                                    superDirtMessage,
                                                    superDirtPort)

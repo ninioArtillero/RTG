@@ -1,12 +1,12 @@
 {-|
-Module      : Messages
-Description : Output messages types and utility functions
+Module      : OscMessages
+Description : Default OSC messages
 Copyright   : (c) Xavier Góngora, 2023
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Time.Messages where
+module Sound.RTG.Time.OscMessages where
 
 import qualified Sound.Osc as Osc
 
