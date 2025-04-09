@@ -194,6 +194,9 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 * [ ] Geometrically informed continuous morphing between two arbitrary rhythms
 * [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
 * [ ] Fix haddocks (see Polygon module for example module header)
+* [ ] Change pattern implementation to Sequences (container type)
+* [ ] Use HashMaps for sequences.
+
 
 
 **Alternative implementations and further work**
