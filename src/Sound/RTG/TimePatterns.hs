@@ -7,7 +7,7 @@ Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
 
-module Sound.RTG.Rhythm.TimePatterns (TimePattern (..), Time,  queryPattern,
+module Sound.RTG.TimePatterns (TimePattern (..), Time,  queryPattern,
                                       diatonic, diminished, wholeTone, gypsy, japanese,
                                       fiveBalance, shiko, clave, soukous, rumba, bossa, gahu,
                                       amiotScale, firstQuart, crowded, patternLibrary)
@@ -15,7 +15,7 @@ where
 
 import           Data.Group               (Group (..))
 import qualified Data.Set                 as Set
-import           Sound.RTG.Internal.Utils (modOne, setNub)
+import           Sound.RTG.Utils (modOne, setNub)
 
 type Time = Rational
 

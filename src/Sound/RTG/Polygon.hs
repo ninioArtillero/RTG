@@ -18,15 +18,15 @@ In Mathematics and computation in music: 5th international conference, MCM 2015;
 proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
 https://doi.org/10.1007/978-3-319-20603-5.
 -}
-module Sound.RTG.Geometry.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
+module Sound.RTG.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
 
 import qualified Data.List                   as List (subsequences)
 import qualified Data.Set                    as Set
 import qualified Math.Combinatorics.Multiset as MS
 import           Math.NumberTheory.Primes    (UniqueFactorisation)
 import qualified Math.NumberTheory.Primes    as Primes (factorise, unPrime)
-import           Sound.RTG.Internal.List     (listSum, rotateLeft)
-import           Sound.RTG.Internal.Utils    (setNub)
+import           Sound.RTG.List     (listSum, rotateLeft)
+import           Sound.RTG.Utils    (setNub)
 
 type Pattern a = [a]
 

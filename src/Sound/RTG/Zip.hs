@@ -6,11 +6,11 @@ License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Rhythm.Zip where
+module Sound.RTG.Zip where
 
-import           Sound.RTG.Internal.List    (backDiff)
-import           Sound.RTG.Internal.Utils   (modOne, setNub)
-import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
+import           Sound.RTG.List    (backDiff)
+import           Sound.RTG.Utils   (modOne, setNub)
+import           Sound.RTG.Bjorklund (euclideanPattern)
 
 -- | Preserves the tail of the zip
 frontWideZip :: Semigroup a => [a] -> [a] -> [a]

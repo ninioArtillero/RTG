@@ -6,7 +6,7 @@ License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Time.OscMessages where
+module Sound.RTG.OscMessages where
 
 import qualified Sound.Osc as Osc
 

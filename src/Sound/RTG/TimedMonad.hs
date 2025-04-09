@@ -26,7 +26,7 @@ A NOTE indicates modifications and additions where appropiate.
 -}
 
 
-module Sound.RTG.Time.TimedMonad where
+module Sound.RTG.TimedMonad where
 
 import System.Clock
 import Control.Concurrent

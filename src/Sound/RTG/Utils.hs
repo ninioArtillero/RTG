@@ -6,7 +6,7 @@ License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Internal.Utils where
+module Sound.RTG.Utils where
 
 import qualified Data.Set as Set
 

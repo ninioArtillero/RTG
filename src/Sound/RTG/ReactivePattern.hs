@@ -8,8 +8,8 @@ import           Euterpea.Music
 import           FRP.Yampa
 import qualified Sound.Osc                        as Osc hiding (Time)
 import           Sound.Osc.Fd                     (sendMessage)
-import           Sound.RTG.Rhythm.RhythmicPattern
-import           Sound.RTG.Time.OscMessages
+import           Sound.RTG.RhythmicPattern
+import           Sound.RTG.OscMessages
 
 -- Signal Function
 

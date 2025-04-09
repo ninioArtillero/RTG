@@ -18,11 +18,11 @@ The implementation of the group instance for euclidean rhythms has the following
   such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
   a negative tile.
 -}
-module Sound.RTG.Geometry.Euclidean (Euclidean (..), e', invert) where
+module Sound.RTG.Euclidean (Euclidean (..), e', invert) where
 
 import           Data.Group                 (Group (..))
-import           Sound.RTG.Rhythm.Bjorklund (euclideanPattern)
-import           Sound.RTG.Internal.List   (rotateLeft)
+import           Sound.RTG.Bjorklund (euclideanPattern)
+import           Sound.RTG.List   (rotateLeft)
 
 -- | Euclidean rhythms, in its stardard semantics, are elements of
 -- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).

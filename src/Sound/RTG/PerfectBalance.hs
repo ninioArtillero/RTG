@@ -15,11 +15,11 @@ In Mathematics and Computation in Music: 5th International Conference, MCM 2015;
 Lecture Notes in Computer Science 9110. London, UK.
 https://doi.org/10.1007/978-3-319-20603-5.
 -}
-module Sound.RTG.Rhythm.PerfectBalance (evenness, balance, indicatorVector) where
+module Sound.RTG.PerfectBalance (evenness, balance, indicatorVector) where
 
 import           Data.Complex             (Complex (..), magnitude)
 import           Data.Ratio               (denominator, numerator, (%))
-import           Sound.RTG.Internal.Utils (stdForm)
+import           Sound.RTG.Utils (stdForm)
 
 type Time = Rational
 

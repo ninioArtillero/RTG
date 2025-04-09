@@ -6,7 +6,7 @@ License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
-module Sound.RTG.Time.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
+module Sound.RTG.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
 
 import           Control.Concurrent
 import           Control.Monad                    (forever)
@@ -14,7 +14,7 @@ import           GHC.IO                           (unsafePerformIO)
 import           Sound.Osc.Fd                     (Datum (AsciiString), Message,
                                                    ascii, message, openUdp,
                                                    pauseThread, sendMessage)
-import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
+import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
                                                    Rhythmic (..))
 
 type CPS = Rational

@@ -13,19 +13,19 @@ Stability   : experimental
 A 'RhythmicPattern' is a binary list in a newtype wrapper.
 Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
 -}
-module Sound.RTG.Rhythm.RhythmicPattern where
+module Sound.RTG.RhythmicPattern where
 
 
 import           Data.Group                      (Group, invert)
 import qualified Data.List                       as List
 import           Euterpea.Music                  hiding (invert)
-import           Sound.RTG.Geometry.Euclidean
-import           Sound.RTG.Internal.List         (rotateLeft, rotateRight,
+import           Sound.RTG.Euclidean
+import           Sound.RTG.List         (rotateLeft, rotateRight,
                                                   startPosition)
-import           Sound.RTG.Rhythm.Bjorklund      (euclideanPattern)
-import           Sound.RTG.Rhythm.Zip
-import           Sound.RTG.Rhythm.PerfectBalance (indicatorVector)
-import           Sound.RTG.Rhythm.TimePatterns
+import           Sound.RTG.Bjorklund      (euclideanPattern)
+import           Sound.RTG.Zip
+import           Sound.RTG.PerfectBalance (indicatorVector)
+import           Sound.RTG.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)

@@ -7,7 +7,7 @@ Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
 
-module Sound.RTG.Internal.List where
+module Sound.RTG.List where
 
 backDiff :: [a] -> [a] -> [a]
 backDiff xs ys

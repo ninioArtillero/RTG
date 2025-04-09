@@ -14,9 +14,9 @@ edited by Reza Sarhangi and Robert V. Moody, 47–56.
 Southwestern College, Winfield, Kansas: Bridges Conference.
 http://archive.bridgesmathart.org/2005/bridges2005-47.html.
 -}
-module Sound.RTG.Rhythm.Bjorklund (euclideanPattern) where
+module Sound.RTG.Bjorklund (euclideanPattern) where
 
-import           Sound.RTG.Internal.List (backDiff)
+import           Sound.RTG.List (backDiff)
 
 -- | Generates the euclidean pattern \((k,n)\) in default position.
 euclideanPattern :: Int -> Int -> [Int]

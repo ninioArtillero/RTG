@@ -23,21 +23,21 @@ https://doi.org/10.1145/2633638.2633648.
 
 A NOTE indicates modifications and additions where appropiate.
 -}
-module Sound.RTG.Time.TemporalMonad (o, l, s') where
+module Sound.RTG.TemporalMonad (o, l, s') where
 
 import           Control.Concurrent               (ThreadId, forkIO, readMVar)
 import           Control.Monad                    (forever)
 import           Euterpea                         (Pitch, note, play)
 import qualified Sound.Osc.Fd                     as Osc
-import           Sound.RTG.Rhythm.RhythmicPattern (Binary (..), Rhythm (..),
+import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
                                                    Rhythmic (..), Root,
                                                    getRhythm, scalePitches,
                                                    toRhythm)
-import           Sound.RTG.Time.OscMessages       (CPS, Dur, SampleName,
+import           Sound.RTG.OscMessages       (CPS, Dur, SampleName,
                                                    eventDuration,
                                                    superDirtMessage,
                                                    superDirtPort)
-import           Sound.RTG.Time.UnSafe            (globalCPS)
+import           Sound.RTG.UnSafe            (globalCPS)
 
 -- TODO: Change real types to rationals (to have use the same number type across modules)?
 -- efficiency gain?

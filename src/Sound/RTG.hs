@@ -7,11 +7,18 @@ module Sound.RTG
     -- * Re-exported modules
   , module Euterpea.IO.MIDI
   , module Euterpea.Music
-  , module Sound.RTG.Geometry
+  , module Sound.RTG.Euclidean
+  , module Sound.RTG.Polygon
   , module Sound.RTG.ReactivePattern
-  , module Sound.RTG.Rhythm
+  , module Sound.RTG.Bjorklund
+  , module Sound.RTG.PerfectBalance
+  , module Sound.RTG.RhythmicPattern
+  , module Sound.RTG.TimePatterns
+  , module Sound.RTG.Zip
   , module Sound.RTG.TiledMusic
-  , module Sound.RTG.Time
+  , module Sound.RTG.OscMessages
+  , module Sound.RTG.TemporalMonad
+  , module Sound.RTG.UnSafe
   )
 where
 
@@ -22,12 +29,19 @@ import           Control.Monad             (forever)
 import           Euterpea.IO.MIDI
 import           Euterpea.Music            hiding (forever, invert)
 -- import           GHC.Conc                  (listThreads, threadStatus) -- since base-4.18.0.0
-import           Sound.RTG.Geometry
+import           Sound.RTG.Euclidean
+import           Sound.RTG.Polygon
 import           Sound.RTG.ReactivePattern
-import           Sound.RTG.Rhythm
+import           Sound.RTG.Bjorklund
+import           Sound.RTG.PerfectBalance
+import           Sound.RTG.RhythmicPattern hiding (co, inv)
+import           Sound.RTG.TimePatterns
+import           Sound.RTG.Zip
 import           Sound.RTG.TiledMusic
 import           Sound.RTG.TiledStream
-import           Sound.RTG.Time
+import           Sound.RTG.OscMessages   hiding (CPS, Dur)
+import           Sound.RTG.TemporalMonad
+import           Sound.RTG.UnSafe
 
 -- | Play r1 as scale over r2
 p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId
