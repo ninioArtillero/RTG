@@ -12,6 +12,7 @@ module Sound.RTG
   , module Sound.RTG.ReactivePattern
   , module Sound.RTG.Bjorklund
   , module Sound.RTG.PerfectBalance
+  , module Sound.RTG.Play
   , module Sound.RTG.RhythmicPattern
   , module Sound.RTG.TimePatterns
   , module Sound.RTG.Zip
@@ -34,6 +35,7 @@ import           Sound.RTG.Polygon
 import           Sound.RTG.ReactivePattern
 import           Sound.RTG.Bjorklund
 import           Sound.RTG.PerfectBalance
+import Sound.RTG.Play
 import           Sound.RTG.RhythmicPattern hiding (co, inv)
 import           Sound.RTG.TimePatterns
 import           Sound.RTG.Zip

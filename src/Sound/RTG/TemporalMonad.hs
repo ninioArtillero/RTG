@@ -23,21 +23,9 @@ https://doi.org/10.1145/2633638.2633648.
 
 A NOTE indicates modifications and additions where appropiate.
 -}
-module Sound.RTG.TemporalMonad (o, l, s') where
+module Sound.RTG.TemporalMonad where
 
-import           Control.Concurrent               (ThreadId, forkIO, readMVar)
-import           Control.Monad                    (forever)
-import           Euterpea                         (Pitch, note, play)
 import qualified Sound.Osc.Fd                     as Osc
-import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
-                                                   Rhythmic (..), Root,
-                                                   getRhythm, scalePitches,
-                                                   toRhythm)
-import           Sound.RTG.OscMessages       (CPS, Dur, SampleName,
-                                                   eventDuration,
-                                                   superDirtMessage,
-                                                   superDirtPort)
-import           Sound.RTG.UnSafe            (globalCPS)
 
 -- TODO: Change real types to rationals (to have use the same number type across modules)?
 -- efficiency gain?
@@ -45,6 +33,7 @@ type Time = Double
 type VTime = Double
 
 -- | Output values
+-- NOTE: In the article this type is not defined.
 data Value = NoValue | Output !Osc.Message deriving (Show, Eq)
 
 newtype Temporal a = T ((Time,Time) -> (VTime -> IO (a, VTime)))
@@ -111,63 +100,3 @@ runTime (T c) = do startT <- Osc.currentTime
                    (a, _) <- c (startT,startT) 0
                    return a
 
--- * NOTE: The following functions are implemented to use the above.
--- TODO: Move to a separate module.
-
-playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
-playEvent port sample delayT x =
-  T (\(_,_) -> \vT -> do case x of
-                           One -> do Osc.sendMessage port (superDirtMessage sample);
-                                     return (Output $ superDirtMessage sample, vT)
-                           Zero -> return (NoValue,vT))
-
-openSuperDirtPort :: Temporal Osc.Udp
-openSuperDirtPort = T (\(_,_) -> \vT ->
-                       do port <- superDirtPort
-                          return (port , vT))
-
-
-temporalPattern :: CPS -> SampleName -> [Binary] -> Temporal ()
-temporalPattern _ _ [] = return ()
-temporalPattern cps sample pttrn = do
-  let n = length pttrn
-      delayT = eventDuration cps n
-  port <- openSuperDirtPort
-  sequence_ . addSleeps delayT . map (playEvent port sample delayT) $ pttrn
-
-scalePattern :: CPS -> [Pitch] -> Temporal ()
-scalePattern _ [] = return ()
-scalePattern cps scale = do
-  let n = length scale
-      delayT = eventDuration cps n
-  sequence_ . addSleeps delayT . map (playMusic $ delayT/2) $ scale
-
-playMusic :: CPS -> Pitch ->  Temporal Value
-playMusic dur p =
-  T (\(_,_) -> \vT -> do forkIO . play $ note (toRational dur) p; return (NoValue,vT))
-
-
-addSleeps :: Time -> [Temporal Value] -> [Temporal Value]
-addSleeps delayT = foldr (\t acc -> t : sleep delayT : acc) []
-
-
--- | Play a rhythmic pattern once.
-o :: Rhythmic a => SampleName -> a -> IO ThreadId
-o sample rhythmic = do
-  forkIO $ do
-    cps <- readMVar globalCPS
-    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
-
--- | Loop a rhythmic pattern.
-l :: Rhythmic a => SampleName -> a -> IO ThreadId
-l sample rhythmic = do
-  forkIO $ forever $ do
-    cps <- readMVar globalCPS
-    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
-
--- | Play as scale.
-s' :: Rhythmic a => Root -> a -> IO ThreadId
-s' root rhythm =
-  forkIO . forever $ do
-    cps <- readMVar globalCPS
-    runTime . scalePattern (fromRational cps) . scalePitches root $ rhythm

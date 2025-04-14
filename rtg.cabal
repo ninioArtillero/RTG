@@ -69,6 +69,7 @@ library
         Sound.RTG.ReactivePattern
         Sound.RTG.Bjorklund
         Sound.RTG.PerfectBalance
+        Sound.RTG.Play
         Sound.RTG.RhythmicPattern
         Sound.RTG.TimePatterns
         Sound.RTG.Zip
