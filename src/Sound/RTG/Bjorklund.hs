@@ -1,6 +1,6 @@
 {-|
 Module      : Bjorklund
-Description : The Björklund algorithmic for generating euclidean rhytms
+Description : The Björklund algorithm for generating euclidean patterns
 Copyright   : (c) Xavier Góngora, 2023
 License     : GPL-3
 Maintainer  : ixbalanque@protonmail.ch
@@ -50,19 +50,11 @@ euclideanPattern'' onsets pulses =
     back = replicate (abs $ pulses - onsets') [0]
 
 bjorklund :: [[Int]] -> [[Int]] -> [Int]
-bjorklund front back
-  | (not . null) front && length back > 1 = bjorklund newFront newBack
-  | otherwise = concat (front ++ back)
+bjorklund front back =
+  if (not . null) front && length back > 1
+    then bjorklund newFront newBack
+    else concat (front ++ back)
   where
     newFront = zipWith (++) front back
     newBack = backDiff front back
 
--- Versión previa, sin concat
-bjorklund' :: [[Int]] -> [[Int]] -> [[Int]]
-bjorklund' front back =
-  if (length back) > 1
-    then bjorklund' newFront newBack
-    else front ++ back
-  where
-    newFront = zipWith (++) front back
-    newBack = backDiff front back

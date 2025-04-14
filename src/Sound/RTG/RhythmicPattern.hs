@@ -19,7 +19,6 @@ module Sound.RTG.RhythmicPattern where
 import           Data.Group                      (Group, invert)
 import qualified Data.List                       as List
 import           Euterpea.Music                  hiding (invert)
-import           Sound.RTG.Euclidean
 import           Sound.RTG.List         (rotateLeft, rotateRight,
                                                   startPosition)
 import           Sound.RTG.Bjorklund      (euclideanPattern)
@@ -153,9 +152,6 @@ infixl 5 <+>
 rhythm :: Rhythmic a => a -> [Binary]
 rhythm = getRhythm . toRhythm
 
-
-instance Rhythmic Euclidean where
-  toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
 
 instance Rhythmic RhythmicPattern where
   toRhythm = id
