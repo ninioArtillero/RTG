@@ -24,7 +24,6 @@ import           Sound.RTG.List         (rotateLeft, rotateRight,
 import           Sound.RTG.Bjorklund      (euclideanPattern)
 import           Sound.RTG.Zip
 import           Sound.RTG.PerfectBalance (indicatorVector)
-import           Sound.RTG.TimePatterns
 
 -- | This data type represents integers modulo 2
 data Binary = Zero | One deriving (Eq, Ord, Enum, Bounded)
@@ -155,11 +154,6 @@ rhythm = getRhythm . toRhythm
 
 instance Rhythmic RhythmicPattern where
   toRhythm = id
-
--- TODO: La operación de grupo en [] es la concatenación,
--- al levantarse, ¿Cómo se relaciona con la superposición <+>?
-instance Rhythmic TimePattern where
-  toRhythm = Rhythm . timeToOnset . queryPattern
 
 -- instance Integral a => Rhythmic [a] where
 --   toRhythm = Rhythm . integralToOnset
@@ -300,12 +294,6 @@ integralToOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
 toInts :: [Binary] -> [Int]
 toInts = let toInt x = case x of Zero -> 0; One -> 1
          in map toInt
-
-timeToOnset :: [Time] -> [Binary]
-timeToOnset xs = integralToOnset (indicatorVector xs)
-
-showTimePattern :: TimePattern -> [Binary]
-showTimePattern = timeToOnset . getPattern
 
 ioisToOnset :: [Int] -> [Binary]
 ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []

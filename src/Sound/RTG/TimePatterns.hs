@@ -7,7 +7,7 @@ Maintainer  : ixbalanque@protonmail.ch
 Stability   : experimental
 -}
 
-module Sound.RTG.TimePatterns (TimePattern (..), Time,  queryPattern,
+module Sound.RTG.TimePatterns (
                                       diatonic, diminished, wholeTone, gypsy, japanese,
                                       fiveBalance, shiko, clave, soukous, rumba, bossa, gahu,
                                       amiotScale, firstQuart, crowded, patternLibrary)
@@ -16,16 +16,24 @@ where
 import           Data.Group               (Group (..))
 import qualified Data.Set                 as Set
 import           Sound.RTG.Utils (modOne, setNub)
+import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary, integralToOnset, Rhythm(Rhythm))
+import Sound.RTG.PerfectBalance (indicatorVector)
 
 type Time = Rational
 
 newtype TimePattern = TimePattern {getPattern :: [Time]}
 
 queryPattern :: TimePattern -> [Time]
-queryPattern (TimePattern ts) = map modOne ts
+queryPattern  = setNub . map modOne . getPattern
+
+showTimePattern :: TimePattern -> [Binary]
+showTimePattern = timeToOnset . getPattern
+
+timeToOnset :: [Time] -> [Binary]
+timeToOnset xs = integralToOnset (indicatorVector xs)
 
 instance Show TimePattern where
-  show = ("Time pattern: " ++) . show . setNub . queryPattern
+  show = ("Time pattern: " ++) . show . showTimePattern
     -- TODO: Move helper fuction to a module. This is implemented as well in Polygon
 
 instance Semigroup TimePattern where
@@ -36,6 +44,11 @@ instance Monoid TimePattern where
 
 instance Group TimePattern where
   invert = TimePattern . map (\n -> if n /= 0 then 1 / n else 0) . getPattern
+
+ -- TODO: La operación de grupo en [] es la concatenación,
+-- al levantarse, ¿Cómo se relaciona con la superposición <+>?
+instance Rhythmic TimePattern where
+  toRhythm = Rhythm . timeToOnset . queryPattern
 
 -- | Twelve tone equal temperament scales.
 diatonic :: TimePattern
