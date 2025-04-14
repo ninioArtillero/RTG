@@ -28,7 +28,7 @@ description:        A geometric transformation library for
 homepage:           https://www.github.com/ninioartillero/RTG/
 
 -- A URL where users can report bugs.
--- bug-reports:
+bug-reports:        https://github.com/ninioArtillero/RTG/issues
 
 -- The license under which the package is released.
 license:            GPL-3.0-or-later
@@ -55,6 +55,8 @@ category:           Sound
 extra-source-files:
     CHANGELOG.md
     README.md
+
+tested-with: GHC == 9.10.1, GHC == 9.8.1, GHC == 9.6.6, GHC == 9.4.8
 
 library
     -- Modules exported by the library.
@@ -88,7 +90,7 @@ library
     build-depends:
         , arithmoi ^>=0.13.0.0
         , base >=4.17.2.1
-        , clock
+        , clock ^>=0.8.4
         , containers ^>=0.6.5
         , Euterpea ^>=2.0.7
         , groups ^>=0.5.3

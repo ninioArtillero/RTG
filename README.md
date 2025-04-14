@@ -17,8 +17,8 @@ How programming language design and features translate to musical expressiveness
 
 ## Papers
 
-* [Rhythm, Time and Geometry](https://doi.org/10.21428/108765d1.e65cd604) @ Algorithmic Pattern Salon (2023)
-* [Demo: A Geometric Approach to Generate Musical Rhythmic Patterns in Haskell](https://doi.org/10.1145/3677996.3678295) @ FARM (2024)
+- [Rhythm, Time and Geometry](https://doi.org/10.21428/108765d1.e65cd604) @ Algorithmic Pattern Salon (2023)
+- [Demo: A Geometric Approach to Generate Musical Rhythmic Patterns in Haskell](https://doi.org/10.1145/3677996.3678295) @ FARM (2024)
 
 ## Installation
 
@@ -27,10 +27,10 @@ How programming language design and features translate to musical expressiveness
 This method installs Haskell tools system wide and is the most direct way of using the library.
 In case of problems, you may try [using nix](#using-nix).
 
-1. [Install GHCup](https://nixos.org/download) to install the Haskell toolchain (you may select all the default options).
+1. [Install GHCup](https://www.haskell.org/ghcup/) to install the Haskell toolchain (you may select all the default options).
 1. Clone this repository.
 1. Run `cabal build` from the root of the repository.
-In case of error, please [open an issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) with the output.
+   In case of error, please [open an issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) with the output.
 1. Follow the [usage](#usage) instructions below to use RTG.
 
 ### Using Nix
@@ -41,8 +41,8 @@ Another advantage of this method is that it abstracts away the installation of [
 1. [Install Nix Package Manager](https://nixos.org/download). Note that on Windows, you'll need [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) with [systemd enabled](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/).
 1. Clone this repository.
 1. From the root of the repository, run `./run.sh` and choose the "default" option: it uses nix to build and install the library.
-If the process completes successfully the interpreter (`ghci`) prompt will be waiting for a command.
-In case of error, please [open an issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) with the output.
+   If the process completes successfully the interpreter (`ghci`) prompt will be waiting for a command.
+   In case of error, please [open an issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) with the output.
 1. Exit with the `:quit` command.
 1. Follow the [usage](#usage) instructions below to use RTG.
 
@@ -50,7 +50,7 @@ In case of error, please [open an issue](https://github.com/ninioArtillero/ritmo
 > Nix will download (and, if necessary, build) all the library dependencies.
 > This process may take a while to finish, but subsequent invocations will be almost immediate
 > as long as the Nix store is not cleaned (with `nix-collect-garbage` or `nix-store --gc` for example).
-> If you need to clean the store to free up some space and avoid a subsequent rebuild,
+> If you need to clean the store to free up some space and want to avoid a subsequent rebuild,
 > add the following lines to your system's nix configuration file (in Linux this is located at `/etc/nix/nix.conf`):
 >
 > ```
@@ -67,24 +67,24 @@ In case of error, please [open an issue](https://github.com/ninioArtillero/ritmo
    1. Install [SuperCollider](https://supercollider.github.io/downloads.html) and, to have all the predefined synths, the [sc3-plugins](https://supercollider.github.io/sc3-plugins/). Both are accessible through the package manager in various Linux distributions.
    1. In the SuperCollider IDE (or in a terminal at the `sclang` shell prompt) run: `Quarks.checkForUpdates({Quarks.install("SuperDirt", "v1.7.4"); thisProcess.recompile()})`.
 1. [Install FluidSynth](https://github.com/FluidSynth/fluidsynth/wiki/Download) (virtual midi synth).
-1. You might need a (virtual) MIDI connection and routing application, such as `qjackctl` (for Jack or Pipewire on Linux), `qpwgraph` (Pipewire on Linux) or Audio MIDI Setup (default on MacOS). For Windows, this [article](https://www.donyaquick.com/midi-on-windows/#x1-80002.3) suggests to the "loopMIDI" application (which currently support Windows 7 to 10). 
+1. You might need a (virtual) MIDI connection and routing application, such as `qjackctl` (for Jack or Pipewire on Linux), `qpwgraph` (Pipewire on Linux) or Audio MIDI Setup (default on MacOS). For Windows, this [article](https://www.donyaquick.com/midi-on-windows/#x1-80002.3) suggests to the "loopMIDI" application (which currently support Windows 7 to 10).
 
 ## Usage
 
 ### Preparations
 
-* Start SuperDirt: Open SuperCollider (or run `sclang` from a terminal) and run (Ctrl+Enter) `SuperDirt.start`.
-This will load the audio engine and load its standard samples.
-  * Alternatively, or in case of SuperCollider error messages regarding the buffer or late messages, run with the SuperDirt configuration file provided (it contains configuration and optimization options):
-  `sclang superdirt_startup.scd`
-* Run `fluidsynth` its own terminal window and make sure is connected to your default midi output device (through the routing application of your system).
-  * In Linux (using pipewire-jack or jack), you may run the following command to make the midi connections automatically:
-  `fluidsynth --server --audio-driver jack --midi-driver jack --connect-jack-outputs`
-* Open a terminal at the repository root (where _this_ file is located)
-  * Run `cabal repl` or
-  * If installed using Nix: run `./run.sh`, select `default` and wait for the input prompt.
-* Sample names used in some pattern functions match those of the `DirtSamples` quark installed by `SuperDirt`.
-a list of them can be printed by running `~dirt.postSampleInfo;` in SuperCollider.
+- Start SuperDirt: Open SuperCollider (or run `sclang` from a terminal) and run (Ctrl+Enter) `SuperDirt.start`.
+  This will load the audio engine and load its standard samples.
+  - Alternatively, or in case of SuperCollider error messages regarding the buffer or late messages, run with the SuperDirt configuration file provided (it contains configuration and optimization options):
+    `sclang superdirt_startup.scd`
+- Run `fluidsynth` its own terminal window and make sure is connected to your default midi output device (through the routing application of your system).
+  - In Linux (using pipewire-jack or jack), you may run the following command to make the midi connections automatically:
+    `fluidsynth --server --audio-driver jack --midi-driver jack --connect-jack-outputs`
+- Open a terminal at the repository root (where _this_ file is located)
+  - Run `cabal repl` or
+  - If installed using Nix: run `./run.sh`, select `default` and wait for the input prompt.
+- Sample names used in some pattern functions match those of the `DirtSamples` quark installed by `SuperDirt`.
+  a list of them can be printed by running `~dirt.postSampleInfo;` in SuperCollider.
 
 ### Current API functions
 
@@ -151,7 +151,7 @@ The current default `shell` environment can be invoked directly by `nix-shell ni
 It depends on the files created by the following sequence of commands,
 which should be called to update them any time the `.cabal` file is changed.
 
-``` sh
+```sh
 # Translate cabal file into a nix function
 cabal2nix ./. > nix/project.nix
 
@@ -169,7 +169,7 @@ cabal2nix . --shell > nix/shell-example.nix
 
 To build the project using nix:
 
-``` sh
+```sh
 nix-build --attr project nix/release.nix
 ```
 
@@ -183,35 +183,34 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 
 **Current implementation**
 
-* [x] Asynchronous evaluation of patterns
-* [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
-* [ ] Implement pattern sync alternatives
-* [ ] A syntax to make new scheduled patterns affect current playing patterns
-* [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
-* [ ] Implement well-formed rhythms (¿3 parameters?)
-* [ ] Continuous morphing of well-formed rhythms using ratio parameter
-* [ ] Have _signals_ for parameter control (for morphing)
-* [ ] Geometrically informed continuous morphing between two arbitrary rhythms
-* [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
-* [ ] Fix haddocks (see Polygon module for example module header)
-* [ ] Change pattern implementation to Sequences (container type)
-* [ ] Use HashMaps for sequences.
-
-
+- [x] Asynchronous evaluation of patterns
+- [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
+- [ ] Implement pattern sync alternatives
+- [ ] A syntax to make new scheduled patterns affect current playing patterns
+- [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
+- [ ] Implement well-formed rhythms (¿3 parameters?)
+- [ ] Continuous morphing of well-formed rhythms using ratio parameter
+- [ ] Have _signals_ for parameter control (for morphing)
+- [ ] Geometrically informed continuous morphing between two arbitrary rhythms
+- [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
+- [ ] Fix haddocks (see Polygon module for example module header)
+- [ ] Change pattern implementation to Sequences (container type)
+- [ ] Use HashMaps for sequences.
+- [ ] Implement tests for bjorklund
 
 **Alternative implementations and further work**
 
-* [ ] FRP implementations.
-  * [ ] Tidal Cycles pattern representation
-  * [ ] AFRP: Yampa, Euterpea MUI library
-* [ ] New interpreter
-  * [ ] Parsing: parsec/megaparsec
-* [ ] Audio
-  * [x] OSC: `hosc`
-  * [x] MIDI: `Euterpea`
-  * [ ] Embed MIDI functionality using `fluidsynth`
+- [ ] FRP implementations.
+  - [ ] Tidal Cycles pattern representation
+  - [ ] AFRP: Yampa, Euterpea MUI library
+- [ ] New interpreter (for `v.0.2.0.0`)
+  - [ ] Parsing: parsec/megaparsec
+- [ ] Audio
+  - [x] OSC: `hosc`
+  - [x] MIDI: `Euterpea`
+  - [ ] Embed MIDI functionality using `fluidsynth`
 
 **Midterm**
 
-* [ ] Expose options to change/modify event streams to make the system modular (regarding changing sound engine or using other digital instrument).
-* [ ] Create a Tidal Cycles module version.
+- [ ] Expose options to change/modify event streams to make the system modular (regarding changing sound engine or using other digital instrument).
+- [ ] Create a Tidal Cycles module version.
