@@ -13,9 +13,10 @@ import           Control.Monad                    (forever)
 import           Euterpea                         (Pitch, note, play)
 import qualified Sound.Osc.Fd                     as Osc
 import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
-                                                   Rhythmic (..), Root,
-                                                   getRhythm, scalePitches,
-                                                   toRhythm)
+                                                   Rhythmic (..),
+                                                   rhythm
+                                                   )
+import Sound.RTG.PlayScale (scalePitches, Root)
 import           Sound.RTG.OscMessages       (CPS, Dur, SampleName,
                                                    eventDuration,
                                                    superDirtMessage,
@@ -30,21 +31,21 @@ o :: Rhythmic a => SampleName -> a -> IO ThreadId
 o sample rhythmic = do
   forkIO $ do
     cps <- readMVar globalCPS
-    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
+    runTime . temporalPattern (fromRational cps) sample . rhythm $ rhythmic
 
 -- | Loop a rhythmic pattern.
 l :: Rhythmic a => SampleName -> a -> IO ThreadId
 l sample rhythmic = do
   forkIO $ forever $ do
     cps <- readMVar globalCPS
-    runTime . temporalPattern (fromRational cps) sample . getRhythm . toRhythm $ rhythmic
+    runTime . temporalPattern (fromRational cps) sample . rhythm $ rhythmic
 
 -- | Play as scale.
 s' :: Rhythmic a => Root -> a -> IO ThreadId
-s' root rhythm =
+s' root rhythmic =
   forkIO . forever $ do
     cps <- readMVar globalCPS
-    runTime . scalePattern (fromRational cps) . scalePitches root $ rhythm
+    runTime . scalePattern (fromRational cps) . scalePitches root $ rhythmic
 
 playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
 playEvent port sample delayT x =

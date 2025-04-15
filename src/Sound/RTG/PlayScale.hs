@@ -1,7 +1,6 @@
 -- |
 
--- module Sound.RTG.PlayScale (patternToMusic, scale, scalePitches) where
-module Sound.RTG.PlayScale () where
+module Sound.RTG.PlayScale (patternToMusic, scale, scalePitches, Root) where
 
 import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary (..), rhythm)
 import Sound.RTG.Structure (iois)
