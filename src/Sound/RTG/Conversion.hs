@@ -1,7 +1,6 @@
 -- |
 
---module Sound.RTG.Conversion (integralToOnset, toInts, ioisToOnset, onsetCount) where
-module Sound.RTG.Conversion (onsetCount) where
+module Sound.RTG.Conversion (integralToOnset, toInts, ioisToOnset, onsetCount) where
 
 import Sound.RTG.RhythmicPattern ( Binary(..) )
 -- Conversion functions

@@ -22,7 +22,8 @@ module Sound.RTG.Euclidean (e') where
 
 import           Data.Group                 (Group (..))
 import           Sound.RTG.Bjorklund (euclideanPattern)
-import Sound.RTG.RhythmicPattern (Rhythmic(..), integralToOnset, Rhythm(..))
+import Sound.RTG.RhythmicPattern (Rhythmic(..), Rhythm(..))
+import Sound.RTG.Conversion (integralToOnset)
 import           Sound.RTG.List   (rotateLeft)
 
 -- | Euclidean rhythms, in its stardard semantics, are elements of

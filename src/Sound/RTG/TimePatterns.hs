@@ -16,7 +16,8 @@ where
 import           Data.Group               (Group (..))
 import qualified Data.Set                 as Set
 import           Sound.RTG.Utils (modOne, setNub)
-import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary, integralToOnset, Rhythm(Rhythm))
+import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary, Rhythm(Rhythm))
+import Sound.RTG.Conversion (integralToOnset)
 import Sound.RTG.PerfectBalance (indicatorVector)
 
 type Time = Rational
