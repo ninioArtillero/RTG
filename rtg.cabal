@@ -78,6 +78,9 @@ library
         Sound.RTG.OscMessages
         Sound.RTG.UnSafe
         Sound.RTG.TemporalMonad
+        Sound.RTG.Structure
+        Sound.RTG.Conversion
+        Sound.RTG.PlayScale
 
     -- Modules included in this library but not exported.
     other-modules:

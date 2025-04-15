@@ -44,6 +44,11 @@ import           Sound.RTG.TiledStream
 import           Sound.RTG.OscMessages   hiding (CPS, Dur)
 import           Sound.RTG.TemporalMonad
 import           Sound.RTG.UnSafe
+import           Sound.RTG.Structure
+import           Sound.RTG.Conversion
+import           Sound.RTG.PlayScale
+
+type CPS = Rational
 
 -- | Play r1 as scale over r2
 p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId

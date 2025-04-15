@@ -13,7 +13,7 @@ Stability   : experimental
 A 'RhythmicPattern' is a binary list in a newtype wrapper.
 Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
 -}
-module Sound.RTG.RhythmicPattern where
+module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), Binary (..), patternToMusic, scale, Root, integralToOnset, scalePitches, rhythm) where
 
 
 import           Data.Group                      (Group, invert)
