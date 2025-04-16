@@ -1,11 +1,10 @@
-{-|
-Module      : Utils
-Description : Utility functions
-Copyright   : (c) Xavier Góngora, 2023
-License     : GPL-3
-Maintainer  : ixbalanque@protonmail.ch
-Stability   : experimental
--}
+-- |
+-- Module      : Utils
+-- Description : Utility functions
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.Utils where
 
 import qualified Data.Set as Set
@@ -17,10 +16,11 @@ stdForm :: [Rational] -> [Rational]
 stdForm = setNub . map modOne
 
 -- | Returns a list in ascending order without duplicates.
-setNub :: Ord a => [a] -> [a]
+setNub :: (Ord a) => [a] -> [a]
 setNub = Set.toAscList . Set.fromList
 
 -- | Rationals wrapped onto [0,1).
 modOne :: Rational -> Rational
 modOne = go . snd . properFraction
-  where go x = if x >= 0 then x else 1 + x
+  where
+    go x = if x >= 0 then x else 1 + x
