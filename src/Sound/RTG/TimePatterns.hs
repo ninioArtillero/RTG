@@ -17,7 +17,7 @@ import           Data.Group               (Group (..))
 import qualified Data.Set                 as Set
 import           Sound.RTG.Utils (modOne, setNub)
 import Sound.RTG.RhythmicPattern (Rhythmic (..), Event, Rhythm(Rhythm))
-import Sound.RTG.Conversion (integralToOnset)
+import Sound.RTG.Conversion (integralsToEvents)
 import Sound.RTG.PerfectBalance (indicatorVector)
 
 type Time = Rational
@@ -31,7 +31,7 @@ showTimePattern :: TimePattern -> [Event]
 showTimePattern = timeToOnset . getPattern
 
 timeToOnset :: [Time] -> [Event]
-timeToOnset xs = integralToOnset (indicatorVector xs)
+timeToOnset xs = integralsToEvents (indicatorVector xs)
 
 instance Show TimePattern where
   show = ("Time pattern: " ++) . show . showTimePattern

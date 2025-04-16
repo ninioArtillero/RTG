@@ -23,7 +23,7 @@ module Sound.RTG.Euclidean (e') where
 import           Data.Group                 (Group (..))
 import           Sound.RTG.Bjorklund (euclideanPattern)
 import Sound.RTG.RhythmicPattern (Rhythmic(..), Rhythm(..))
-import Sound.RTG.Conversion (integralToOnset)
+import Sound.RTG.Conversion (integralsToEvents)
 import           Sound.RTG.List   (rotateLeft)
 
 -- | Euclidean rhythms, in its stardard semantics, are elements of
@@ -117,7 +117,7 @@ instance Group Euclidean where
   invert (Euclidean a b c) = Euclidean (- a) b (- c)
 
 instance Rhythmic Euclidean where
-  toRhythm (Euclidean k n p) = Rhythm . integralToOnset . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
+  toRhythm (Euclidean k n p) = Rhythm . integralsToEvents . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
 
 -- | Allow pairs and triplets as arguments to construct Euclidean Rhythms
 class EuclideanArgument a where
