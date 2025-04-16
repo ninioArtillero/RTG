@@ -63,29 +63,30 @@ library
     -- The first is automatically loaded by `cabal repl`.
     exposed-modules:
         Sound.RTG
-        Sound.RTG.Euclidean
-        Sound.RTG.Polygon
-        Sound.RTG.HotSwap
-        Sound.RTG.ReactivePattern
         Sound.RTG.Bjorklund
+        Sound.RTG.Conversion
+        Sound.RTG.Euclidean
+        Sound.RTG.HotSwap
+        Sound.RTG.OscMessages
         Sound.RTG.PerfectBalance
         Sound.RTG.Play
-        Sound.RTG.RhythmicPattern
-        Sound.RTG.TimePatterns
-        Sound.RTG.Zip
-        Sound.RTG.TiledStream
-        Sound.RTG.TiledMusic
-        Sound.RTG.OscMessages
-        Sound.RTG.UnSafe
-        Sound.RTG.TemporalMonad
-        Sound.RTG.Structure
-        Sound.RTG.Conversion
         Sound.RTG.PlayScale
+        Sound.RTG.Polygon
+        Sound.RTG.ReactivePattern
+        Sound.RTG.RhythmicPattern
+        Sound.RTG.Structure
+        Sound.RTG.TemporalMonad
+        Sound.RTG.TiledMusic
+        Sound.RTG.TiledStream
+        Sound.RTG.TimePatterns
+        Sound.RTG.TimedMonad
+        Sound.RTG.UnSafe
+        Sound.RTG.Zip
 
     -- Modules included in this library but not exported.
     other-modules:
-        Sound.RTG.Utils
         Sound.RTG.List
+        Sound.RTG.Utils
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: Arrows, FlexibleInstances, GeneralizedNewtypeDeriving, LambdaCase
