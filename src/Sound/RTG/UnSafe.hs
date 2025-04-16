@@ -14,7 +14,7 @@ import           GHC.IO                           (unsafePerformIO)
 import           Sound.Osc.Fd                     (Datum (AsciiString), Message,
                                                    ascii, message, openUdp,
                                                    pauseThread, sendMessage)
-import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
+import           Sound.RTG.RhythmicPattern (Event (..), Rhythm (..),
                                                    Rhythmic (..))
 
 type CPS = Rational
@@ -43,7 +43,7 @@ setbpm bpc bpm = do
   return ()
 
 
-patternStream :: SampleName -> Pattern Binary -> IO ThreadId
+patternStream :: SampleName -> Pattern Event -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
@@ -78,9 +78,9 @@ stop = killThread
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
 -- Esta estructura esta definida en el módulo Sound.Tidal.Stream
 -- De esta manera, tengo un mensaje que SuperDirt entiende para producir sonido.
-messageGen :: Binary -> SampleName -> Message
-messageGen Zero _ = message "/dirt/play" []
-messageGen One sample = message "/dirt/play"
+messageGen :: Event -> SampleName -> Message
+messageGen Rest _ = message "/dirt/play" []
+messageGen Onset sample = message "/dirt/play"
  [ -- ASCII_String $ ascii "cps",
    -- Float 0.5,
    -- ASCII_String $ ascii "cycle",

@@ -2,10 +2,10 @@
 
 module Sound.RTG.PlayScale (patternToMusic, scale, scalePitches, Root) where
 
-import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary (..), rhythm)
+import Sound.RTG.RhythmicPattern (Rhythmic (..), Event (..), rhythm)
 import Sound.RTG.Structure (iois)
 import Sound.RTG.Conversion (onsetCount)
-import Euterpea.Music
+import Euterpea.Music hiding (Rest)
 
 -- Use patterns simultaneaously as rhythms and scales
 -- for Euterpea MIDI output
@@ -35,7 +35,7 @@ scale cps root rhythmicPttrn = line . map (note dur) $ scalePttrn
   where scalePttrn = scalePitches root rhythmicPttrn
         dur = 1/ fromIntegral (length scalePttrn) * cps
 
-matchEvents :: Dur -> [Binary] -> Scale -> [Music Pitch]
+matchEvents :: Dur -> [Event] -> Scale -> [Music Pitch]
 matchEvents 0 _ _  = []
 matchEvents _ [] _ = []
 matchEvents _ _ [] = []
@@ -43,8 +43,8 @@ matchEvents duration pttrn scale =
   let (x:xs) = cycle pttrn
       (p:ps) = cycle scale
    in case x of
-     Zero -> rest duration : matchEvents duration xs (p:ps)
-     One  -> note duration p : matchEvents duration xs ps
+     Rest -> rest duration : matchEvents duration xs (p:ps)
+     Onset  -> note duration p : matchEvents duration xs ps
 
 -- TODO: Allow microtonal scales
 

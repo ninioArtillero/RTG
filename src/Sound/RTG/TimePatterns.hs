@@ -16,7 +16,7 @@ where
 import           Data.Group               (Group (..))
 import qualified Data.Set                 as Set
 import           Sound.RTG.Utils (modOne, setNub)
-import Sound.RTG.RhythmicPattern (Rhythmic (..), Binary, Rhythm(Rhythm))
+import Sound.RTG.RhythmicPattern (Rhythmic (..), Event, Rhythm(Rhythm))
 import Sound.RTG.Conversion (integralToOnset)
 import Sound.RTG.PerfectBalance (indicatorVector)
 
@@ -27,10 +27,10 @@ newtype TimePattern = TimePattern {getPattern :: [Time]}
 queryPattern :: TimePattern -> [Time]
 queryPattern  = setNub . map modOne . getPattern
 
-showTimePattern :: TimePattern -> [Binary]
+showTimePattern :: TimePattern -> [Event]
 showTimePattern = timeToOnset . getPattern
 
-timeToOnset :: [Time] -> [Binary]
+timeToOnset :: [Time] -> [Event]
 timeToOnset xs = integralToOnset (indicatorVector xs)
 
 instance Show TimePattern where

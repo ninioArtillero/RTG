@@ -28,7 +28,7 @@ import           Control.Concurrent        (ThreadId, forkIO, killThread,
                                             myThreadId, readMVar)
 import           Control.Monad             (forever)
 import           Euterpea.IO.MIDI
-import           Euterpea.Music            hiding (forever, invert)
+import           Euterpea.Music            hiding (Rest, forever, invert)
 -- import           GHC.Conc                  (listThreads, threadStatus) -- since base-4.18.0.0
 import           Sound.RTG.Euclidean
 import           Sound.RTG.Polygon

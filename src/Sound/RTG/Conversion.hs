@@ -2,18 +2,18 @@
 
 module Sound.RTG.Conversion (integralToOnset, toInts, ioisToOnset, onsetCount) where
 
-import Sound.RTG.RhythmicPattern ( Binary(..) )
--- Conversion functions
+import Sound.RTG.RhythmicPattern ( Event (..) )
 
-integralToOnset :: Integral a => [a] -> [Binary]
-integralToOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Zero else One)
+-- | Convert by congruence modulo 2
+integralToOnset :: Integral a => [a] -> [Event]
+integralToOnset = map (\n -> if (== 0) . (`mod` 2) $ n then Rest else Onset)
 
-toInts :: [Binary] -> [Int]
-toInts = let toInt x = case x of Zero -> 0; One -> 1
+toInts :: [Event] -> [Int]
+toInts = let toInt x = case x of Rest -> 0; Onset -> 1
          in map toInt
 
-ioisToOnset :: [Int] -> [Binary]
-ioisToOnset = foldr (\x acc -> if x>0 then (One:replicate (x-1) Zero) ++ acc else error "There was a non-positive IOI") []
+ioisToOnset :: [Int] -> [Event]
+ioisToOnset = foldr (\x acc -> if x>0 then (Onset:replicate (x-1) Rest) ++ acc else error "There was a non-positive IOI") []
 
-onsetCount :: [Binary] -> Int
-onsetCount = foldl (\acc x -> case x of Zero -> acc; One -> acc + 1) 0
+onsetCount :: [Event] -> Int
+onsetCount = foldl (\acc x -> case x of Rest -> acc; Onset -> acc + 1) 0

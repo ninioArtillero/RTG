@@ -3,7 +3,7 @@
 module Sound.RTG.Structure (iois, mnng) where
 
 import qualified Data.List                       as List
-import Sound.RTG.RhythmicPattern ( rhythm, Binary(..), Rhythmic )
+import Sound.RTG.RhythmicPattern ( rhythm, Event(..), Rhythmic )
 import           Sound.RTG.List         (rotateLeft, rotateRight,
                                                   startPosition)
 -- | Computes the /mutual nearest neighbor graph/ of an onset pattern.
@@ -28,37 +28,37 @@ import           Sound.RTG.List         (rotateLeft, rotateRight,
 --
 -- TODO: formulate properties
 -- TODO: optmize recursion
-mnng :: Rhythmic a => a -> [[Binary]]
+mnng :: Rhythmic a => a -> [[Event]]
 mnng xs = concatMap (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else reverse $ longClusterBuilderIter neighborhood [] []) neighborhoods
   where neighborhoods = parseNeighborhoods . iois $ xs
         clusterBuilder neighborhood =
           case neighborhood of
             [] -> []
             (n, (c1,c2)) : nbs -> case (c1,c2) of
-              (GT,GT) -> [One: replicate (n-1) Zero ++ [One]]
-              (LT,LT) -> [replicate (n-1) Zero]
-              (GT,LT) -> [[One], replicate (n-1) Zero]
-              (LT,GT) -> [replicate (n-1) Zero, [One]]
+              (GT,GT) -> [Onset: replicate (n-1) Rest ++ [Onset]]
+              (LT,LT) -> [replicate (n-1) Rest]
+              (GT,LT) -> [[Onset], replicate (n-1) Rest]
+              (LT,GT) -> [replicate (n-1) Rest, [Onset]]
               -- The only singleton case left is one interval rhythms (EQ,EQ)
-              (_,_)   -> [[One]]
+              (_,_)   -> [[Onset]]
         longClusterBuilderIter [] [] cluster = cluster
         longClusterBuilderIter [] acc cluster = acc:cluster
         longClusterBuilderIter neighborhood acc cluster =
           case neighborhood of
             (n, (c1,c2)) : nbs -> case (c1,c2) of
               (EQ,EQ)  -> if not (null nbs) && (snd . head) nbs == (EQ,LT)
-                then longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero) ++ [One] ) cluster
-                else longClusterBuilderIter nbs (acc ++ (One : replicate (n-1) Zero)) cluster
+                then longClusterBuilderIter nbs (acc ++ (Onset : replicate (n-1) Rest) ++ [Onset] ) cluster
+                else longClusterBuilderIter nbs (acc ++ (Onset : replicate (n-1) Rest)) cluster
               (LT,EQ)  ->
                 if (snd . head) nbs == (EQ,LT)
-                then longClusterBuilderIter nbs (acc ++ [One]) (replicate (n-1) Zero : cluster)
-                else longClusterBuilderIter nbs acc (replicate (n-1) Zero : cluster)
+                then longClusterBuilderIter nbs (acc ++ [Onset]) (replicate (n-1) Rest : cluster)
+                else longClusterBuilderIter nbs acc (replicate (n-1) Rest : cluster)
               (EQ,LT)   ->
-                     longClusterBuilderIter nbs []  (replicate (n-1) Zero : acc : cluster)
+                     longClusterBuilderIter nbs []  (replicate (n-1) Rest : acc : cluster)
               (GT,EQ)  ->
-                     longClusterBuilderIter nbs (One : replicate (n-1) Zero) cluster
+                     longClusterBuilderIter nbs (Onset : replicate (n-1) Rest) cluster
               (EQ,GT)   ->
-                     longClusterBuilderIter nbs [] ((acc ++ (One : replicate (n-1) Zero ++ [One])) : cluster)
+                     longClusterBuilderIter nbs [] ((acc ++ (Onset : replicate (n-1) Rest ++ [Onset])) : cluster)
 
 -- | A list of pairs where the second value indicates whether
 -- its neighbors first values are bigger
@@ -129,5 +129,5 @@ parseNeighborhoodsIter (n@(_,bs):ns) acc neighborhoods =
 iois :: Rhythmic a => a -> [Int]
 -- Intervals are calculated by counting the times scanl doesn't add another onset
 iois = let intervals = List.group . drop 1 . scanl pickOnsets [] . startPosition
-           pickOnsets acc x = if x == One then x:acc else acc
+           pickOnsets acc x = if x == Onset then x:acc else acc
        in map length . intervals . rhythm

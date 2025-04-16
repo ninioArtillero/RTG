@@ -12,7 +12,7 @@ import           Control.Concurrent               (ThreadId, forkIO, readMVar)
 import           Control.Monad                    (forever)
 import           Euterpea                         (Pitch, note, play)
 import qualified Sound.Osc.Fd                     as Osc
-import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
+import           Sound.RTG.RhythmicPattern (Event (..), Rhythm (..),
                                                    Rhythmic (..),
                                                    rhythm
                                                    )
@@ -47,12 +47,12 @@ s' root rhythmic =
     cps <- readMVar globalCPS
     runTime . scalePattern (fromRational cps) . scalePitches root $ rhythmic
 
-playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Binary -> Temporal Value
+playEvent :: Osc.Transport t => t -> SampleName -> Dur -> Event -> Temporal Value
 playEvent port sample delayT x =
   T (\(_,_) -> \vT -> do case x of
-                           One -> do Osc.sendMessage port (superDirtMessage sample);
-                                     return (Output $ superDirtMessage sample, vT)
-                           Zero -> return (NoValue,vT))
+                           Onset -> do Osc.sendMessage port (superDirtMessage sample);
+                                       return (Output $ superDirtMessage sample, vT)
+                           Rest -> return (NoValue,vT))
 
 openSuperDirtPort :: Temporal Osc.Udp
 openSuperDirtPort = T (\(_,_) -> \vT ->
@@ -60,7 +60,7 @@ openSuperDirtPort = T (\(_,_) -> \vT ->
                           return (port , vT))
 
 
-temporalPattern :: CPS -> SampleName -> [Binary] -> Temporal ()
+temporalPattern :: CPS -> SampleName -> [Event] -> Temporal ()
 temporalPattern _ _ [] = return ()
 temporalPattern cps sample pttrn = do
   let n = length pttrn

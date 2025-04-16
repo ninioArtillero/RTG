@@ -26,7 +26,7 @@ patternToSF sample beat bpm pttrn = proc time -> do
       bps = bpm / 60 -- beats per second
   index <- arr (\(t, i, l, b) -> floor (t * i / b) `mod` l) -< (time, bps, patternLength, beat)
   -- Determine if the current index corresponds to an onset
-  isOnset <- arr (\(i, onsets) -> onsets !! i == One) -< (index, onsetPattern)
+  isOnset <- arr (\(i, onsets) -> onsets !! i == Onset) -< (index, onsetPattern)
   -- Event stream
   event <- edge -< isOnset
   -- Generate an OSC message if there's an onset
