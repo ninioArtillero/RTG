@@ -29,6 +29,7 @@ import Sound.RTG.Utils (setNub)
 
 type Pattern a = [a]
 
+-- TODO: This module needs a detailed revision and could probably be split.
 -- TODO:
 -- Al definir un polígono hay que ver la manera de generalizar su posición
 -- módulo rotaciones (para evitar que se superpongan).

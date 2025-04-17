@@ -1,3 +1,10 @@
+-- |
+-- Module      : Structure
+-- Description : Functions to extract rhythmic pattern structural properties
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.Structure (iois, mnng) where
 
 import qualified Data.List as List

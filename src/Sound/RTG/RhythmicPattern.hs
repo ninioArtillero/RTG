@@ -20,6 +20,8 @@ import Sound.RTG.Zip (euclideanZip)
 -- | This data type represents integers modulo 2
 data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
 
+-- TODO: Create Event module with Conversion functions?
+
 instance Show Event where
   show Rest = show 0
   show Onset = show 1

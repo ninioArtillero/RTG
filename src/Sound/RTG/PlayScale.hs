@@ -1,3 +1,10 @@
+-- |
+-- Module      : PlayScale
+-- Description : Use patterns as scales
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.PlayScale (patternToMusic, scale, scalePitches, Root) where
 
 import Euterpea.Music hiding (Rest)

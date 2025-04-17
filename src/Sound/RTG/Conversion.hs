@@ -1,3 +1,10 @@
+-- |
+-- Module      : Conversion
+-- Description : Convert Events and Event lists.
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.Conversion (integralsToEvents, eventsToInts, ioisToEvents, onsetCount) where
 
 import Sound.RTG.RhythmicPattern (Event (..))

@@ -10,14 +10,18 @@ to implement the needed functionality and to objectively assess what is superfic
 
 ## TODO
 
-+ [x] Flatten structure and simplify API definition.
++ [x] Flatten structure
++ [x] Format with ormolu
++ [x] Avoid unnecessary dependencies
++ [x] Add missing module metadata
 + [ ] Implement sequencer functionality
 + [ ] Implement global transformations
 + [ ] Remove/hide unnecesary modules.
++ [ ] Redesign API at library entry point (RTG.hs)
 
 ## Module List
 
-The current module structure with a summary of content for refactoring.
+The module structure before the refactor with a summary of content.
 
 ### Rhythm
 

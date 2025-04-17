@@ -46,6 +46,7 @@ import Sound.RTG.ReactivePattern
 import Sound.RTG.RhythmicPattern hiding (co, inv)
 import Sound.RTG.Structure
 import Sound.RTG.TemporalMonad
+import Sound.RTG.TimedMonad
 import Sound.RTG.TiledMusic
 import Sound.RTG.TiledStream
 import Sound.RTG.TimePatterns

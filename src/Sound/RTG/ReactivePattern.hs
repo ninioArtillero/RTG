@@ -1,16 +1,41 @@
 {-# LANGUAGE Arrows #-}
 
--- | FRP pattern implementation for on-the-fly pattern transformation
+-- |
+-- Module      : ReactivePattern
+-- Description : FRP pattern implementation for on-the-fly pattern transformation
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.ReactivePattern where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Euterpea.IO.MIDI (play)
-import Euterpea.Music
+import Euterpea.Music (Music, Pitch, c, qn, rest)
 import FRP.Yampa
-import qualified Sound.Osc as Osc hiding (Time)
+  ( Arrow (arr),
+    DTime,
+    SF,
+    Time,
+    edge,
+    isEvent,
+    reactimate,
+    returnA,
+    time,
+    (>>>),
+  )
+import qualified Sound.Osc as Osc
 import Sound.Osc.Fd (sendMessage)
 import Sound.RTG.OscMessages
+  ( SampleName,
+    superDirtMessage,
+    superDirtPort,
+  )
 import Sound.RTG.RhythmicPattern
+  ( Event (Onset),
+    Rhythm (getRhythm),
+    Rhythmic (toRhythm),
+  )
 
 -- Signal Function
 

@@ -22,7 +22,31 @@
 -- In constrast to previous work by Janin et al. (2013) on the "T-Calculus" (see module 'TiledStream'),
 -- here the tiles are not pressumed to be /bi-infinite/ (as streams indexed by integers),
 -- but infinite tiles are considered towards the future (positive rationals).
-module Sound.RTG.TiledMusic ((%), r, t, re, co, inv, mToT, iMToT, tempoT, liftT, tToM, playT, resync, coresync, stretch, costretch, repeatT, shiftT, iterateT, fixT, forceSync, tileReProd) where
+module Sound.RTG.TiledMusic
+  ( (%),
+    r,
+    t,
+    re,
+    co,
+    inv,
+    mToT,
+    iMToT,
+    tempoT,
+    liftT,
+    tToM,
+    playT,
+    resync,
+    coresync,
+    stretch,
+    costretch,
+    repeatT,
+    shiftT,
+    iterateT,
+    fixT,
+    forceSync,
+    tileReProd,
+  )
+where
 
 import Control.Exception (assert)
 import Euterpea

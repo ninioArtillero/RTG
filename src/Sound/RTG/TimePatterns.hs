@@ -32,6 +32,8 @@ import Sound.RTG.PerfectBalance (indicatorVector)
 import Sound.RTG.RhythmicPattern (Event, Rhythm (Rhythm), Rhythmic (..))
 import Sound.RTG.Utils (modOne, setNub)
 
+-- TODO: Separate the types from the pattern collection?
+
 type Time = Rational
 
 newtype TimePattern = TimePattern {getPattern :: [Time]}

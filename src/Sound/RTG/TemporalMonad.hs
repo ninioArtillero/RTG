@@ -37,6 +37,7 @@ type VTime = Double
 -- NOTE: In the article this type is not defined.
 data Value = NoValue | Output !Osc.Message deriving (Show, Eq)
 
+-- | The Temporal Monad data type.
 newtype Temporal a = T ((Time, Time) -> (VTime -> IO (a, VTime)))
 
 -- First fmap composes, the seconds maps into the IO monad
