@@ -1,26 +1,49 @@
-{-|
-Module      : UnSafe
-Description : Operations manipulating global mutable state in non-functional style using 'unsafePerformIO'.
-Copyright   : (c) Xavier Góngora, 2023
-License     : GPL-3
-Maintainer  : ixbalanque@protonmail.ch
-Stability   : experimental
--}
+-- |
+-- Module      : UnSafe
+-- Description : Operations manipulating global mutable state in non-functional style using 'unsafePerformIO'.
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
 
-import           Control.Concurrent
-import           Control.Monad                    (forever)
-import           GHC.IO                           (unsafePerformIO)
-import           Sound.Osc.Fd                     (Datum (AsciiString), Message,
-                                                   ascii, message, openUdp,
-                                                   pauseThread, sendMessage)
-import           Sound.RTG.RhythmicPattern (Binary (..), Rhythm (..),
-                                                   Rhythmic (..))
+import Control.Concurrent
+  ( MVar,
+    ThreadId,
+    forkIO,
+    killThread,
+    newEmptyMVar,
+    newMVar,
+    putMVar,
+    readMVar,
+    swapMVar,
+    takeMVar,
+  )
+import Control.Monad (forever)
+import GHC.IO (unsafePerformIO)
+import Sound.Osc.Fd
+  ( Datum (AsciiString),
+    Message,
+    ascii,
+    message,
+    openUdp,
+    pauseThread,
+    sendMessage,
+  )
+import Sound.RTG.RhythmicPattern
+  ( Event (..),
+    Rhythm (..),
+    Rhythmic (..),
+  )
 
 type CPS = Rational
+
 type SampleName = String
+
 type Pattern a = [a]
+
 type BPM = Int
+
 -- | Beats per cycle
 type BPC = Int
 
@@ -38,12 +61,11 @@ setcps newcps = do
 
 setbpm :: BPC -> BPM -> IO ()
 setbpm bpc bpm = do
-  let newcps = (fromIntegral bpm / 60)/ fromIntegral bpc
-  swapMVar  globalCPS newcps
+  let newcps = (fromIntegral bpm / 60) / fromIntegral bpc
+  swapMVar globalCPS newcps
   return ()
 
-
-patternStream :: SampleName -> Pattern Binary -> IO ThreadId
+patternStream :: SampleName -> Pattern Event -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
@@ -65,7 +87,7 @@ patternStream sample pttrn = forkIO $ do
     send event
     pauseThread dur
 
-playU :: Rhythmic a => SampleName -> a -> IO ThreadId
+playU :: (Rhythmic a) => SampleName -> a -> IO ThreadId
 playU sample pttrn = do
   threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
   putStrLn $ "New pattern running at " ++ show threadId
@@ -78,18 +100,20 @@ stop = killThread
 -- del mensaje OSC generado en Tidal Cycles por: once $ s "sn"
 -- Esta estructura esta definida en el módulo Sound.Tidal.Stream
 -- De esta manera, tengo un mensaje que SuperDirt entiende para producir sonido.
-messageGen :: Binary -> SampleName -> Message
-messageGen Zero _ = message "/dirt/play" []
-messageGen One sample = message "/dirt/play"
- [ -- ASCII_String $ ascii "cps",
-   -- Float 0.5,
-   -- ASCII_String $ ascii "cycle",
-   -- Float 0.0,
-   -- ASCII_String $ ascii "delta",
-   -- Float 1.7777760028839,
-   AsciiString $ ascii "s",
-   AsciiString $ ascii sample
-  ]
+messageGen :: Event -> SampleName -> Message
+messageGen Rest _ = message "/dirt/play" []
+messageGen Onset sample =
+  message
+    "/dirt/play"
+    [ -- ASCII_String $ ascii "cps",
+      -- Float 0.5,
+      -- ASCII_String $ ascii "cycle",
+      -- Float 0.0,
+      -- ASCII_String $ ascii "delta",
+      -- Float 1.7777760028839,
+      AsciiString $ ascii "s",
+      AsciiString $ ascii sample
+    ]
 
 eventDuration :: Rational -> Int -> Rational
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle

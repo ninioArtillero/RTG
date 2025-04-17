@@ -1,28 +1,29 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-{-|
-Module      : Euclidean
-Description : An euclidean rhythm type using an abstract tuplet
-Copyright   : (c) Xavier Góngora, 2023
-License     : GPL-3
-Maintainer  : ixbalanque@protonmail.ch
-Stability   : experimental
+-- |
+-- Module      : Euclidean
+-- Description : An euclidean rhythm type using an abstract tuplet
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
+--
+-- The implementation of the group instance for euclidean rhythms has the following specification:
+--
+--   1. @(0,1,0)@ in the identity element
+--   2. @(0,n,0)@ modifies the granularity of another rhythm
+--   3. The invers of @(k,n,p)@ is (-k,n,-p)
+--   4. Onset (@k@) and position (@p@) values are converted to their representation /modulo/ $n$
+--   5. Negative values of @n@ mean a change in orientation of the position value @p@,
+--   such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
+--   a negative tile.
+module Sound.RTG.Euclidean (e') where
 
-The implementation of the group instance for euclidean rhythms has the following specification:
-
-  1. @(0,1,0)@ in the identity element
-  2. @(0,n,0)@ modifies the granularity of another rhythm
-  3. The invers of @(k,n,p)@ is (-k,n,-p)
-  4. Onset (@k@) and position (@p@) values are converted to their representation /modulo/ $n$
-  5. Negative values of @n@ mean a change in orientation of the position value @p@,
-  such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
-  a negative tile.
--}
-module Sound.RTG.Euclidean (Euclidean (..), e', invert) where
-
-import           Data.Group                 (Group (..))
-import           Sound.RTG.Bjorklund (euclideanPattern)
-import           Sound.RTG.List   (rotateLeft)
+import Data.Group (Group (..))
+import Sound.RTG.Bjorklund (euclideanPattern)
+import Sound.RTG.Conversion (integralsToEvents)
+import Sound.RTG.List (rotateLeft)
+import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic (..))
 
 -- | Euclidean rhythms, in its stardard semantics, are elements of
 -- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
@@ -36,21 +37,25 @@ type Pulses = Integer
 type Position = Integer
 
 -- | Implements an equivalence relation for euclidean rhythms
--- at the type level, based on a representation function.
+-- at the type level, based on a simplified form.
 instance Eq Euclidean where
   Euclidean k n p == Euclidean k' n' p' =
     simpleForm (k, n, p) == simpleForm (k', n', p')
 
 instance Show Euclidean where
-  show (Euclidean k n p) = (description ++) . show . rotateLeft (fromIntegral p) $
-      euclideanPattern (fromIntegral k) (fromIntegral n)
-    where description = if p' == 0
-                        then "Euclidean Rhythm: "
-                        else "Euclidean Rhythm (in position " ++ show p' ++ "):"
-          p' = p `mod` n
+  show (Euclidean k n p) = "Euclidean Rhythm: " ++ (show . simpleForm $ (k, n, p))
+
+{- To show onset pattern (can be uninformative):
+show (Euclidean k n p) = (description ++) . show . rotateLeft (fromIntegral p) $
+    euclideanPattern (fromIntegral k) (fromIntegral n)
+  where description = if p' == 0
+                      then "Euclidean Rhythm: "
+                      else "Euclidean Rhythm (in position " ++ show p' ++ "):"
+        p' = p `mod` n
+ -}
 
 -- The following functions are used to try different equivalence
--- relantions among euclidean rhythms in terms of form representation.
+-- relations among euclidean rhythms in terms of form representation.
 
 -- | A simple representation based on common euclidean rhythm usage and modular aritmetic.
 -- It excludes full isocronous rhythms, /i.e./ where all pulses are onsets.
@@ -87,10 +92,10 @@ altForm (k, n, p) = (k', n', p')
 
 -- | Combines two euclidean rhythms using modular arithmetic
 -- on the least common multiple of pulse granularity.
-(<+>) :: Euclidean -> Euclidean -> Euclidean
-Euclidean k n p <+> Euclidean k' n' p'
+euclideanProduct :: Euclidean -> Euclidean -> Euclidean
+euclideanProduct (Euclidean k n p) (Euclidean k' n' p')
   | (n /= 0) && (n' /= 0) =
-    Euclidean ((k + k') `mod` grain) grain ((position + position') `mod` grain)
+      Euclidean ((k + k') `mod` grain) grain ((position + position') `mod` grain)
   | otherwise = error "No defined semantics for zero pulse euclidean rhythms"
   where
     grain = lcm n n'
@@ -101,29 +106,31 @@ Euclidean k n p <+> Euclidean k' n' p'
       let scaleFactor' = grain `div` n'
        in (p' `mod` n') * scaleFactor'
 
-infixl 5 <+>
-
 instance Semigroup Euclidean where
-  a <> b = a <+> b
+  a <> b = euclideanProduct a b
 
 instance Monoid Euclidean where
   mempty = Euclidean 0 1 0
 
 instance Group Euclidean where
-  invert (Euclidean a b c) = Euclidean (- a) b (- c)
+  invert (Euclidean a b c) = Euclidean (-a) b (-c)
 
--- | An ad-hoc class to fit
+instance Rhythmic Euclidean where
+  toRhythm (Euclidean k n p) = Rhythm . integralsToEvents . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
+
+-- | Allow pairs and triplets as arguments to construct Euclidean Rhythms
 class EuclideanArgument a where
-  arg :: a -> (Integer,Integer,Integer)
+  arg :: a -> (Integer, Integer, Integer)
 
-instance EuclideanArgument (Integer,Integer,Integer) where
+instance EuclideanArgument (Integer, Integer, Integer) where
   arg = id
 
-instance EuclideanArgument (Integer,Integer) where
-  arg (x,y) = (x,y,0)
+instance EuclideanArgument (Integer, Integer) where
+  arg (x, y) = (x, y, 0)
 
 -- | The interface function to construct euclidean rhythms
 -- (the value constructor is not exported).
-e' :: EuclideanArgument a => a -> Euclidean
+e' :: (EuclideanArgument a) => a -> Euclidean
 e' tripleOrDuple = Euclidean x y z
-  where (x,y,z) = arg tripleOrDuple
+  where
+    (x, y, z) = arg tripleOrDuple

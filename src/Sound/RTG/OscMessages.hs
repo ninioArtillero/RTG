@@ -1,26 +1,27 @@
-{-|
-Module      : OscMessages
-Description : Default OSC messages
-Copyright   : (c) Xavier Góngora, 2023
-License     : GPL-3
-Maintainer  : ixbalanque@protonmail.ch
-Stability   : experimental
--}
+-- |
+-- Module      : OscMessages
+-- Description : Default OSC messages
+-- Copyright   : (c) Xavier Góngora, 2023
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
 module Sound.RTG.OscMessages where
 
 import qualified Sound.Osc as Osc
 
 type Dur = Double
+
 type CPS = Double
+
 type SampleName = String
 
 superDirtMessage :: SampleName -> Osc.Message
-superDirtMessage sample = Osc.message
-        "/dirt/play"
-        [
-          Osc.AsciiString $ Osc.ascii "s",
-          Osc.AsciiString $ Osc.ascii sample
-        ]
+superDirtMessage sample =
+  Osc.message
+    "/dirt/play"
+    [ Osc.AsciiString $ Osc.ascii "s",
+      Osc.AsciiString $ Osc.ascii sample
+    ]
 
 eventDuration :: CPS -> Int -> Dur
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle

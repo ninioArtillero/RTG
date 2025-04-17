@@ -1,38 +1,35 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-{-|
-Module      : TimedMonad
-Description : "A Timed IO Monad" article transcription/implementation
-Copyright   : (c) David Janin, 2020
-License     : GPL-3
-Maintainer  : ixbalanque@protonmail.ch
-Stability   : experimental
-
-The Timed Monad extends the IO monad to include timestamps
-such that the semantics match the time specification of programs,
-Most code in this module's comes from the following paper:
-
-Janin, David. 2020. “A Timed IO Monad.”
-In Practical Aspects of Declarative Languages,
-edited by Ekaterina Komendantskaya and Yanhong Annie Liu, 12007:131–47.
-Lecture Notes in Computer Science. Cham: Springer International Publishing.
-https://doi.org/10.1007/978-3-030-39197-3_9.
-
-A NOTE indicates modifications and additions where appropiate.
--}
-
-
+-- |
+-- Module      : TimedMonad
+-- Description : "A Timed IO Monad" article transcription/implementation
+-- Copyright   : (c) David Janin, 2020
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
+--
+-- The Timed Monad extends the IO monad to include timestamps
+-- such that the semantics match the time specification of programs,
+-- Most code in this module's comes from the following paper:
+--
+-- Janin, David. 2020. “A Timed IO Monad.”
+-- In Practical Aspects of Declarative Languages,
+-- edited by Ekaterina Komendantskaya and Yanhong Annie Liu, 12007:131–47.
+-- Lecture Notes in Computer Science. Cham: Springer International Publishing.
+-- https://doi.org/10.1007/978-3-030-39197-3_9.
+--
+-- A NOTE indicates modifications and additions where appropiate.
 module Sound.RTG.TimedMonad where
 
-import System.Clock
 import Control.Concurrent
-import Control.Monad (liftM,ap)
-import Euterpea
+import Control.Monad (ap, liftM)
 import Data.Kind
+import Euterpea
+import System.Clock
 import Prelude hiding (read)
 
 -- | Timestamp type. A /timestamp/ is defined here as the duration elapsed
@@ -42,31 +39,40 @@ import Prelude hiding (read)
 -- restricted to be a 'Num' type.
 -- While the sum of durations makes sense, the sum of two timestamps does not, so
 -- they are only equiped with primitives 'duration' and 'shift'.
-newtype Time d = Time d deriving (Eq,Ord)
+newtype Time d = Time d deriving (Eq, Ord)
 
-duration :: Num d => Time d -> Time d -> d
+duration :: (Num d) => Time d -> Time d -> d
 duration (Time d1) (Time d2) = d2 - d1
 
-shift :: Num d => Time d -> d -> Time d
+shift :: (Num d) => Time d -> d -> Time d
 shift (Time d1) d2 = Time (d1 + d2)
 
-class (Ord d, Num d, Monad m, Monad t)
-  => TimedMonad m d t | t->m , t->d where
+class
+  (Ord d, Num d, Monad m, Monad t) =>
+  TimedMonad m d t
+    | t -> m,
+      t -> d
+  where
   -- | Current /specified/ timestamp.
   now :: t (Time d)
+
   -- | Current time drift, i.e. the difference between the /specified/ timestamp
   -- and the /actual/ timestamp (as measured by the underlying runtime).
   drift :: t d
+
   -- | Wait until the current /specified/ timestamp shifted by the given positive duration.
-  delay :: d -> t()
+  delay :: d -> t ()
+
   -- | Turns an action of the underlying monad to an action in the timed monad.
   lift :: m a -> t a
+
   -- | Allows moving a timed action back into the underlying untimed monad.
   run :: t a -> m a
 
-realNow :: TimedMonad m d t => t (Time d)
-realNow = do t <- now
-             shift t <$> drift
+realNow :: (TimedMonad m d t) => t (Time d)
+realNow = do
+  t <- now
+  shift t <$> drift
 
 -- | Returns the /speficied/ duration of a timed action (shall always be positive).
 -- Used to formulate the following (equational) laws.
@@ -110,19 +116,21 @@ realNow = do t <- now
 -- prop> run . lift == id
 --
 -- The reverse composition does not for any timed action with non-zero duration.
-dur :: TimedMonad m d t => t a -> t d
-dur m = do t0 <- now
-           _ <- m
-           t1 <- now
-           return (duration t1 t0)
+dur :: (TimedMonad m d t) => t a -> t d
+dur m = do
+  t0 <- now
+  _ <- m
+  t1 <- now
+  return (duration t1 t0)
 
 -- | This 'lift' takes into account  the actual duration of the action, so this
 -- can be used with blocking actions like 'getChar' from the IO monad.
-timedLift :: TimedMonad m d t => m a -> t a
-timedLift m = do a <- lift m
-                 d <- drift
-                 delay d
-                 return a
+timedLift :: (TimedMonad m d t) => m a -> t a
+timedLift m = do
+  a <- lift m
+  d <- drift
+  delay d
+  return a
 
 -- | Monads with enough timing information to be extended to a 'TimedMonad'.
 -- Must satisfy __time monotonicity__, meaning time shall flow from the past to the future.
@@ -137,8 +145,9 @@ class (Ord d, Num d, Monad m) => HasTimer m d where
   getRealTime :: m (Time d)
   waitUntil :: Time d -> m ()
   getDrift :: Time d -> m d
-  getDrift t = do r <- getRealTime
-                  return (duration r t)
+  getDrift t = do
+    r <- getRealTime
+    return (duration r t)
 
 -- IO example
 
@@ -148,16 +157,16 @@ class (Ord d, Num d, Monad m) => HasTimer m d where
 -- which is either an error or due to a change in the 'Num' class.
 newtype Micro = Micro Int deriving (Show, Eq, Ord, Num, Enum, Real, Integral)
 
-
 getSystemTime :: IO (Time Micro)
-getSystemTime = do t <- getTime Monotonic
-                   return . Time . fromInteger $ div (toNanoSecs t) 1000
+getSystemTime = do
+  t <- getTime Monotonic
+  return . Time . fromInteger $ div (toNanoSecs t) 1000
 
 instance HasTimer IO Micro where
   getRealTime = getSystemTime
-  waitUntil (Time d) = do Time r <- getSystemTime
-                          threadDelay . fromInteger . toInteger $ d - r
-
+  waitUntil (Time d) = do
+    Time r <- getSystemTime
+    threadDelay . fromInteger . toInteger $ d - r
 
 -- Deriving a TimedMonad instance from a monad with timing information
 
@@ -169,38 +178,46 @@ newtype TA m d a = TA (Time d -> m (Time d, a))
 -- to be compatible with current Haskell, by moving the definition of 'return'
 -- to 'pure' and using some library functions from "Control.Monad".
 -- Also the @HasTimer m d@ restriction its ommited as it is not needed.
-instance Monad m => Monad (TA m d) where
-  TA ta >>= f = TA (\s -> do (s1,a) <- ta s
-                             let (TA ta1) = f a
-                             ta1 s1)
+instance (Monad m) => Monad (TA m d) where
+  TA ta >>= f =
+    TA
+      ( \s -> do
+          (s1, a) <- ta s
+          let (TA ta1) = f a
+          ta1 s1
+      )
 
 ---------------------------------------------------------------------------------
 
 -- These require the constraits as they are dependent on the 'Monad' instance.
 
-instance Monad m => Functor (TA m d) where
+instance (Monad m) => Functor (TA m d) where
   fmap = liftM
 
-instance Monad m => Applicative (TA m d) where
-  pure a = TA (\s -> return (s,a))
+instance (Monad m) => Applicative (TA m d) where
+  pure a = TA (\s -> return (s, a))
   (<*>) = ap
 
 ---------------------------------------------------------------------------------
 
 -- NOTE: removed unnecesary constraint @Monad m@ already implied by @HasTimer m d@
-instance HasTimer m d => TimedMonad m d (TA m d) where
-  now = TA (\s -> return (s,s))
-  drift = TA $ \s -> do d <- getDrift s
-                        return (s,d)
+instance (HasTimer m d) => TimedMonad m d (TA m d) where
+  now = TA (\s -> return (s, s))
+  drift = TA $ \s -> do
+    d <- getDrift s
+    return (s, d)
   delay d | d <= 0 = return ()
-  delay d | d > 0 = TA $ \s -> do dr <- getDrift s
-                                  waitUntil (shift s (d - dr))
-                                  return (shift s d, ())
-  lift m = TA $ \s -> do a <- m
-                         return (s,a)
-  run (TA ta) = do t <- getRealTime
-                   (_,a) <- ta t
-                   return a
+  delay d | d > 0 = TA $ \s -> do
+    dr <- getDrift s
+    waitUntil (shift s (d - dr))
+    return (shift s d, ())
+  lift m = TA $ \s -> do
+    a <- m
+    return (s, a)
+  run (TA ta) = do
+    t <- getRealTime
+    (_, a) <- ta t
+    return a
 
 -- | The default time extension of the IO monad, having the instance
 -- @TimedMonad IO Micro TIO@ deriving from the instance of @HasTimer IO Micro@.
@@ -217,75 +234,87 @@ type TIO = TA IO Micro
 --
 -- prop> backStep s (step s i) == i
 -- prop> step d (backStep d o) == o
-class (Num i, Num o, Num s) => ScaleChange i o s | s ->i, s->o where
+class (Num i, Num o, Num s) => ScaleChange i o s | s -> i, s -> o where
   initialSpeed :: s
   step :: s -> i -> o
   backStep :: s -> o -> i
 
-newtype Beat = Beat Double deriving (Eq,Ord,Show,Num)
-newtype BPM = BPM Double deriving (Eq,Ord,Show,Num)
+newtype Beat = Beat Double deriving (Eq, Ord, Show, Num)
+
+newtype BPM = BPM Double deriving (Eq, Ord, Show, Num)
 
 instance ScaleChange Micro Beat BPM where
   initialSpeed = BPM 60
-  step (BPM t) (Micro d) = Beat $ t * fromIntegral d/ratio
-    where ratio = 60 * 10^6
-  backStep (BPM t) (Beat d) = Micro . fromIntegral . floor $ (d/t) * ratio
-    where ratio = 60 * 10^6
+  step (BPM t) (Micro d) = Beat $ t * fromIntegral d / ratio
+    where
+      ratio = 60 * 10 ^ 6
+  backStep (BPM t) (Beat d) = Micro . fromIntegral . floor $ (d / t) * ratio
+    where
+      ratio = 60 * 10 ^ 6
 
 -- | Symbolic timed states.
-data ST i o s = ST { innerTime :: Time i, outerTime :: Time o, speed :: s }
+data ST i o s = ST {innerTime :: Time i, outerTime :: Time o, speed :: s}
 
 -- | Symbolic timed actions. A generalization of timed actions 'TA'
 -- NOTE: @newtype@ is used instead of @data@ for optimization.
-newtype STA m i o s a = STA (ST i o s -> m (ST i o s,a))
+newtype STA m i o s a = STA (ST i o s -> m (ST i o s, a))
 
 -- NOTE: The following instances are suggested or implied by the article
 -- They are consequence of STA being, again, a rather simple state monad.
 
-instance Monad m => Functor (STA m i o s) where
+instance (Monad m) => Functor (STA m i o s) where
   fmap = liftM
 
-instance Monad m => Applicative (STA m i o s) where
-  pure a = STA (\st -> return (st,a))
+instance (Monad m) => Applicative (STA m i o s) where
+  pure a = STA (\st -> return (st, a))
   (<*>) = ap
 
-instance Monad m => Monad (STA m i o s) where
-  STA sta >>= f = STA (\st -> do (st', a) <- sta st
-                                 let STA sta' = f a
-                                 (st'', b) <- sta' st'
-                                 return (st'',b))
-
+instance (Monad m) => Monad (STA m i o s) where
+  STA sta >>= f =
+    STA
+      ( \st -> do
+          (st', a) <- sta st
+          let STA sta' = f a
+          (st'', b) <- sta' st'
+          return (st'', b)
+      )
 
 -- | Standard timed extension of a Monad with timing information using symbolic
 -- time states. Analogous to the 'TA' instance.
 -- TODO: Should not @Ord o@ be derived from variable constraints of the 'TimedMonad'?
 instance (Ord o, ScaleChange i o s, HasTimer m i) => TimedMonad m o (STA m i o s) where
   now = STA (\st -> return (st, outerTime st))
-  drift = STA $ \st -> do d <- getDrift $ innerTime st
-                          return (st,step (speed st) d)
+  drift = STA $ \st -> do
+    d <- getDrift $ innerTime st
+    return (st, step (speed st) d)
   delay d | d <= 0 = return ()
-  delay d | d > 0 = STA $ \(ST ti to s) -> do dr <- getDrift ti
-                                              let ti' = shift ti (backStep s d - dr)
-                                                  to' = shift to (d - step s dr)
-                                              waitUntil ti'
-                                              return (ST ti' to' s, ())
-  lift m = STA $ \st -> do a <- m
-                           return (st,a)
-  -- | NOTE: Explicit type annotations are needed to unify the types from the 'ScaleChange' and 'HasTimer'
+  delay d | d > 0 = STA $ \(ST ti to s) -> do
+    dr <- getDrift ti
+    let ti' = shift ti (backStep s d - dr)
+        to' = shift to (d - step s dr)
+    waitUntil ti'
+    return (ST ti' to' s, ())
+  lift m = STA $ \st -> do
+    a <- m
+    return (st, a)
+
+  -- \| NOTE: Explicit type annotations are needed to unify the types from the 'ScaleChange' and 'HasTimer'
   -- constraints
-  run (STA sta) = do Time (inner :: i) <- getRealTime
-                     let outer :: o
-                         outer = step (initialSpeed :: s) inner
-                     (_,a) <- sta $ ST (Time inner) (Time outer) initialSpeed
-                     return a
+  run (STA sta) = do
+    Time (inner :: i) <- getRealTime
+    let outer :: o
+        outer = step (initialSpeed :: s) inner
+    (_, a) <- sta $ ST (Time inner) (Time outer) initialSpeed
+    return a
 
 --------------------------------------
 
 type MusicIO = STA IO Micro Beat BPM
 
 setTempo :: BPM -> MusicIO ()
-setTempo t | t <= 0 = error "setTempo: forbidden negative tempo"
-           | otherwise = STA $ \st -> let ST ti to _ = st in return (ST ti to t, ())
+setTempo t
+  | t <= 0 = error "setTempo: forbidden negative tempo"
+  | otherwise = STA $ \st -> let ST ti to _ = st in return (ST ti to t, ())
 
 playInIO = run $ setTempo 90 >> playMusic func 30
 
@@ -295,9 +324,10 @@ func n = note qn (pitch n)
 
 playMusic :: (Int -> Music Pitch) -> Int -> MusicIO ()
 playMusic f n =
-  do playNote (f n) 1
-     delay 1
-     playMusic f (n+1)
+  do
+    playNote (f n) 1
+    delay 1
+    playMusic f (n + 1)
 
 playNote :: Music Pitch -> Beat -> MusicIO ()
 playNote n d = lift (forkIO $ play n) >> delay d
@@ -305,7 +335,7 @@ playNote n d = lift (forkIO $ play n) >> delay d
 -- | Monad references implementing the concept of promises.
 -- NOTE: Following a compiler warning, the deprecated @StarIsType@ extension is dropped and
 -- 'Data.Kind.Type' is used instead for the type family's signature.
-class Monad m => MonadRef m where
+class (Monad m) => MonadRef m where
   type Ref m :: Type -> Type
   fork :: m a -> m (Ref m a)
   read :: Ref m a -> m a
@@ -313,42 +343,52 @@ class Monad m => MonadRef m where
   parRead :: Ref m a -> Ref m b -> m (Either a b)
 
 -- | Timed monad references
-data TRef m d a = TRef (Time d) (Ref m (Time d , a))
+data TRef m d a = TRef (Time d) (Ref m (Time d, a))
 
 -- | Equipping a timed extension of a monad by monad references,
 -- given the underlying monad itself has references.
 instance (MonadRef m, HasTimer m d) => MonadRef (TA m d) where
   type Ref (TA m d) = TRef m d
-  fork (TA m) = TA $ \s -> do {r <- fork (m s); return (s, TRef s r )}
-  read (TRef _ r) = TA $ \s -> do {(t, a) <- read r ; return (max s t, a)}
+  fork (TA m) = TA $ \s -> do r <- fork (m s); return (s, TRef s r)
+  read (TRef _ r) = TA $ \s -> do (t, a) <- read r; return (max s t, a)
   tryRead (TRef _ r) = TA $ \s ->
-    do c <- tryRead r
-       case c of Nothing     -> return (s, Nothing)
-                 Just (t, a) -> return (max s t, Just a)
+    do
+      c <- tryRead r
+      case c of
+        Nothing -> return (s, Nothing)
+        Just (t, a) -> return (max s t, Just a)
   parRead (TRef _ r1) (TRef _ r2) = TA $ \s ->
-    do c <- parRead r1 r2
-       case c of Left (t, a)  -> return (max s t, Left a)
-                 Right (t, b) -> return (max s t, Right b)
+    do
+      c <- parRead r1 r2
+      case c of
+        Left (t, a) -> return (max s t, Left a)
+        Right (t, b) -> return (max s t, Right b)
 
 -- REVIEW the following
 
 durRef :: (MonadRef m, HasTimer m d) => TRef m d a -> TA m d d
-durRef (TRef t0 r) = TA (\s -> do (t,_) <- read r
-                                  return (max s t, duration t t0))
+durRef (TRef t0 r) =
+  TA
+    ( \s -> do
+        (t, _) <- read r
+        return (max s t, duration t t0)
+    )
 
 replayRef :: (MonadRef m, HasTimer m d) => TRef m d a -> TA m d a
-replayRef r = do t1 <- now
-                 d <- durRef r
-                 a <- read r
-                 t2 <- now
-                 delay (d - duration t2 t1)
-                 return a
+replayRef r = do
+  t1 <- now
+  d <- durRef r
+  a <- read r
+  t2 <- now
+  delay (d - duration t2 t1)
+  return a
 
-expandRef :: (MonadRef m, HasTimer m d) => (d -> d ) -> TRef m d a -> TA m d a
-expandRef f r = do t1 <- now
-                   d <- durRef r
-                   a <- read r
-                   t2 <- now
-                   let d1 = f d - duration t2 t1
-                   delay d1
-                   return a
+expandRef :: (MonadRef m, HasTimer m d) => (d -> d) -> TRef m d a -> TA m d a
+expandRef f r = do
+  t1 <- now
+  d <- durRef r
+  a <- read r
+  t2 <- now
+  let d1 = f d - duration t2 t1
+  delay d1
+  return a

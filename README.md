@@ -179,7 +179,7 @@ The compiler version can be given as an argument for the build:
 nix-build --argstr compiler ghc964 --attr project nix/release.nix
 ```
 
-### TODO
+## TODO
 
 **Current implementation**
 
