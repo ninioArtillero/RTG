@@ -25,11 +25,11 @@
 -- A NOTE indicates modifications and additions where appropiate.
 module Sound.RTG.TimedMonad where
 
-import Control.Concurrent
+import Control.Concurrent ( threadDelay, forkIO )
 import Control.Monad (ap, liftM)
-import Data.Kind
-import Euterpea
-import System.Clock
+import Data.Kind ( Type )
+import Euterpea ( Music, Pitch, play, qn, note, pitch )
+import System.Clock ( getTime, toNanoSecs, Clock(Monotonic) )
 import Prelude hiding (read)
 
 -- | Timestamp type. A /timestamp/ is defined here as the duration elapsed
