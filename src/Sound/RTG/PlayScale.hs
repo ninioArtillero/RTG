@@ -5,12 +5,23 @@
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.PlayScale (patternToMusic, scale, scalePitches, Root) where
+module Sound.RTG.PlayScale
+  ( p,
+    s,
+    patternToMusic,
+    scale,
+    scalePitches,
+    Root,
+  )
+where
 
-import Euterpea.Music hiding (Rest)
+import Control.Concurrent (ThreadId, forkIO, readMVar)
+import Control.Monad (forever)
+import Euterpea hiding (Rest, forever)
 import Sound.RTG.Conversion (onsetCount)
 import Sound.RTG.RhythmicPattern (Event (..), Rhythmic (..), rhythm)
 import Sound.RTG.Structure (iois)
+import Sound.RTG.UnSafe (readcps)
 
 -- Use patterns simultaneaously as rhythms and scales
 -- for Euterpea MIDI output
@@ -20,6 +31,20 @@ type CPS = Rational
 type Root = Pitch
 
 type Scale = [Pitch]
+
+-- | Play r1 as scale over r2
+p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId
+p root r1 r2 =
+  forkIO . forever $ do
+    cps <- readcps
+    play $ patternToMusic cps root r1 r2
+
+-- | Play as scale
+s :: (Rhythmic a) => Root -> a -> IO ThreadId
+s root rhythm =
+  forkIO . forever $ do
+    cps <- readcps
+    play $ scale cps root rhythm
 
 -- | Transforms the first rhythm into a scale to be played at the second.
 -- Produces an infinite 'Music Pitch' value.

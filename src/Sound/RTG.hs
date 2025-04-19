@@ -1,12 +1,6 @@
 -- | Main API
 module Sound.RTG
-  ( p,
-    s,
-    readcps,
-
-    -- * Re-exported modules
-    module Euterpea.IO.MIDI,
-    module Euterpea.Music,
+  ( module Euterpea.Music,
     module Sound.RTG.Euclidean,
     module Sound.RTG.Polygon,
     module Sound.RTG.ReactivePattern,
@@ -16,61 +10,27 @@ module Sound.RTG
     module Sound.RTG.RhythmicPattern,
     module Sound.RTG.TimePatterns,
     module Sound.RTG.Zip,
-    module Sound.RTG.TiledMusic,
-    module Sound.RTG.OscMessages,
     module Sound.RTG.TemporalMonad,
     module Sound.RTG.UnSafe,
   )
 where
 
-import Control.Concurrent
-  ( ThreadId,
-    forkIO,
-    killThread,
-    myThreadId,
-    readMVar,
-  )
-import Control.Monad (forever)
-import Euterpea.IO.MIDI
-import Euterpea.Music hiding (Rest, forever, invert)
--- import GHC.Conc (listThreads, threadStatus) -- since base-4.18.0.0
+import Euterpea.Music hiding (Primitive (..))
 import Sound.RTG.Bjorklund
 import Sound.RTG.Conversion
 import Sound.RTG.Euclidean
-import Sound.RTG.OscMessages hiding (CPS, Dur)
 import Sound.RTG.PerfectBalance
 import Sound.RTG.Play
 import Sound.RTG.PlayScale
 import Sound.RTG.Polygon
 import Sound.RTG.ReactivePattern
-import Sound.RTG.RhythmicPattern hiding (co, inv)
+import Sound.RTG.RhythmicPattern
 import Sound.RTG.Structure
 import Sound.RTG.TemporalMonad
-import Sound.RTG.TimedMonad
-import Sound.RTG.TiledMusic
-import Sound.RTG.TiledStream
 import Sound.RTG.TimePatterns
+import Sound.RTG.TimedMonad
 import Sound.RTG.UnSafe
 import Sound.RTG.Zip
-
-type CPS = Rational
-
--- | Play r1 as scale over r2
-p :: (Rhythmic a, Rhythmic b) => Root -> a -> b -> IO ThreadId
-p root r1 r2 =
-  forkIO . forever $ do
-    cps <- readMVar globalCPS
-    play $ patternToMusic cps root r1 r2
-
--- | Play as scale
-s :: (Rhythmic a) => Root -> a -> IO ThreadId
-s root rhythm =
-  forkIO . forever $ do
-    cps <- readMVar globalCPS
-    play $ scale cps root rhythm
-
-readcps :: IO CPS
-readcps = readMVar globalCPS
 
 help :: IO ()
 help =
@@ -99,11 +59,3 @@ help =
         "and the ghci session needs to be ended to kill all active pattern. \n",
         "λ> :quit"
       ]
-
--- Requires GHC.Conc.listThreads available since base-4.18.0.0
--- Still not working as expected and imposes a conservative upperbound base-4.21.0.0)
--- due the instability of the module (as mentioned in the documentation).
--- NOTE: Not working for unknown reason. Modify base dependency bounds as mentioned before
--- for testing.
--- stopAll :: IO ()
--- stopAll = listThreads >>= mapM_ killThread

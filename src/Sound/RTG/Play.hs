@@ -7,7 +7,7 @@
 -- Stability   : experimental
 module Sound.RTG.Play (o, l, s') where
 
-import Control.Concurrent (ThreadId, forkIO, readMVar)
+import Control.Concurrent (ThreadId, forkIO)
 import Control.Monad (forever)
 import Euterpea (Pitch, note, play)
 import qualified Sound.Osc.Fd as Osc
@@ -27,27 +27,27 @@ import Sound.RTG.RhythmicPattern
     rhythm,
   )
 import Sound.RTG.TemporalMonad (Temporal (..), Time, Value (..), runTime, sleep)
-import Sound.RTG.UnSafe (globalCPS)
+import Sound.RTG.UnSafe (readcps)
 
 -- | Play a rhythmic pattern once.
 o :: (Rhythmic a) => SampleName -> a -> IO ThreadId
 o sample rhythmic = do
   forkIO $ do
-    cps <- readMVar globalCPS
+    cps <- readcps
     runTime . temporalPattern (fromRational cps) sample . rhythm $ rhythmic
 
 -- | Loop a rhythmic pattern.
 l :: (Rhythmic a) => SampleName -> a -> IO ThreadId
 l sample rhythmic = do
   forkIO $ forever $ do
-    cps <- readMVar globalCPS
+    cps <- readcps
     runTime . temporalPattern (fromRational cps) sample . rhythm $ rhythmic
 
 -- | Play as scale.
 s' :: (Rhythmic a) => Root -> a -> IO ThreadId
 s' root rhythmic =
   forkIO . forever $ do
-    cps <- readMVar globalCPS
+    cps <- readcps
     runTime . scalePattern (fromRational cps) . scalePitches root $ rhythmic
 
 playEvent :: (Osc.Transport t) => t -> SampleName -> Dur -> Event -> Temporal Value

@@ -5,13 +5,14 @@
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.UnSafe (playU, stop, setcps, setbpm, globalCPS) where
+module Sound.RTG.UnSafe (playU, stop, setcps, setbpm, readcps) where
 
 import Control.Concurrent
   ( MVar,
     ThreadId,
     forkIO,
     killThread,
+    -- myThreadId,
     newEmptyMVar,
     newMVar,
     putMVar,
@@ -19,6 +20,7 @@ import Control.Concurrent
     swapMVar,
     takeMVar,
   )
+-- import GHC.Conc (listThreads, threadStatus) -- for stopAll since base-4.18.0.0
 import Control.Monad (forever)
 import GHC.IO (unsafePerformIO)
 import Sound.Osc.Fd
@@ -35,6 +37,7 @@ import Sound.RTG.RhythmicPattern
     Rhythm (..),
     Rhythmic (..),
   )
+import Sound.RTG.Utils ()
 
 type CPS = Rational
 
@@ -47,12 +50,17 @@ type BPM = Int
 -- | Beats per cycle
 type BPC = Int
 
+-- TODO: Clean up pending... many functions not in used and
+-- repeated functionality.
 -- Utiliza MVar, una implementación de variables mutables que
 -- permite sincronizar procesos concurrentes.
 
 globalCPS :: MVar CPS
 {-# NOINLINE globalCPS #-}
 globalCPS = unsafePerformIO $ newMVar 0.4
+
+readcps :: IO CPS
+readcps = readMVar globalCPS
 
 setcps :: CPS -> IO ()
 setcps newcps = do
@@ -120,3 +128,11 @@ eventDuration cps pulses = secondsPerCycle / eventsPerCycle
   where
     secondsPerCycle = 1 / cps
     eventsPerCycle = fromIntegral pulses
+
+-- Requires GHC.Conc.listThreads available since base-4.18.0.0
+-- Still not working as expected and imposes a conservative upperbound base-4.21.0.0)
+-- due the instability of the module (as mentioned in the documentation).
+-- NOTE: Not working for unknown reason. Modify base dependency bounds as mentioned before
+-- for testing.
+-- stopAll :: IO ()
+-- stopAll = listThreads >>= mapM_ killThread
