@@ -15,7 +15,6 @@ import Sound.RTG.OscMessages
   ( CPS,
     Dur,
     SampleName,
-    eventDuration,
     superDirtMessage,
     superDirtPort,
   )
@@ -28,6 +27,7 @@ import Sound.RTG.RhythmicPattern
   )
 import Sound.RTG.TemporalMonad (Temporal (..), Time, Value (..), runTime, sleep)
 import Sound.RTG.UnSafe (readcps)
+import Sound.RTG.Utils (patternEventDurationSec)
 
 -- | Play a rhythmic pattern once.
 o :: (Rhythmic a) => SampleName -> a -> IO ThreadId
@@ -73,16 +73,16 @@ openSuperDirtPort =
 temporalPattern :: CPS -> SampleName -> [Event] -> Temporal ()
 temporalPattern _ _ [] = return ()
 temporalPattern cps sample pttrn = do
-  let n = length pttrn
-      delayT = eventDuration cps n
+  let len = length pttrn
+      delayT = patternEventDurationSec cps len
   port <- openSuperDirtPort
   sequence_ . addSleeps delayT . map (playEvent port sample delayT) $ pttrn
 
 scalePattern :: CPS -> [Pitch] -> Temporal ()
 scalePattern _ [] = return ()
 scalePattern cps scale = do
-  let n = length scale
-      delayT = eventDuration cps n
+  let len = length scale
+      delayT = patternEventDurationSec cps len
   sequence_ . addSleeps delayT . map (playMusic $ delayT / 2) $ scale
 
 playMusic :: CPS -> Pitch -> Temporal Value

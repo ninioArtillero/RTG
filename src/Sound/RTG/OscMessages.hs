@@ -5,7 +5,7 @@
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.OscMessages where
+module Sound.RTG.OscMessages (superDirtMessage, superDirtPort, SampleName, Dur, CPS) where
 
 import qualified Sound.Osc as Osc
 
@@ -22,12 +22,6 @@ superDirtMessage sample =
     [ Osc.AsciiString $ Osc.ascii "s",
       Osc.AsciiString $ Osc.ascii sample
     ]
-
-eventDuration :: CPS -> Int -> Dur
-eventDuration cps pulses = secondsPerCycle / eventsPerCycle
-  where
-    secondsPerCycle = 1 / cps
-    eventsPerCycle = fromIntegral pulses
 
 superDirtPort :: IO Osc.Udp
 superDirtPort = Osc.openUdp "127.0.0.1" 57120

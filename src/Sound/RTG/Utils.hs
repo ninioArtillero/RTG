@@ -24,3 +24,9 @@ modOne :: Rational -> Rational
 modOne = go . snd . properFraction
   where
     go x = if x >= 0 then x else 1 + x
+
+patternEventDurationSec :: (RealFrac a, Integral b) => a -> b -> a
+patternEventDurationSec cps patternLength = secondsPerCycle / eventsPerCycle
+  where
+    secondsPerCycle = 1 / cps
+    eventsPerCycle = fromIntegral patternLength
