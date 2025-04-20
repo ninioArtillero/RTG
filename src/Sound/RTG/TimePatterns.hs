@@ -38,17 +38,14 @@ type Time = Rational
 
 newtype TimePattern = TimePattern {getPattern :: [Time]}
 
+instance Show TimePattern where
+  show = ("Time pattern: " ++) . show . timeAsFloats
+
+timeAsFloats :: TimePattern -> [Float]
+timeAsFloats pattern = map fromRational $ queryPattern pattern :: [Float]
+
 queryPattern :: TimePattern -> [Time]
 queryPattern = setNub . map modOne . getPattern
-
-showTimePattern :: TimePattern -> [Event]
-showTimePattern = timeToOnset . getPattern
-
-timeToOnset :: [Time] -> [Event]
-timeToOnset xs = integralsToEvents (indicatorVector xs)
-
-instance Show TimePattern where
-  show = ("Time pattern: " ++) . show . showTimePattern
 
 -- TODO: Move helper fuction to a module. This is implemented as well in Polygon
 
@@ -65,6 +62,9 @@ instance Group TimePattern where
 -- al levantarse, ¿Cómo se relaciona con la superposición <+>?
 instance Rhythmic TimePattern where
   toRhythm = Rhythm . timeToOnset . queryPattern
+
+timeToOnset :: [Time] -> [Event]
+timeToOnset xs = integralsToEvents (indicatorVector xs)
 
 -- | Twelve tone equal temperament scales.
 diatonic :: TimePattern
