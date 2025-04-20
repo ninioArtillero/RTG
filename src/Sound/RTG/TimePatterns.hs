@@ -6,19 +6,29 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 module Sound.RTG.TimePatterns
-  ( diatonic,
+  ( -- * Equal tempered twelve tone scale.
+    diatonic,
     diminished,
     wholeTone,
-    gypsy,
     japanese,
-    fiveBalance,
+    gypsy,
+
+    -- * Toussaint's distinguished timelines.
+
+    -- | Five onset in sixteen pulses timelines from chap. 7 of
+    -- "The Geometry of Musical Rhythm", G. Toussaint.
     shiko,
     clave,
     soukous,
     rumba,
     bossa,
     gahu,
+
+    -- * Notable irreducible perfectly balanced rhythms.
+    fiveBalance,
     amiotScale,
+
+    -- *  Test patterns.
     firstQuart,
     crowded,
     patternLibrary,
@@ -31,42 +41,62 @@ import Sound.RTG.Conversion (integralsToEvents)
 import Sound.RTG.PerfectBalance (indicatorVector)
 import Sound.RTG.RhythmicPattern (Event, Rhythm (Rhythm), Rhythmic (..))
 import Sound.RTG.Utils (modOne, setNub)
-
--- TODO: Separate the types from the pattern collection?
+import Sound.RTG.Zip (euclideanZipWith)
 
 type Time = Rational
 
+-- | Time patterns are ordered lists of 'Rational' values
+-- within the \([0,1)\) interval.
 newtype TimePattern = TimePattern {getPattern :: [Time]}
 
+-- | Equality follows 'TimePattern' specification.
+instance Eq TimePattern where
+  xs == ys = queryPattern xs == queryPattern ys
+
+-- | Time patterns are displayed using floating numbers, hoping that they are
+-- easier to read this way.
 instance Show TimePattern where
   show = ("Time pattern: " ++) . show . timeAsFloats
 
+-- | Used exclusively for the 'Show' instance.
 timeAsFloats :: TimePattern -> [Float]
 timeAsFloats pattern = map fromRational $ queryPattern pattern :: [Float]
 
+-- | This function enforces the specification of the 'TimePattern' type.
+-- It wraps rationals within the number line to the \([0,1)\) interval,
+-- which conceptually represent a /circle/, order the values and remove duplicates.
 queryPattern :: TimePattern -> [Time]
 queryPattern = setNub . map modOne . getPattern
 
--- TODO: Move helper fuction to a module. This is implemented as well in Polygon
-
 instance Semigroup TimePattern where
-  xs <> ys = TimePattern [x * y | x <- getPattern xs, y <- getPattern ys]
+  (<>) = timePatternProduct
+
+-- | A modular sum within the circle (see 'queryPattern'), matching patterns of
+-- different length using an 'euclideanPattern' distribution.
+timePatternProduct :: TimePattern -> TimePattern -> TimePattern
+timePatternProduct xs ys =
+  let pat1 = getPattern xs
+      pat2 = getPattern ys
+   in TimePattern $ euclideanZipWith (\x y -> modOne $ x + y) pat1 pat2
 
 instance Monoid TimePattern where
-  mempty = TimePattern [1]
+  mempty = TimePattern [0]
 
 instance Group TimePattern where
-  invert = TimePattern . map (\n -> if n /= 0 then 1 / n else 0) . getPattern
+  invert = TimePattern . map (\n -> if n /= 0 then 1 - n else 0) . queryPattern
 
--- TODO: La operación de grupo en [] es la concatenación,
--- al levantarse, ¿Cómo se relaciona con la superposición <+>?
+-- | Reflects the circle, represented as the interval \([0,1)\),
+-- on a diameter passing through \(0.5\).
+reflectCircle :: [Time] -> [Time]
+reflectCircle = map (\n -> if n /= 0 then 1 - n else 0)
+
 instance Rhythmic TimePattern where
   toRhythm = Rhythm . timeToOnset . queryPattern
 
+-- | Uses the 'indicatorVector' to embed the pattern in a discrete chromatic universe.
 timeToOnset :: [Time] -> [Event]
 timeToOnset xs = integralsToEvents (indicatorVector xs)
 
--- | Twelve tone equal temperament scales.
 diatonic :: TimePattern
 diatonic = TimePattern [0 / 12, 2 / 12, 4 / 12, 5 / 12, 7 / 12, 9 / 12, 11 / 12]
 
@@ -82,6 +112,7 @@ wholeTone = TimePattern [0 / 12, 2 / 12, 4 / 12, 6 / 12, 8 / 12, 10 / 12]
 gypsy :: TimePattern
 gypsy = TimePattern [0 / 12, 1 / 12, 4 / 12, 5 / 12, 7 / 12, 8 / 12, 11 / 12]
 
+-- | The japanese pentatonic scale.
 japanese :: TimePattern
 japanese = TimePattern [0 / 12, 1 / 12, 5 / 12, 7 / 12, 8 / 12]
 
@@ -90,8 +121,6 @@ japanese = TimePattern [0 / 12, 1 / 12, 5 / 12, 7 / 12, 8 / 12]
 fiveBalance :: TimePattern
 fiveBalance = TimePattern [0 / 12, 4 / 12, 5 / 12, 8 / 12, 11 / 12]
 
--- | Toussaint's five onset in sixteen pulse distinguished timelines.
--- from chap. 7 of "The Geometry of Musical Rhythm", G. Toussaint.
 shiko :: TimePattern
 shiko = TimePattern [0 / 16, 4 / 16, 6 / 16, 10 / 16, 12 / 16]
 

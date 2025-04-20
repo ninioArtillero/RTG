@@ -92,4 +92,25 @@ pttrn1 `euclideanZip` pttrn2
         then fzip xs ys ((x <> fst y) : zs)
         else fzip (x : xs) ys ((fst y) : zs)
 
--- is this a fold? branched fold?
+euclideanZipWith :: (a -> a -> a) -> [a] -> [a] -> [a]
+euclideanZipWith _ [] _ = []
+euclideanZipWith _ _ [] = []
+euclideanZipWith f pttrn1 pttrn2 =
+  zipWithToOneIter f smallerPttrn indexedBiggerPattern []
+  where
+    len1 = length pttrn1
+    len2 = length pttrn2
+    k = min len1 len2
+    n = max len1 len2
+    (smallerPttrn, indexedBiggerPattern) =
+      if len1 == k
+        then (pttrn1, pttrn2 `zip` euclideanPattern k n)
+        else (pttrn2, pttrn1 `zip` euclideanPattern k n)
+
+zipWithToOneIter :: (a -> a -> a) -> [a] -> [(a, Int)] -> [a] -> [a]
+zipWithToOneIter _ [] ys zs = reverse zs
+zipWithToOneIter _ xs [] zs = reverse zs
+zipWithToOneIter f (x : xs) (y : ys) zs =
+  if snd y == 1
+    then zipWithToOneIter f xs ys (f x (fst y) : zs)
+    else zipWithToOneIter f (x : xs) ys ((fst y) : zs)
