@@ -25,6 +25,7 @@ import Sound.RTG.PlayScale
 import Sound.RTG.Polygon
 import Sound.RTG.ReactivePattern
 import Sound.RTG.RhythmicPattern
+import Sound.RTG.Sequencer
 import Sound.RTG.Structure
 import Sound.RTG.TemporalMonad
 import Sound.RTG.TimePatterns
