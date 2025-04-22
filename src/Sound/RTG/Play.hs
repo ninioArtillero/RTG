@@ -85,7 +85,7 @@ scalePattern cps scale = do
       delayT = patternEventDurationSec cps len
   sequence_ . addSleeps delayT . map (playMusic $ delayT / 2) $ scale
 
-playMusic :: CPS -> Pitch -> Temporal Value
+playMusic :: Dur -> Pitch -> Temporal Value
 playMusic dur p =
   T (\(_, _) -> \vT -> do forkIO . play $ note (toRational dur) p; return (NoValue, vT))
 
