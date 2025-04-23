@@ -63,6 +63,7 @@ library
     -- The first is automatically loaded by `cabal repl`.
     exposed-modules:
         Sound.RTG
+        Sound.RTG.Async
         Sound.RTG.Bjorklund
         Sound.RTG.Conversion
         Sound.RTG.Euclidean
@@ -95,6 +96,7 @@ library
     -- Other library packages from which modules are imported.
     build-depends:
         , arithmoi ^>=0.13.0.0
+        , async
         , base >=4.17.2.1
         , clock ^>=0.8.4
         , containers >=0.6.5 && <= 0.8.0
@@ -104,6 +106,9 @@ library
         -- , liquidhaskell == 0.9.10.1.2
         , midair ^>=0.2.0.1
         , multiset-comb ^>=0.2.4.2
+        -- To check documentation properties interactively
+        , QuickCheck ^>=2.14.3
+        , stm
         , unordered-containers
         , Yampa ^>=0.14.8
 
