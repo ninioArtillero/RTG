@@ -381,12 +381,14 @@ playNote n d = lift (forkIO $ play n) >> delay d
 -- Defines an associated type (family) 'Ref' for @m@ of kind @* -> *@.
 -- NOTE: Following a compiler warning, the deprecated @StarIsType@ extension is dropped and
 -- 'Data.Kind.Type' is used instead for the type family's signature.
+-- NOTE: The 'freeze' function was introduced.
 class (Monad m) => MonadRef m where
   type Ref m :: Type -> Type
   fork :: m a -> m (Ref m a)
   read :: Ref m a -> m a
   tryRead :: Ref m a -> m (Maybe a)
   parRead :: Ref m a -> Ref m b -> m (Either a b)
+  freeze :: Ref m a -> m ()
 
 -- | NOTE: This instance is suggested by the companion article:
 -- Janin, D. 2020 "An equational model of asynchronous concurrent programming".
@@ -397,6 +399,7 @@ instance MonadRef IO where
   read = wait
   tryRead = tryWait
   parRead = waitEither
+  freeze = cancel
 
 -- | Timed monad references. The constraint 'MonadRef m' is needed when
 -- manipulating values of this type due to the use of the associated
@@ -421,6 +424,13 @@ instance (MonadRef m, HasTimer m d) => MonadRef (TA m d) where
       case c of
         Left (t, a) -> return (max s t, Left a)
         Right (t, b) -> return (max s t, Right b)
+
+  freeze (TRef _ r1) = TA $ \ s ->
+    do
+      _ <- freeze r1
+      return (s,())
+
+
 
 -- | Returns the specified duration of a referenced action when finished.
 durRef :: (MonadRef m, HasTimer m d) => TRef m d a -> TA m d d

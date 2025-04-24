@@ -1,8 +1,8 @@
 -- |
 
-module Sound.RTG.Async (Async, async, wait, waitEither, tryWait) where
+module Sound.RTG.Async (Async, async, wait, waitEither, tryWait, cancel) where
 
-import Control.Concurrent.Async (Async, async, wait, waitEither, pollSTM)
+import Control.Concurrent.Async (Async, async, wait, waitEither, pollSTM, cancel)
 import Control.Concurrent.STM (atomically)
 
 -- | A non-blocking version of 'wait'.
