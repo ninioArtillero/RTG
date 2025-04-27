@@ -41,7 +41,7 @@ import Prelude hiding (read)
 -- restricted to be a 'Num' type.
 -- While the sum of durations makes sense, the sum of two timestamps does not, so
 -- they are only equiped with primitives 'duration' and 'shift'.
--- NOTE: derived a 'Show' instance for testing purposes.
+-- NOTE: derived a 'Show' instance for debugging purposes.
 newtype Time d = Time d deriving (Show, Eq, Ord)
 
 -- | The relative duration between two timestamps.
@@ -228,8 +228,9 @@ instance (HasTimer m d) => TimedMonad m d (TA m d) where
     (_, a) <- ta t
     return a
 
--- | The default time extension of the IO monad, having the instance
--- @TimedMonad IO Micro TIO@ deriving from the instance of @HasTimer IO Micro@.
+-- | The default time extension of the IO monad, where timing information
+-- is handled. Its 'TimedMonad' instance @TimedMonad IO Micro TIO@ is derived
+-- from the 'HasTimer IO Micro' context.
 type TIO = TA IO Micro
 
 -- Symbolic Timed Extension of a Monad
