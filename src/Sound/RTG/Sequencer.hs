@@ -5,34 +5,36 @@
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.Sequencer
-  ( globalPattern,
-    updatePatternPool,
-    removePattern,
-    playSequencerPattern,
-    pp,
-    d1,
-    d2,
-    d3,
-    d4,
-    d5,
-    d6,
-    d7,
-    d8,
-  )
-where
+module Sound.RTG.Sequencer where
+
+-- ( globalPattern,
+--   updatePatternPool,
+--   stopPattern,
+--   playSequencerPattern,
+--   refreshSequencer,
+--   playPattern,
+--   d1,
+--   d2,
+--   d3,
+--   d4,
+--   d5,
+--   d6,
+--   d7,
+--   d8,
+-- )
 
 import Control.Monad (forever, mapM_)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef, writeIORef)
-import Data.Maybe (fromMaybe, fromJust, isNothing)
+import Data.Maybe (fromJust, fromMaybe, isNothing)
 import Euterpea (Pitch, PitchClass (..), note, play, playS)
 import GHC.IO (unsafePerformIO)
 import qualified Sound.Osc.Fd as Osc
-import Sound.RTG.Conversion (zipValuesWithOnsets)
+import Sound.RTG.Async (cancel)
+import Sound.RTG.Event (Event (..), isOnset, zipValuesWithOnsets)
 import Sound.RTG.OscMessages (superDirtMessage, superDirtPort)
-import Sound.RTG.RhythmicPattern (Event (..), Rhythmic, rhythm)
+import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
 import Sound.RTG.TimedMonad
   ( Micro (..),
     MonadRef (..),
@@ -40,9 +42,11 @@ import Sound.RTG.TimedMonad
     TimedMonad (..),
     timedLift,
   )
-import Sound.RTG.Async (cancel)
 import Sound.RTG.UnSafe (readcps)
 import Sound.RTG.Utils (patternEventDurationSec)
+
+-- TODO: This module still depends on Event constructors.
+-- Can it be decoupled?
 
 -- | A map containing all currently running patterns.
 type PatternPool = HashMap PatternId SequencerPattern
@@ -56,7 +60,7 @@ type SequencerPattern = [(Event, Maybe [Output])]
 -- | Samples names from an existing sound library (in this case, DirtSamples).
 type SampleName = String
 
--- | Output value types.
+-- | Output value
 data Output
   = -- | Trigger samples in SuperDirt.
     Osc !SampleName
@@ -74,19 +78,26 @@ isNote _ = False
 
 -- PatternPool and Global Pattern
 
--- | Initialize an empty pattern pool.
+-- | Initialize an empty pattern pool in a mutable variable.
+-- It needs to be exposed outside of an action to be able to
+-- update it within the ghci runtime.
 patternPoolRef :: IORef PatternPool
 patternPoolRef = unsafePerformIO $ newIORef (HM.empty)
 
--- | Add or update a pattern.
+-- | Add or update a pattern in the pattern pool.
 updatePatternPool :: PatternId -> SequencerPattern -> IO ()
 updatePatternPool id pattern = modifyIORef' patternPoolRef $ HM.insert id pattern
+
+-- Test Examples:
+-- updatePatternPool "1" [(Onset, Just [Osc "cp"])]
+-- updatePatternPool "2" [(Onset, Just [Osc "bd", Osc "sn"]), (Onset, Just [Osc "blip"])]
+-- updatePatternPool "3" [(Rest, Nothing), (Onset, Just [Osc "can"], (Rest, Nothing))]
 
 -- | Remove a pattern from the pool.
 removePattern :: PatternId -> IO ()
 removePattern id = modifyIORef' patternPoolRef $ HM.delete id
 
--- | The global pattern obtained from merging all running patterns.
+-- | The global pattern obtained from merging all patterns in the pool.
 globalPattern :: IO (SequencerPattern)
 globalPattern = do
   patternPool <- readIORef patternPoolRef
@@ -96,17 +107,14 @@ globalPattern = do
       mergePattern = HM.foldl' (matchOutputEvents) [] adjustedPatterns
   pure mergePattern
 
--- updatePatternPool "1" [(Onset, Just [Osc "cp"])]
--- updatePatternPool "2" [(Onset, Just [Osc "bd", Osc "sn"])]
-
 {-@ refinePattern :: Integral a => n:a
                  -> {pttrn : SequencerPattern | n `mod` (length pttrn) == 0 }
                  -> {pttrn' : SequencerPattern | length pttrn' == n}@-}
 
 -- | Adjust a pattern to a finer grain (/i.e./ to a bigger discrete chromatic universe).
 refinePattern :: (Integral a) => a -> SequencerPattern -> SequencerPattern
-refinePattern n pttrn =
-  let factor = div (fromIntegral n) (length pttrn)
+refinePattern grain pttrn =
+  let factor = (fromIntegral grain) `div` (length pttrn)
    in concat $ map (\x -> x : replicate (factor - 1) (Rest, Nothing)) pttrn
 
 {-@ matchOutputEvents :: pttrn : [(Event, Maybe [a])]
@@ -120,17 +128,16 @@ matchOutputEvents pttrn [] = pttrn
 matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
   where
     f (event, outputs) (event', outputs') =
-      if event == Onset || event' == Onset
+      if isOnset event || isOnset event'
         then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
         else (Rest, Nothing)
 
 -- Play functionality
 
--- Using the timedLift function we can to forget about
--- implementation details of the Timed IO Monad (TIO), which are quite messy.
--- Timing information is handled beneath the hood, except when we call delay.
+-- By lifting actions into the Timed IO Monad (TIO) we can forget about
+-- managing computaion time dritfs explicitly.
 
--- | Play through the Timed IO Monad 'TIO'.
+-- | Play through the Timed IO Monad 'TIO' in a loop.
 -- The 'Micro' parameter should be generated from the global cps value;
 -- it defines the duration of each event.
 playSequencerPattern :: Micro -> SequencerPattern -> TIO ()
@@ -138,43 +145,81 @@ playSequencerPattern dur sp = do
   ref <- fork $ mapM_ (eventOutput dur . snd) $ cycle sp
   timedLift $ writeIORef playRef (Just ref)
 
+-- | Current play status. 'Nothing' stands for no playback.
+-- A value gives the current playback process reference.
+playRef :: IORef (Maybe (Ref TIO ()))
+playRef = unsafePerformIO $ newIORef Nothing
+
+-- | Generates an event playback by the given duration inside the timed IO monad.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
 eventOutput dur Nothing = delay dur
-eventOutput dur (Just outputs) = mapM_ (\x -> timedOutput dur x >> delay dur) outputs
+-- NOTE: Added now >>= lift . print to show timestamps
+-- but they are shown elsewhere (probably in the actual thread).
+eventOutput dur (Just outputs) = mapM_ (\x -> instantOutput dur x >> delay dur >> now >>= lift . print) outputs
 
--- TODO: output for Note is messing up time.
-timedOutput :: Micro -> Output -> TIO ()
-timedOutput dur (Osc sample) = timedLift $ do
+-- | TODO: output for Note is messing up time.
+-- NOTE: Previously called timedOutput, now I changed 'timedLift' to 'lift'
+-- as this events are supposed to be instantaneous.
+instantOutput :: Micro -> Output -> TIO ()
+instantOutput dur (Osc sample) = lift $ do
   port <- superDirtPort
   Osc.sendMessage port (superDirtMessage sample)
-timedOutput dur (Note pitch) =
+instantOutput dur (Note pitch) =
   let Micro m = dur
       microsecs = fromIntegral m
       secs = microsecs / 10 ^ 6
-   in timedLift $ do
-        fork $ playS $ note secs pitch -- Esta función es tan lenta que
-        return ()
+   in lift $ do
+        play $ note secs pitch -- too slow to catch up
+        -- fork $ play $ note secs pitch -- too slow to catch up
+        -- return ()
 
 -- Execution interface
 
 -- | Play a pattern and update the pattern pool.
-pp :: (Rhythmic a) => PatternId -> a -> IO ()
-pp id pattern = do
-  outputs <- readIORef defaultOutput
-  cps <- readcps
+playPattern :: (Rhythmic a) => PatternId -> a -> IO ()
+playPattern id pattern = do
+  outputs <- readIORef defaultOutput -- just for testing?
   let newSequencerPattern = toSequencerPattern pattern outputs
   updatePatternPool id newSequencerPattern
-  gp <- globalPattern
-  let grain = length gp
-      dur = cpsToTimeStamp cps grain
-  run $ do
-    playing <- timedLift $ readIORef playRef
-    if isNothing playing
-        then playSequencerPattern dur gp
-        else freeze (fromJust playing) >> delay dur >> playSequencerPattern dur gp
+  refreshSequencer
 
-playRef :: IORef (Maybe (Ref TIO ()))
-playRef = unsafePerformIO $ newIORef Nothing
+resume = refreshSequencer
+
+stopPattern id = removePattern id >> refreshSequencer
+
+clear :: IO ()
+clear = run go
+  where
+    go :: TIO ()
+    go = lift $ do
+      modifyIORef' playRef $ const Nothing
+      modifyIORef' patternPoolRef $ const HM.empty
+      refreshSequencer
+
+stopAll :: IO ()
+stopAll = run go
+  where
+    go :: TIO ()
+    go = do
+      currentlyPlaying <- (timedLift $ readIORef playRef)
+      freeze $ fromJust currentlyPlaying
+
+refreshSequencer :: IO ()
+refreshSequencer = do
+  gp <- globalPattern
+  cps <- readcps
+  currentlyPlaying <- readIORef playRef
+  let grain = length gp
+      dur =
+        if grain /= 0 -- We get this at the start of after clearing the pool
+          then cpsToTimeStamp cps grain
+          else 0
+  if isNothing currentlyPlaying
+    then run $ playSequencerPattern dur gp
+    else run $ do
+      freeze (fromJust currentlyPlaying)
+      delay dur
+      playSequencerPattern dur gp
 
 toSequencerPattern :: (Rhythmic a) => a -> [[Output]] -> SequencerPattern
 toSequencerPattern pattern outputs =
@@ -182,23 +227,25 @@ toSequencerPattern pattern outputs =
    in zipValuesWithOnsets eventPattern outputs
 
 defaultOutput :: IORef [[Output]]
--- defaultOutput = unsafePerformIO $ newIORef [[Note (C,5)]]
-defaultOutput = unsafePerformIO $ newIORef [[Osc "cp"]]
+defaultOutput = unsafePerformIO $ newIORef [[Osc "blip"]]
+-- defaultOutput = unsafePerformIO $ newIORef [[Note (C, 5)]]
+
+changeDefOutput = do
+  modifyIORef' defaultOutput (const [[Osc "bd"]])
 
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
 cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
 
--- Default pattern IDs following Tidal Cycles convention.
-
+-- | Default pattern ID following Tidal Cycles convention.
 d1, d2, d3, d4, d5, d6, d7, d8 :: (Rhythmic a) => a -> IO ()
-d1 = pp "1"
-d2 = pp "2"
-d3 = pp "3"
-d4 = pp "4"
-d5 = pp "5"
-d6 = pp "6"
-d7 = pp "7"
-d8 = pp "8"
+d1 = playPattern "1"
+d2 = playPattern "2"
+d3 = playPattern "3"
+d4 = playPattern "4"
+d5 = playPattern "5"
+d6 = playPattern "6"
+d7 = playPattern "7"
+d8 = playPattern "8"
 
 {-
 playPattern :: Playback -> [Event] -> [Output] -> IO ()
