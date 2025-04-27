@@ -65,7 +65,7 @@ library
         Sound.RTG
         Sound.RTG.Async
         Sound.RTG.Bjorklund
-        Sound.RTG.Conversion
+        Sound.RTG.Event
         Sound.RTG.Euclidean
         Sound.RTG.HotSwap
         Sound.RTG.OscMessages
@@ -119,7 +119,7 @@ library
     default-language: Haskell2010
 
     ghc-options:
-                -Wcompat
+                -w
                 -- -fplugin=LiquidHaskell
 
 test-suite rtg-test

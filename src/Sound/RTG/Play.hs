@@ -11,6 +11,7 @@ import Control.Concurrent (ThreadId, forkIO)
 import Control.Monad (forever)
 import Euterpea (Pitch, note, play)
 import qualified Sound.Osc.Fd as Osc
+import Sound.RTG.Event (Event, isOnset)
 import Sound.RTG.OscMessages
   ( CPS,
     Dur,
@@ -20,8 +21,7 @@ import Sound.RTG.OscMessages
   )
 import Sound.RTG.PlayScale (Root, scalePitches)
 import Sound.RTG.RhythmicPattern
-  ( Event (..),
-    Rhythm (..),
+  ( Rhythm (..),
     Rhythmic (..),
     rhythm,
   )
@@ -51,14 +51,14 @@ s' root rhythmic =
     runTime . scalePattern (fromRational cps) . scalePitches root $ rhythmic
 
 playEvent :: (Osc.Transport t) => t -> SampleName -> Dur -> Event -> Temporal Value
-playEvent port sample delayT x =
+playEvent port sample delayT event =
   T
     ( \(_, _) -> \vT -> do
-        case x of
-          Onset -> do
+        if isOnset event
+          then do
             Osc.sendMessage port (superDirtMessage sample)
             return (Output $ superDirtMessage sample, vT)
-          Rest -> return (NoValue, vT)
+          else return (NoValue, vT)
     )
 
 openSuperDirtPort :: Temporal Osc.Udp

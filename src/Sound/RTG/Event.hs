@@ -1,12 +1,16 @@
 -- |
--- Module      : Conversion
--- Description : Convert Events and Event lists.
+-- Module      : Event
+-- Description : Event types and functions.
 -- Copyright   : (c) Xavier Góngora, 2023
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.Conversion
-  ( integralsToEvents,
+module Sound.RTG.Event
+  ( Event (..),
+    isOnset,
+    swapEvent,
+    fixOnset,
+    integralsToEvents,
     eventsToInts,
     ioisToEvents,
     onsetCount,
@@ -15,9 +19,35 @@ module Sound.RTG.Conversion
   )
 where
 
-import Sound.RTG.RhythmicPattern (Event (..))
+import Data.Group (Group (..))
 
--- NOTE: make this the Event module?
+-- | Events are either onsets or rests and are modeled after integers modulo 2.
+data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
+
+isOnset :: Event -> Bool
+isOnset Onset = True
+isOnset Rest = False
+
+instance Show Event where
+  show Rest = show 0
+  show Onset = show 1
+
+instance Semigroup Event where
+  Rest <> Onset = Onset
+  Onset <> Rest = Onset
+  _ <> _ = Rest
+
+instance Monoid Event where
+  mempty = Rest
+
+instance Group Event where
+  invert = id
+
+swapEvent :: Event -> Event
+swapEvent event = if event == Onset then Rest else Onset
+
+fixOnset :: Event -> Event -> Event
+fixOnset x y = if x == Onset then Onset else y
 
 -- | Convert by congruence modulo 2
 integralsToEvents :: (Integral a) => [a] -> [Event]

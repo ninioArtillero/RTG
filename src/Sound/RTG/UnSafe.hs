@@ -32,9 +32,9 @@ import Sound.Osc.Fd
     pauseThread,
     sendMessage,
   )
+import Sound.RTG.Event (Event, isOnset)
 import Sound.RTG.RhythmicPattern
-  ( Event (..),
-    Rhythm (..),
+  ( Rhythm (..),
     Rhythmic (..),
   )
 import Sound.RTG.Utils ()
@@ -49,6 +49,8 @@ type BPM = Int
 
 -- | Beats per cycle
 type BPC = Int
+
+-- TODO: Change to global state module?
 
 -- TODO: Clean up pending... many functions not in used and
 -- repeated functionality.
@@ -109,19 +111,21 @@ stop = killThread
 -- Esta estructura esta definida en el módulo Sound.Tidal.Stream
 -- De esta manera, tengo un mensaje que SuperDirt entiende para producir sonido.
 messageGen :: Event -> SampleName -> Message
-messageGen Rest _ = message "/dirt/play" []
-messageGen Onset sample =
-  message
-    "/dirt/play"
-    [ -- ASCII_String $ ascii "cps",
-      -- Float 0.5,
-      -- ASCII_String $ ascii "cycle",
-      -- Float 0.0,
-      -- ASCII_String $ ascii "delta",
-      -- Float 1.7777760028839,
-      AsciiString $ ascii "s",
-      AsciiString $ ascii sample
-    ]
+messageGen event sample =
+  if isOnset event
+    then
+      message
+        "/dirt/play"
+        [ -- ASCII_String $ ascii "cps",
+          -- Float 0.5,
+          -- ASCII_String $ ascii "cycle",
+          -- Float 0.0,
+          -- ASCII_String $ ascii "delta",
+          -- Float 1.7777760028839,
+          AsciiString $ ascii "s",
+          AsciiString $ ascii sample
+        ]
+    else message "/dirt/play" []
 
 eventDuration :: Rational -> Int -> Rational
 eventDuration cps pulses = secondsPerCycle / eventsPerCycle

@@ -37,9 +37,9 @@ where
 
 import Data.Group (Group (..))
 import qualified Data.Set as Set
-import Sound.RTG.Conversion (integralsToEvents)
+import Sound.RTG.Event (Event, integralsToEvents)
 import Sound.RTG.PerfectBalance (indicatorVector)
-import Sound.RTG.RhythmicPattern (Event, Rhythm (Rhythm), Rhythmic (..))
+import Sound.RTG.RhythmicPattern (Rhythm (Rhythm), Rhythmic (..))
 import Sound.RTG.Utils (modOne, setNub)
 import Sound.RTG.Zip (euclideanZipWith)
 

@@ -18,8 +18,8 @@ where
 import Control.Concurrent (ThreadId, forkIO, readMVar)
 import Control.Monad (forever)
 import Euterpea hiding (Rest, forever)
-import Sound.RTG.Conversion (onsetCount)
-import Sound.RTG.RhythmicPattern (Event (..), Rhythmic (..), rhythm)
+import Sound.RTG.Event (Event, isOnset, onsetCount)
+import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Structure (iois)
 import Sound.RTG.UnSafe (readcps)
 
@@ -75,9 +75,9 @@ matchEvents _ _ [] = []
 matchEvents duration pttrn scale =
   let (x : xs) = cycle pttrn
       (p : ps) = cycle scale
-   in case x of
-        Rest -> rest duration : matchEvents duration xs (p : ps)
-        Onset -> note duration p : matchEvents duration xs ps
+   in if isOnset x
+        then note duration p : matchEvents duration xs ps
+        else rest duration : matchEvents duration xs (p : ps)
 
 -- TODO: Allow microtonal scales
 

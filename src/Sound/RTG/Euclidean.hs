@@ -21,7 +21,7 @@ module Sound.RTG.Euclidean (e') where
 
 import Data.Group (Group (..))
 import Sound.RTG.Bjorklund (euclideanPattern)
-import Sound.RTG.Conversion (integralsToEvents)
+import Sound.RTG.Event (integralsToEvents)
 import Sound.RTG.List (rotateLeft)
 import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic (..))
 

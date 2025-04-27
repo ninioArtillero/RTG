@@ -26,16 +26,13 @@ import FRP.Yampa
   )
 import qualified Sound.Osc as Osc
 import Sound.Osc.Fd (sendMessage)
+import Sound.RTG.Event (Event, isOnset)
 import Sound.RTG.OscMessages
   ( SampleName,
     superDirtMessage,
     superDirtPort,
   )
-import Sound.RTG.RhythmicPattern
-  ( Event (Onset),
-    Rhythm (getRhythm),
-    Rhythmic (toRhythm),
-  )
+import Sound.RTG.RhythmicPattern (Rhythm (getRhythm), Rhythmic (toRhythm))
 
 -- Signal Function
 
@@ -53,7 +50,7 @@ patternToSF sample beat bpm pttrn = proc time -> do
       bps = bpm / 60 -- beats per second
   index <- arr (\(t, i, l, b) -> floor (t * i / b) `mod` l) -< (time, bps, patternLength, beat)
   -- Determine if the current index corresponds to an onset
-  isOnset <- arr (\(i, onsets) -> onsets !! i == Onset) -< (index, onsetPattern)
+  isOnset <- arr (\(i, onsets) -> isOnset $ onsets !! i) -< (index, onsetPattern)
   -- Event stream
   event <- edge -< isOnset
   -- Generate an OSC message if there's an onset

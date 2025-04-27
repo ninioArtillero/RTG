@@ -12,30 +12,13 @@
 --
 -- A 'RhythmicPattern' is a event list in a newtype wrapper.
 -- Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
-module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), Event (..), rhythm) where
+module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm) where
 
 import Data.Group (Group, invert)
+import Sound.RTG.Event (Event, fixOnset, swapEvent)
 import Sound.RTG.Zip (euclideanZip)
 
--- | This data type represents integers modulo 2
-data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
-
--- TODO: Create Event module with Conversion functions?
-
-instance Show Event where
-  show Rest = show 0
-  show Onset = show 1
-
-instance Semigroup Event where
-  Rest <> Onset = Onset
-  Onset <> Rest = Onset
-  _ <> _ = Rest
-
-instance Monoid Event where
-  mempty = Rest
-
-instance Group Event where
-  invert = id
+-- TODO: Avoid exposing the data constructor (helps decouple implementation).
 
 -- | Rhythm wrapper to define a new custom instances for lists
 newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq, Show, Functor)
@@ -97,7 +80,7 @@ class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   co :: a -> RhythmicPattern
   co x =
     let rhythm = toRhythm x
-     in fmap (\case Rest -> Onset; Onset -> Rest) rhythm
+     in fmap swapEvent rhythm
 
   -- | Reverse. Play pattern backwards, different from Inverse.
   --
@@ -119,8 +102,6 @@ class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   -- prop> x <+> co x = toRhythm $ replicate (length x) Onset
   (<+>) :: (Rhythmic b) => a -> b -> RhythmicPattern
   r1 <+> r2 = fixOnset <$> toRhythm r1 <*> toRhythm r2
-    where
-      fixOnset x y = if x == Onset then Onset else y
 
 -- TODO
 --

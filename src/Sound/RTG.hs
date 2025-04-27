@@ -17,7 +17,7 @@ where
 
 import Euterpea.Music hiding (Primitive (..))
 import Sound.RTG.Bjorklund
-import Sound.RTG.Conversion
+import Sound.RTG.Event
 import Sound.RTG.Euclidean
 import Sound.RTG.PerfectBalance
 import Sound.RTG.Play

@@ -13,7 +13,11 @@ import Sound.RTG.List
     rotateRight,
     startPosition,
   )
-import Sound.RTG.RhythmicPattern (Event (..), Rhythmic, rhythm)
+import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
+import Sound.RTG.Event (Event (..))
+
+-- TODO: This module still depends on Event constructors.
+-- Can it be decoupled?
 
 -- | Computes the /mutual nearest neighbor graph/ of an onset pattern.
 -- Lists wrap as if embedded in a circle.
@@ -37,6 +41,7 @@ import Sound.RTG.RhythmicPattern (Event (..), Rhythmic, rhythm)
 --
 -- TODO: formulate properties
 -- TODO: optmize recursion
+-- TODO: refactor to show intention
 mnng :: (Rhythmic a) => a -> [[Event]]
 mnng xs = concatMap (\neighborhood -> if length neighborhood <= 1 then clusterBuilder neighborhood else reverse $ longClusterBuilderIter neighborhood [] []) neighborhoods
   where
