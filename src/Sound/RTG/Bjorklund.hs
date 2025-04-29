@@ -18,8 +18,9 @@ module Sound.RTG.Bjorklund (euclideanPattern) where
 import Sound.RTG.List (backDiff)
 
 -- | Generates the euclidean pattern \((k,n)\) in default position.
+-- Expects @k > 0 && n > 0 && n > k@.
 euclideanPattern :: Int -> Int -> [Int]
-euclideanPattern onsets pulses = bjorklund front back
+euclideanPattern onsets pulses = concat $ bjorklund front back
   where
     front = replicate onsets [1]
     back = replicate (pulses - onsets) [0]
@@ -27,32 +28,40 @@ euclideanPattern onsets pulses = bjorklund front back
 -- Las siguientes implementaciones difieren en
 -- su tratamiento de valores negativos.
 
+{-@ type Pos = { n:Int | n >0 }@-}
+
+{-@ euclideanPattern :: Pos -> Pos -> Pos @-}
+
+-- | 'euclideanPattern', but if @k >= n@ in \((k,n)\) then
+-- produces an n-isochronous rhythm.
+-- Expects @k > 0 && n > 0@.
 euclideanPattern' :: Int -> Int -> [Int]
 euclideanPattern' onsets pulses =
-  case compare onsets pulses of
-    LT -> bjorklund front back
-    GT -> replicate pulses 1
-    EQ -> replicate onsets 1
+  if onsets < pulses then concat $ bjorklund front back else replicate pulses 1
   where
     front = replicate onsets [1]
     back = replicate (pulses - onsets) [0]
 
+-- | 'euclideanPattern', but a negative /pulses/ value @k@ in \((k,n)\)
+-- reverses the pattern.
+-- TODO: review case logic
 euclideanPattern'' :: Int -> Int -> [Int]
 euclideanPattern'' onsets pulses =
   if orientation > 0
-    then bjorklund front back
-    else reverse $ bjorklund front back
+    then concat $ bjorklund front back
+    else reverse $ concat $ bjorklund front back
   where
     orientation = signum pulses
     onsets' = if onsets /= pulses then onsets `rem` pulses else abs onsets
     front = replicate onsets' [1]
     back = replicate (abs $ pulses - onsets') [0]
 
-bjorklund :: [[Int]] -> [[Int]] -> [Int]
+-- | The Björklund algorithm.
+bjorklund :: [[Int]] -> [[Int]] -> [[Int]]
 bjorklund front back =
   if (not . null) front && length back > 1
     then bjorklund newFront newBack
-    else concat (front ++ back)
+    else front ++ back
   where
     newFront = zipWith (++) front back
     newBack = backDiff front back
