@@ -101,6 +101,7 @@ library
         , clock ^>=0.8.4
         , containers >=0.6.5 && <= 0.8.0
         , Euterpea ^>=2.0.7
+        , foreign-store
         , groups ^>=0.5.3
         , hosc ^>=0.20
         -- , liquidhaskell == 0.9.10.1.2
