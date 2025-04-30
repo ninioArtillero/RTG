@@ -25,13 +25,11 @@ module Sound.RTG.Sequencer where
 
 import Control.Monad (forever, mapM_)
 import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
+import qualified Data.HashMap.Strict as Map
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef, writeIORef)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import Euterpea (Pitch, PitchClass (..), note, play, playS)
-import GHC.IO (unsafePerformIO)
 import qualified Sound.Osc.Fd as Osc
-import Sound.RTG.Async (cancel)
 import Sound.RTG.Event (Event (..), isOnset, zipValuesWithOnsets)
 import Sound.RTG.OscMessages (superDirtMessage, superDirtPort)
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
@@ -40,10 +38,10 @@ import Sound.RTG.TimedMonad
     MonadRef (..),
     TIO,
     TimedMonad (..),
-    timedLift,
   )
 import Sound.RTG.UnSafe (readcps)
 import Sound.RTG.Utils (patternEventDurationSec)
+import System.IO.Unsafe (unsafePerformIO)
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -52,7 +50,7 @@ import Sound.RTG.Utils (patternEventDurationSec)
 type PatternPool = HashMap PatternId SequencerPattern
 
 -- | Pattern keys in a 'PatternPool' are just Strings.
-type PatternId = String
+type PatternId = Int
 
 -- | Events with output data.
 type SequencerPattern = [(Event, Maybe [Output])]
@@ -60,7 +58,7 @@ type SequencerPattern = [(Event, Maybe [Output])]
 -- | Samples names from an existing sound library (in this case, DirtSamples).
 type SampleName = String
 
--- | Output value
+-- | Output values. OSC messages or MIDI notes.
 data Output
   = -- | Trigger samples in SuperDirt.
     Osc !SampleName
@@ -76,17 +74,24 @@ isNote :: Output -> Bool
 isNote (Note _) = True
 isNote _ = False
 
+toSequencerPattern :: (Rhythmic a) => a -> [[Output]] -> SequencerPattern
+toSequencerPattern pattern outputs =
+  let eventPattern = rhythm pattern
+   in zipValuesWithOnsets eventPattern outputs
+
 -- PatternPool and Global Pattern
 
 -- | Initialize an empty pattern pool in a mutable variable.
--- It needs to be exposed outside of an action to be able to
--- update it within the ghci runtime.
+-- It is exposed outside of 'IO' as a mutable shared state
+-- to be able to update it within the ghci runtime.
 patternPoolRef :: IORef PatternPool
-patternPoolRef = unsafePerformIO $ newIORef (HM.empty)
+patternPoolRef = unsafePerformIO $ newIORef (Map.empty)
+
+activePatterns = readIORef patternPoolRef >>= print . Map.keys
 
 -- | Add or update a pattern in the pattern pool.
 updatePatternPool :: PatternId -> SequencerPattern -> IO ()
-updatePatternPool id pattern = modifyIORef' patternPoolRef $ HM.insert id pattern
+updatePatternPool id pattern = modifyIORef' patternPoolRef $ Map.insert id pattern
 
 -- Test Examples:
 -- updatePatternPool "1" [(Onset, Just [Osc "cp"])]
@@ -95,25 +100,25 @@ updatePatternPool id pattern = modifyIORef' patternPoolRef $ HM.insert id patter
 
 -- | Remove a pattern from the pool.
 removePattern :: PatternId -> IO ()
-removePattern id = modifyIORef' patternPoolRef $ HM.delete id
+removePattern id = modifyIORef' patternPoolRef $ Map.delete id
 
 -- | The global pattern obtained from merging all patterns in the pool.
 globalPattern :: IO (SequencerPattern)
 globalPattern = do
   patternPool <- readIORef patternPoolRef
-  let patternLengths = HM.map (length) patternPool
-      leastCommonMultiple = HM.foldl' lcm 1 patternLengths
-      adjustedPatterns = HM.map (refinePattern leastCommonMultiple) patternPool
-      mergePattern = HM.foldl' (matchOutputEvents) [] adjustedPatterns
-  pure mergePattern
+  let patternLengthsMap = Map.map (length) patternPool
+      leastCommonMultiple = Map.foldl' lcm 1 patternLengthsMap
+      adjustedPatterns = Map.map (alignPattern leastCommonMultiple) patternPool
+      gp = Map.foldl' (matchOutputEvents) [] adjustedPatterns
+  pure gp
 
-{-@ refinePattern :: Integral a => n:a
+{-@ alignPattern :: Integral a => n:a
                  -> {pttrn : SequencerPattern | n `mod` (length pttrn) == 0 }
                  -> {pttrn' : SequencerPattern | length pttrn' == n}@-}
 
--- | Adjust a pattern to a finer grain (/i.e./ to a bigger discrete chromatic universe).
-refinePattern :: (Integral a) => a -> SequencerPattern -> SequencerPattern
-refinePattern grain pttrn =
+-- | Alight a 'SequencerPattern' to a finer grain (/i.e./ to a bigger discrete chromatic universe).
+alignPattern :: (Integral a) => a -> SequencerPattern -> SequencerPattern
+alignPattern grain pttrn =
   let factor = (fromIntegral grain) `div` (length pttrn)
    in concat $ map (\x -> x : replicate (factor - 1) (Rest, Nothing)) pttrn
 
@@ -143,67 +148,96 @@ matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
 playSequencerPattern :: Micro -> SequencerPattern -> TIO ()
 playSequencerPattern dur sp = do
   ref <- fork $ mapM_ (eventOutput dur . snd) $ cycle sp
-  timedLift $ writeIORef playRef (Just ref)
+  lift $ writeIORef playRef (Just ref)
 
 -- | Current play status. 'Nothing' stands for no playback.
 -- A value gives the current playback process reference.
 playRef :: IORef (Maybe (Ref TIO ()))
 playRef = unsafePerformIO $ newIORef Nothing
 
+playStatus :: IO String
+playStatus = do
+  currentlyPlaying <- readIORef playRef
+  if isNothing currentlyPlaying
+    then pure "Nothing is playing"
+    else pure "Just playing"
+
 -- | Generates an event playback by the given duration inside the timed IO monad.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
 eventOutput dur Nothing = delay dur
--- NOTE: Added now >>= lift . print to show timestamps
--- but they are shown elsewhere (probably in the actual thread).
-eventOutput dur (Just outputs) = mapM_ (\x -> instantOutput dur x >> delay dur >> now >>= lift . print) outputs
+eventOutput dur (Just outputs) = mapM_ (\x -> instantOut dur x >> delay dur) outputs
 
--- | TODO: output for Note is messing up time.
--- NOTE: Previously called timedOutput, now I changed 'timedLift' to 'lift'
--- as this events are supposed to be instantaneous.
-instantOutput :: Micro -> Output -> TIO ()
-instantOutput dur (Osc sample) = lift $ do
+-- | TODO: output for Note is messing up time. For the mean time I'll forget about it.
+instantOut :: Micro -> Output -> TIO ()
+instantOut dur (Osc sample) = lift $ do
   port <- superDirtPort
   Osc.sendMessage port (superDirtMessage sample)
-instantOutput dur (Note pitch) =
+instantOut dur (Note pitch) =
   let Micro m = dur
       microsecs = fromIntegral m
       secs = microsecs / 10 ^ 6
    in lift $ do
-        play $ note secs pitch -- too slow to catch up
-        -- fork $ play $ note secs pitch -- too slow to catch up
-        -- return ()
+        play $ note secs pitch -- too slow to catch up?
 
 -- Execution interface
 
--- | Play a pattern and update the pattern pool.
-playPattern :: (Rhythmic a) => PatternId -> a -> IO ()
-playPattern id pattern = do
-  outputs <- readIORef defaultOutput -- just for testing?
+-- | Default pattern ID following the Tidal Cycles idiom.
+d1, d2, d3, d4, d5, d6, d7, d8 :: (Rhythmic a) => [SampleName] -> a -> IO ()
+d1 samples = playPattern 1 (map (\s -> [Osc s]) samples)
+d2 samples = playPattern 2 (map (\s -> [Osc s]) samples)
+d3 samples = playPattern 3 (map (\s -> [Osc s]) samples)
+d4 samples = playPattern 4 (map (\s -> [Osc s]) samples)
+d5 samples = playPattern 5 (map (\s -> [Osc s]) samples)
+d6 samples = playPattern 6 (map (\s -> [Osc s]) samples)
+d7 samples = playPattern 7 (map (\s -> [Osc s]) samples)
+d8 samples = playPattern 8 (map (\s -> [Osc s]) samples)
+
+-- | Entry point for a pattern execution. It add the pattern to the pool
+-- and updates the sequencer.
+-- TODO: Add argument to modify event matching strategy for output values.
+playPattern :: (Rhythmic a) => PatternId -> [[Output]] -> a -> IO ()
+playPattern id outputs pattern = inSequencer $ do
   let newSequencerPattern = toSequencerPattern pattern outputs
   updatePatternPool id newSequencerPattern
-  refreshSequencer
 
+-- | Convinience alias. Used to resume play after 'stopAll'.
+resume :: IO ()
 resume = refreshSequencer
 
-stopPattern id = removePattern id >> refreshSequencer
+-- | Removes a pattern both from the pool and playback.
+kill :: PatternId -> IO ()
+kill id = inSequencer $ do
+  removePattern id
+  pool <- readIORef patternPoolRef
+  if pool == Map.empty
+    then modifyIORef' playRef $ const Nothing
+    else pure ()
 
+-- | Clear the pool and stop playing.
 clear :: IO ()
-clear = run go
-  where
-    go :: TIO ()
-    go = lift $ do
-      modifyIORef' playRef $ const Nothing
-      modifyIORef' patternPoolRef $ const HM.empty
-      refreshSequencer
+clear = do
+  stopAll
+  modifyIORef' playRef $ const Nothing
+  modifyIORef' patternPoolRef $ const Map.empty
+  refreshSequencer
 
+-- | Stop playing, but keep patterns in the pool.
 stopAll :: IO ()
 stopAll = run go
   where
     go :: TIO ()
     go = do
-      currentlyPlaying <- (timedLift $ readIORef playRef)
+      currentlyPlaying <- lift $ readIORef playRef
       freeze $ fromJust currentlyPlaying
+      lift $ modifyIORef' playRef $ const Nothing
 
+-- Mangaging execuention environment and shared state.
+
+-- | Refresh the sequencer after an 'IO' action.
+inSequencer :: IO a -> IO ()
+inSequencer action = action >> refreshSequencer
+
+-- | Querie the environment and re-trigger excecution.
 refreshSequencer :: IO ()
 refreshSequencer = do
   gp <- globalPattern
@@ -215,49 +249,12 @@ refreshSequencer = do
           then cpsToTimeStamp cps grain
           else 0
   if isNothing currentlyPlaying
-    then run $ playSequencerPattern dur gp
+    then run $ playSequencerPattern dur gp -- resume
     else run $ do
+      -- kill running sequencer pattern and resume
       freeze (fromJust currentlyPlaying)
       delay dur
       playSequencerPattern dur gp
 
-toSequencerPattern :: (Rhythmic a) => a -> [[Output]] -> SequencerPattern
-toSequencerPattern pattern outputs =
-  let eventPattern = rhythm pattern
-   in zipValuesWithOnsets eventPattern outputs
-
-defaultOutput :: IORef [[Output]]
-defaultOutput = unsafePerformIO $ newIORef [[Osc "blip"]]
--- defaultOutput = unsafePerformIO $ newIORef [[Note (C, 5)]]
-
-changeDefOutput = do
-  modifyIORef' defaultOutput (const [[Osc "bd"]])
-
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
 cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
-
--- | Default pattern ID following Tidal Cycles convention.
-d1, d2, d3, d4, d5, d6, d7, d8 :: (Rhythmic a) => a -> IO ()
-d1 = playPattern "1"
-d2 = playPattern "2"
-d3 = playPattern "3"
-d4 = playPattern "4"
-d5 = playPattern "5"
-d6 = playPattern "6"
-d7 = playPattern "7"
-d8 = playPattern "8"
-
-{-
-playPattern :: Playback -> [Event] -> [Output] -> IO ()
-playPattern playback events outputs = do
-  cps <- readcps
-  let outputPattern = matchValuesWithOnsets eventPattern outputs
-      eventPattern = case playback of
-        Once -> events
-        Loop -> cycle events
-      dur =
-        let len = length events
-            microSecs = (patternEventDurationSec cps len) * 10 ^ 6
-         in Micro $ round microSecs
-  run $ mapM_ (playEvent dur) outputPattern
--}
