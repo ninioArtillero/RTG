@@ -5,7 +5,7 @@
 -- License     : GPL-3
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
-module Sound.RTG.UnSafe (playU, stop, setcps, setbpm, readcps) where
+module Sound.RTG.UnSafe (setcps, setbpm, readcps) where
 
 import Control.Concurrent
   ( MVar,
@@ -22,40 +22,35 @@ import Control.Concurrent
   )
 -- import GHC.Conc (listThreads, threadStatus) -- for stopAll since base-4.18.0.0
 import Control.Monad (forever)
-import GHC.IO (unsafePerformIO)
 import Sound.Osc.Fd
-  ( Datum (AsciiString),
-    Message,
-    ascii,
+  ( Message,
     message,
-    openUdp,
     pauseThread,
     sendMessage,
   )
 import Sound.RTG.Event (Event, isOnset)
+import Sound.RTG.OscMessages (superDirtMessage, superDirtPort)
 import Sound.RTG.RhythmicPattern
   ( Rhythm (..),
     Rhythmic (..),
   )
-import Sound.RTG.Utils ()
+import Sound.RTG.Utils (patternEventDurationSec)
+import System.IO.Unsafe (unsafePerformIO)
 
 type CPS = Rational
 
 type SampleName = String
 
-type Pattern a = [a]
-
+-- | Beats Per Minute.
 type BPM = Int
 
--- | Beats per cycle
+-- | Beats Per Cycle.
 type BPC = Int
 
 -- TODO: Change to global state module?
 
 -- TODO: Clean up pending... many functions not in used and
 -- repeated functionality.
--- Utiliza MVar, una implementación de variables mutables que
--- permite sincronizar procesos concurrentes.
 
 globalCPS :: MVar CPS
 {-# NOINLINE globalCPS #-}
@@ -75,11 +70,11 @@ setbpm bpc bpm = do
   swapMVar globalCPS newcps
   return ()
 
-patternStream :: SampleName -> Pattern Event -> IO ThreadId
+patternStream :: SampleName -> [Event] -> IO ThreadId
 patternStream sample pttrn = forkIO $ do
   let cyclicPattern = cycle pttrn
   -- initialize variables
-  port <- openUdp "127.0.0.1" 57120
+  port <- superDirtPort
   onsetContainer <- newEmptyMVar
   index <- newMVar 0
   -- pattern query
@@ -93,10 +88,12 @@ patternStream sample pttrn = forkIO $ do
     cps <- readMVar globalCPS
     let send = sendMessage port
         event = messageGen onset sample
-        dur = eventDuration cps (length pttrn)
+        dur = patternEventDurationSec cps (length pttrn)
     send event
     pauseThread dur
 
+-- | Plays a sample in the given pattern. The returned 'ThreadId' must be bound
+-- to a variable to be able to stop the thread. These binding are lost when @ghci@ is reloaded.
 playU :: (Rhythmic a) => SampleName -> a -> IO ThreadId
 playU sample pttrn = do
   threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
@@ -113,25 +110,8 @@ stop = killThread
 messageGen :: Event -> SampleName -> Message
 messageGen event sample =
   if isOnset event
-    then
-      message
-        "/dirt/play"
-        [ -- ASCII_String $ ascii "cps",
-          -- Float 0.5,
-          -- ASCII_String $ ascii "cycle",
-          -- Float 0.0,
-          -- ASCII_String $ ascii "delta",
-          -- Float 1.7777760028839,
-          AsciiString $ ascii "s",
-          AsciiString $ ascii sample
-        ]
+    then superDirtMessage sample
     else message "/dirt/play" []
-
-eventDuration :: Rational -> Int -> Rational
-eventDuration cps pulses = secondsPerCycle / eventsPerCycle
-  where
-    secondsPerCycle = 1 / cps
-    eventsPerCycle = fromIntegral pulses
 
 -- Requires GHC.Conc.listThreads available since base-4.18.0.0
 -- Still not working as expected and imposes a conservative upperbound base-4.21.0.0)
