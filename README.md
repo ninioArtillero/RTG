@@ -193,10 +193,15 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [ ] Have _signals_ for parameter control (for morphing)
 - [ ] Geometrically informed continuous morphing between two arbitrary rhythms
 - [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
-- [ ] Fix haddocks (see Polygon module for example module header)
-- [ ] Change pattern implementation to Sequences (container type)
-- [ ] Use HashMaps for sequences.
-- [ ] Implement tests for bjorklund
+- [x] Fix haddocks (see Polygon module for example module header)
+- [ ] Change pattern implementation to Sequences (container type)?
+- [x] Use HashMaps for sequences.
+- [ ] Implement tests for bjorklund / LH specifications
+- [x] Preserve Sequencer State between `ghci` reloads.
+- [ ] Elaborate graph of execution model
+- [ ] Breakdown `Sequencer` module. Execution, PatterPool, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
+- [ ] Fix implementation for simultaneous events.
+- [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
 
 **Alternative implementations and further work**
 
@@ -209,6 +214,7 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
   - [x] OSC: `hosc`
   - [x] MIDI: `Euterpea`
   - [ ] Embed MIDI functionality using `fluidsynth`
+- [ ] Create a minimal sampler for RTG
 
 **Midterm**
 
