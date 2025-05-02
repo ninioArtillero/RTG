@@ -15,7 +15,7 @@ How programming language design and features translate to musical expressiveness
 > The API is bloated (most module functions are exported for experimentation)
 > and still subject to redesign.
 
-## Papers
+## Related Papers
 
 - [Rhythm, Time and Geometry](https://doi.org/10.21428/108765d1.e65cd604) @ Algorithmic Pattern Salon (2023)
 - [Demo: A Geometric Approach to Generate Musical Rhythmic Patterns in Haskell](https://doi.org/10.1145/3677996.3678295) @ FARM (2024)
@@ -202,6 +202,7 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [ ] Breakdown `Sequencer` module. Execution, PatterPool, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
 - [ ] Fix implementation for simultaneous events.
 - [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
+- [ ] Fix Nix installation.
 
 **Alternative implementations and further work**
 
