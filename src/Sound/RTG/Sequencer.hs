@@ -125,6 +125,9 @@ getPatternPool = readStore patternPoolStore
 queriePatterns :: IO [PatternId]
 queriePatterns = withStore patternPoolStore $ pure . Map.keys
 
+activePatterns :: IO [PatternId]
+activePatterns = withStore patternPoolStore $ pure . Map.keys . Map.filter ((== Running) . status)
+
 -- | Store and return the result of an update operation on the stored value.
 updateStore :: Store a -> (a -> IO a) -> IO a
 updateStore store update = storeAction store . withStore store $ update
@@ -141,6 +144,12 @@ addPatternToPool id pattern =
 -- | Remove a pattern from the pool.
 removePattern :: PatternId -> IO PatternPool
 removePattern id = updateStore patternPoolStore $ pure . Map.delete id
+
+stopPattern :: PatternId -> IO PatternPool
+stopPattern id = updateStore patternPoolStore $ pure . Map.adjust (\sequencerPattern -> sequencerPattern {status = Idle}) id
+
+activatePattern :: PatternId -> IO PatternPool
+activatePattern id = updateStore patternPoolStore $ pure . Map.adjust (\sequencerPattern -> sequencerPattern {status = Running}) id
 
 -- * Global Pattern
 
@@ -346,6 +355,12 @@ playPattern mode id outputs pttrn = inSequencer mode id $ do
 
 solo :: PatternId -> IO ()
 solo id = inSequencer Solo id $ pure ()
+
+stop :: PatternId -> IO PatternPool
+stop id = inSequencer Global 0 $ stopPattern id
+
+start :: PatternId -> IO PatternPool
+start id = inSequencer Global 0 $ activatePattern id
 
 -- | Resume play of the 'globalPattern'.
 resume :: IO ()
