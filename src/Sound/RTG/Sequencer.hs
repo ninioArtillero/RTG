@@ -75,7 +75,11 @@ type PatternId = Int
 
 -- | Events with output data.
 -- Analogous to the /fiber/ of a /fiber bundle/.
-type SequencerPattern = [(Event, Maybe [Output])]
+data SequencerPattern = SequencerPattern {getOutputPattern :: !OutputPattern, status :: !PatternStatus}
+
+type OutputPattern = [(Event, Maybe [Output])]
+
+data PatternStatus = Idle | Running deriving (Eq)
 
 -- | Samples names from an existing sound library (in this case, DirtSamples).
 type SampleName = String
@@ -99,8 +103,8 @@ isNote _ = False
 data SequencerMode = Solo | Global
 
 -- | TODO: Add a switch for changing the event matching strategy.
-toSequencerPattern :: (Rhythmic a) => a -> [[Output]] -> SequencerPattern
-toSequencerPattern pattern outputs =
+toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
+toOutputPattern pattern outputs =
   let eventPattern = rhythm pattern
    in zipValuesWithOnsets eventPattern outputs
 
@@ -145,14 +149,15 @@ removePattern id = updateStore patternPoolStore $ pure . Map.delete id
 -- to play the patterns contained in the 'PatternPool'. The /merging/ proceduce it
 -- implements is analogous to a /projection/.
 
--- | The global pattern obtained from merging all patterns in the pool.
-globalPattern :: IO SequencerPattern
+-- | The global pattern obtained from merging all running patterns in the pool.
+globalPattern :: IO OutputPattern
 globalPattern = withStore patternPoolStore $
   \patternPool -> do
-    let patternLengthsMap = Map.map (length) patternPool
+    let patternLengthsMap = Map.map (length . getOutputPattern) patternPool
         leastCommonMultiple = Map.foldl' lcm 1 patternLengthsMap
-        adjustedPatterns = Map.map (alignPattern leastCommonMultiple) patternPool
-        gp = Map.foldl' (matchOutputEvents) [] adjustedPatterns
+        runningPatterns = Map.filter ((== Running) . status) patternPool
+        adjustedOutputPatterns = Map.map (alignPattern leastCommonMultiple . getOutputPattern) runningPatterns
+        gp = Map.foldl' (matchOutputEvents) [] adjustedOutputPatterns
     pure gp
 
 soloPattern :: PatternId -> IO (Maybe SequencerPattern)
@@ -160,21 +165,21 @@ soloPattern id = withStore patternPoolStore $
   \patternPool -> pure $ Map.lookup id patternPool
 
 {-@ alignPattern :: Integral a => n:a
-                 -> {pttrn : SequencerPattern | n `mod` (length pttrn) == 0 }
-                 -> {pttrn' : SequencerPattern | length pttrn' == n}@-}
+                 -> {pttrn : OutputPattern | n `mod` (length pttrn) == 0 }
+                 -> {pttrn' : OutputPattern | length pttrn' == n}@-}
 
--- | Align a 'SequencerPattern' to a finer grain (/i.e./ to a bigger discrete chromatic universe).
-alignPattern :: (Integral a) => a -> SequencerPattern -> SequencerPattern
+-- | Align a 'OutputPattern' to a finer grain (/i.e./ to a bigger discrete chromatic universe).
+alignPattern :: (Integral a) => a -> OutputPattern -> OutputPattern
 alignPattern grain pttrn =
   let factor = (fromIntegral grain) `div` (length pttrn)
    in concat $ map (\x -> x : replicate (factor - 1) (Rest, Nothing)) pttrn
 
-{-@ matchOutputEvents :: pttrn : [(Event, Maybe [a])]
-                         -> {pttrn' : [(Event, Maybe [a])] | length pttrn == length pttrn'}
-                         -> {pttrn'' : [(Event, Maybe [a])] | length pttrn == length pttrn''} @-}
+{-@ matchOutputEvents :: pttrn : OutputPattern
+                      -> {pttrn' : OutputPattern | length pttrn == length pttrn'}
+                      -> {pttrn'' : OutputPattern | length pttrn == length pttrn''} @-}
 
 -- | Join the outputs of matching events. Expects patterns of the same length.
-matchOutputEvents :: SequencerPattern -> SequencerPattern -> SequencerPattern
+matchOutputEvents :: OutputPattern -> OutputPattern -> OutputPattern
 matchOutputEvents [] pttrn' = pttrn' -- Should empty cases be handled here?
 matchOutputEvents pttrn [] = pttrn
 matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
@@ -226,12 +231,12 @@ playStatus = do
 
 -- | Play a pattern in the Timed IO Monad 'TIO'.
 -- The playback is in a loop and runs on a forked thread.
--- This functions is called at 'refreshSequencerPattern'
+-- This functions is called at 'runSequencer'
 -- to play the current 'globalPattern'.
 -- There the 'Micro' parameter corresponds to the duration of each event,
 -- and is derived from the global cps value and the pattern length.
-playSequencerPattern :: Micro -> SequencerPattern -> TIO ()
-playSequencerPattern dur sp =
+playOutputPattern :: Micro -> OutputPattern -> TIO ()
+playOutputPattern dur sp =
   if dur == 0 || null sp
     then do
       (wasPlaying, _) <- lift $ updatePlayThread Nothing
@@ -298,7 +303,7 @@ runSequencer mode id = do
   let len = length gp
       dur = if len /= 0 then cpsToTimeStamp cps len else 0
   case mode of
-    Global -> run $ playSequencerPattern dur gp
+    Global -> run $ playOutputPattern dur gp
     Solo -> do
       sp <- soloPattern id
       case sp of
@@ -309,8 +314,11 @@ runSequencer mode id = do
                 "\nPattern " ++ show id ++ "is not in the pool!",
                 "\nUse 'queriePatterns' to show available patterns."
               ]
-        Just pttrn -> run $ playSequencerPattern dur $
-          alignPattern (lcm len $ length pttrn) pttrn
+        Just pttrn ->
+          run $
+            playOutputPattern dur $
+              let outputPattern = getOutputPattern pttrn
+               in alignPattern (lcm len $ length outputPattern) outputPattern
 
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
 cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
@@ -333,18 +341,8 @@ d8 samples = playPattern Global 8 (map (\s -> [Osc s]) samples)
 -- TODO: Add argument to modify event matching strategy for output values.
 playPattern :: (Rhythmic a) => SequencerMode -> PatternId -> [[Output]] -> a -> IO PatternPool
 playPattern mode id outputs pttrn = inSequencer mode id $ do
-  let newSequencerPattern = toSequencerPattern pttrn outputs
-  addPatternToPool id newSequencerPattern
-
-s1, s2, s3, s4, s5, s6, s7, s8 :: IO ()
-s1 = solo 1
-s2 = solo 2
-s3 = solo 3
-s4 = solo 1
-s5 = solo 5
-s6 = solo 6
-s7 = solo 7
-s8 = solo 8
+  let newSequencerPattern = toOutputPattern pttrn outputs
+  addPatternToPool id $ SequencerPattern {getOutputPattern = newSequencerPattern, status = Running}
 
 solo :: PatternId -> IO ()
 solo id = inSequencer Solo id $ pure ()
