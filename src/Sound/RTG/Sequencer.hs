@@ -18,22 +18,6 @@
 -- which can easily make the process blow up.
 module Sound.RTG.Sequencer where
 
--- ( globalPattern,
---   updatePatternPool,
---   stopPattern,
---   playSequencerPattern,
---   refreshSequencer,
---   playPattern,
---   d1,
---   d2,
---   d3,
---   d4,
---   d5,
---   d6,
---   d7,
---   d8,
--- )
-
 import Control.Monad (mapM_)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
@@ -75,7 +59,10 @@ type PatternId = Int
 
 -- | Events with output data.
 -- Analogous to the /fiber/ of a /fiber bundle/.
-data SequencerPattern = SequencerPattern {getOutputPattern :: !OutputPattern, status :: !PatternStatus}
+data SequencerPattern = SequencerPattern
+  { getOutputPattern :: !OutputPattern,
+    status :: !PatternStatus
+  }
 
 type OutputPattern = [(Event, Maybe [Output])]
 
@@ -100,7 +87,7 @@ isNote :: Output -> Bool
 isNote (Note _) = True
 isNote _ = False
 
-data SequencerMode = Solo | Global
+data SequencerMode = Solo Int | Global deriving (Show)
 
 -- | TODO: Add a switch for changing the event matching strategy.
 toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
@@ -151,6 +138,12 @@ stopPattern id = updateStore patternPoolStore $ pure . Map.adjust (\sequencerPat
 activatePattern :: PatternId -> IO PatternPool
 activatePattern id = updateStore patternPoolStore $ pure . Map.adjust (\sequencerPattern -> sequencerPattern {status = Running}) id
 
+activateAllPatterns :: IO PatternPool
+activateAllPatterns = updateStore patternPoolStore $ pure . Map.map (\sequencerPattern -> sequencerPattern {status = Running})
+
+stopAllPatterns :: IO PatternPool
+stopAllPatterns = updateStore patternPoolStore $ pure . Map.map (\sequencerPattern -> sequencerPattern {status = Idle})
+
 -- * Global Pattern
 
 -- $globalpattern
@@ -198,38 +191,44 @@ matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
         then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
         else (Rest, Nothing)
 
--- * Play Status
+-- * Sequencer State
 
--- $playstatus
--- The 'playStatus' is inferred from a 'Maybe (Ref TIO ())' (a 'TimedMonad' reference)
--- value inside a 'Store'.
--- Under the hood, the reference carries a 'Control.Concurrency.threadId'
--- as a process handle. 'Nothing' stands for no-playback.
+-- | Current play thread reference store.
+sequencerStateStore :: Store SequencerState
+-- sequencerStateStore = unsafePerformIO $ newStore $ Nothing
+sequencerStateStore = Store 1
 
--- | Current play thread reference store. 'Nothing' stands for no-playback.
-playThreadStore :: Store (Maybe (Ref TIO ()))
--- playThreadStore = unsafePerformIO $ newStore $ Nothing
-playThreadStore = Store 1
+-- | A 'SequencerState' contains a 'Maybe (Ref TIO ())' and the 'SequencerMode'.
+-- A 'Ref TIO ()' is a Timed IO Monad ('TIO') reference to the sequencer running thread.
+-- 'Nothing' in this field means the sequencer is not running.
+type SequencerState = (SequencerMode, Maybe (Ref TIO ()))
 
--- | Updates the 'playThreadStore' with the given reference and
+-- | Updates the 'sequencerStateStore' with the given reference and
 -- returns both the old and new playing thread references.
-updatePlayThread :: Maybe (Ref TIO ()) -> IO (Maybe (Ref TIO ()), Maybe (Ref TIO ()))
-updatePlayThread currentlyPlaying = do
-  wasPlaying <- readStore playThreadStore
-  writeStore playThreadStore currentlyPlaying
-  pure (wasPlaying, currentlyPlaying)
+updateSequencerThread :: Maybe (Ref TIO ()) -> IO SequencerState
+updateSequencerThread currentlyPlaying = updateStore sequencerStateStore $
+  \(mode, _) -> pure (mode, currentlyPlaying)
 
-getPlayThread :: IO (Maybe (Ref TIO ()))
-getPlayThread = do
-  currentlyPlaying <- readStore playThreadStore
+updateSequencerMode :: SequencerMode -> IO SequencerState
+updateSequencerMode mode = updateStore sequencerStateStore $
+  \(_, currentlyPlaying) -> pure (mode, currentlyPlaying)
+
+getSequencerThread :: IO (Maybe (Ref TIO ()))
+getSequencerThread = do
+  (_, currentlyPlaying) <- readStore sequencerStateStore
   pure currentlyPlaying
+
+getSequencerMode :: IO SequencerMode
+getSequencerMode = do
+  (mode, _) <- readStore sequencerStateStore
+  pure mode
 
 playStatus :: IO String
 playStatus = do
-  withStore playThreadStore $ \currentlyPlaying -> do
+  withStore sequencerStateStore $ \(mode, currentlyPlaying) -> do
     case currentlyPlaying of
-      Nothing -> pure "Nothing is playing"
-      Just _ -> pure "Just playing"
+      Nothing -> pure $ "Nothing is playing in " ++ show mode ++ " mode"
+      Just _ -> pure $ "Just playing in " ++ show mode ++ " mode"
 
 -- * Play Functionality
 
@@ -248,22 +247,25 @@ playOutputPattern :: Micro -> OutputPattern -> TIO ()
 playOutputPattern dur sp =
   if dur == 0 || null sp
     then do
-      (wasPlaying, _) <- lift $ updatePlayThread Nothing
+      wasPlaying <- lift $ getSequencerThread
       case wasPlaying of
         Nothing -> pure ()
-        Just thread -> freeze thread
+        Just thread -> do
+          freeze thread
+          _ <- lift $ updateSequencerThread Nothing
+          pure ()
     else do
-      wasPlaying <- lift $ getPlayThread
+      wasPlaying <- lift $ getSequencerThread
       case wasPlaying of
         Nothing -> do
           thread <- fork $ patternOutput dur sp
-          _ <- lift $ updatePlayThread (Just thread)
+          _ <- lift $ updateSequencerThread (Just thread)
           pure ()
         Just oldThread -> do
           freeze oldThread
-          delay dur
+          delay dur -- the swap time matches the event time
           newThread <- fork (patternOutput dur sp)
-          _ <- lift $ updatePlayThread (Just newThread)
+          _ <- lift $ updateSequencerThread (Just newThread)
           pure ()
 
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
@@ -287,43 +289,52 @@ instantOut dur (Note pitch) =
 -- * Sequencer State
 
 -- | Wrapper for operations that depend on the sequencer state.
-inSequencer :: SequencerMode -> PatternId -> IO a -> IO a
-inSequencer mode id action = do
+inSequencer :: IO a -> IO a
+inSequencer action = do
   storeInit
   returnValue <- action
-  runSequencer mode id
+  runSequencer
   pure returnValue
 
--- | Initializes the 'patternPoolStore' and the 'playThreadStore'.
+-- | Initializes the 'patternPoolStore' and the 'sequencerStateStore'.
 storeInit :: IO ()
 storeInit = do
   [maybePoolStore, maybeThreadStore] <- mapM lookupStore [0, 1]
   case (maybePoolStore, maybeThreadStore) of
-    (Nothing, Nothing) -> resetPatternPool >> writeStore playThreadStore Nothing
+    (Nothing, Nothing) -> resetPatternPool >> writeStore sequencerStateStore (Global, Nothing)
     (Nothing, _) -> resetPatternPool
-    (_, Nothing) -> writeStore playThreadStore Nothing
+    (_, Nothing) -> writeStore sequencerStateStore (Global, Nothing)
     (_, _) -> pure ()
 
 -- | Querie the environment and (re-)trigger execution.
-runSequencer :: SequencerMode -> PatternId -> IO ()
-runSequencer mode id = do
+runSequencer :: IO ()
+runSequencer = do
   gp <- globalPattern
+  mode <- getSequencerMode
   cps <- readcps
   let len = length gp
       dur = if len /= 0 then cpsToTimeStamp cps len else 0
   case mode of
     Global -> run $ playOutputPattern dur gp
-    Solo -> do
-      sp <- soloPattern id
+    Solo patternId -> do
+      sp <- soloPattern patternId
       case sp of
-        Nothing ->
-          error $
+        Nothing -> do
+          putStrLn $
             unlines
-              [ "runSequencer:",
-                "\nPattern " ++ show id ++ "is not in the pool!",
-                "\nUse 'queriePatterns' to show available patterns."
+              [ "Pattern missing!",
+                "Use 'queriePatterns' to show available patterns to 'solo',",
+                "'unsolo' the sequencer or play 'd" ++ show patternId ++ "'."
               ]
-        Just pttrn ->
+          run $ playOutputPattern 0 []
+        -- error $
+        --   unlines
+        --     [ ">>at 'runSequencer' in 'Solo' mode<<",
+        --       "Pattern " ++ show patternId ++ " is not in the pool!",
+        --       "Use 'queriePatterns' to show available patterns."
+        --     ]
+        Just pttrn -> do
+          activatePattern patternId
           run $
             playOutputPattern dur $
               let outputPattern = getOutputPattern pttrn
@@ -336,58 +347,66 @@ cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral
 
 -- | Default pattern ID following the Tidal Cycles idiom.
 d1, d2, d3, d4, d5, d6, d7, d8 :: (Rhythmic a) => [SampleName] -> a -> IO PatternPool
-d1 samples = playPattern Global 1 (map (\s -> [Osc s]) samples)
-d2 samples = playPattern Global 2 (map (\s -> [Osc s]) samples)
-d3 samples = playPattern Global 3 (map (\s -> [Osc s]) samples)
-d4 samples = playPattern Global 4 (map (\s -> [Osc s]) samples)
-d5 samples = playPattern Global 5 (map (\s -> [Osc s]) samples)
-d6 samples = playPattern Global 6 (map (\s -> [Osc s]) samples)
-d7 samples = playPattern Global 7 (map (\s -> [Osc s]) samples)
-d8 samples = playPattern Global 8 (map (\s -> [Osc s]) samples)
+d1 samples = addPattern Running 1 (map (\s -> [Osc s]) samples)
+d2 samples = addPattern Running 2 (map (\s -> [Osc s]) samples)
+d3 samples = addPattern Running 3 (map (\s -> [Osc s]) samples)
+d4 samples = addPattern Running 4 (map (\s -> [Osc s]) samples)
+d5 samples = addPattern Running 5 (map (\s -> [Osc s]) samples)
+d6 samples = addPattern Running 6 (map (\s -> [Osc s]) samples)
+d7 samples = addPattern Running 7 (map (\s -> [Osc s]) samples)
+d8 samples = addPattern Running 8 (map (\s -> [Osc s]) samples)
 
 -- | Entry point for a pattern execution. It add the pattern to the pool
 -- and updates the sequencer.
 -- TODO: Add argument to modify event matching strategy for output values.
-playPattern :: (Rhythmic a) => SequencerMode -> PatternId -> [[Output]] -> a -> IO PatternPool
-playPattern mode id outputs pttrn = inSequencer mode id $ do
+addPattern :: (Rhythmic a) => PatternStatus -> PatternId -> [[Output]] -> a -> IO PatternPool
+addPattern st id outputs pttrn = inSequencer $ do
   let newSequencerPattern = toOutputPattern pttrn outputs
-  addPatternToPool id $ SequencerPattern {getOutputPattern = newSequencerPattern, status = Running}
+  addPatternToPool id $ SequencerPattern {getOutputPattern = newSequencerPattern, status = st}
 
-solo :: PatternId -> IO ()
-solo id = inSequencer Solo id $ pure ()
+solo :: PatternId -> IO SequencerState
+solo patternId = inSequencer $ updateSequencerMode (Solo patternId)
+
+unsolo :: IO SequencerState
+unsolo = inSequencer $ updateSequencerMode Global
 
 stop :: PatternId -> IO PatternPool
-stop id = inSequencer Global 0 $ stopPattern id
+stop id = inSequencer $ stopPattern id
+
+-- | Set all patterns to 'Idle'.
+stopAll :: IO PatternPool
+stopAll = inSequencer $ stopAllPatterns
 
 start :: PatternId -> IO PatternPool
-start id = inSequencer Global 0 $ activatePattern id
+start id = inSequencer $ activatePattern id
 
--- | Resume play of the 'globalPattern'.
-resume :: IO ()
-resume = inSequencer Global 0 $ pure ()
+-- | Set all pattern to 'Running'.
+startAll :: IO PatternPool
+startAll = inSequencer $ activateAllPatterns
 
--- | Removes a pattern both from the pool and playback.
+-- | Removes a pattern from both the pool and playback.
 kill :: PatternId -> IO PatternPool
-kill id = inSequencer Global id $ removePattern id
+kill id = inSequencer $ removePattern id
 
 -- | Clear the pool and stop playing.
 -- REVIEW: why not "inSequencer"?
 clear :: IO ()
-clear = do
-  stopAll
-  resetPatternPool
+clear = inSequencer $ do resetPatternPool
 
--- | Stop playing, but keep patterns in the pool.
--- TODO: bug when "inSequencer"
-stopAll :: IO ()
-stopAll = run go
+-- | Reset the sequencer with the current state.
+reset :: IO ()
+reset = inSequencer $ pure ()
+
+-- | Kill playing thread
+hush :: IO ()
+hush = run go
   where
     go :: TIO ()
     go = do
-      currentlyPlaying <- lift $ getPlayThread
+      currentlyPlaying <- lift $ getSequencerThread
       case currentlyPlaying of
         Nothing -> lift $ putStrLn "Nothing is playing in silence loudly, listen..."
         Just thread -> do
           freeze thread
-          _ <- lift $ updatePlayThread Nothing
+          _ <- lift $ updateSequencerThread Nothing
           pure ()
