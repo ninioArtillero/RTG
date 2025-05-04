@@ -185,9 +185,15 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 
 - [x] Asynchronous evaluation of patterns
 - [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
+- [ ] Soloing many pattern together
+- [ ] Global pattern operations and transformations
+- [ ] Fix pattern update timing (avoid jumps)
+- [ ] Fix pattern resizing -> add feature
+- [ ] Make sequencer inform of current pattern length, balance and evenness.
 - [ ] Implement pattern sync alternatives
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
 - [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
+- [ ] Add perfectly balance rhythm library (no efficient algorithm on-sight)
 - [ ] Implement well-formed rhythms (¿3 parameters?)
 - [ ] Continuous morphing of well-formed rhythms using ratio parameter
 - [ ] Have _signals_ for parameter control (for morphing)
