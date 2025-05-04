@@ -15,7 +15,26 @@
 -- Some parts of this module are (very) unsafe due to the use of 'Foreign.Store',
 -- whose documentation is rather opaque about its implementation quirks.
 -- Modify with care, as a 'Store' is not thread safe.
-module Sound.RTG.Sequencer where
+module Sound.RTG.Sequencer
+  ( p,
+    start,
+    startAll,
+    stop,
+    stopAll,
+    solo,
+    unsolo,
+    setcps,
+    setbpm,
+    kill,
+    clear,
+    status,
+    querie,
+    active,
+    idle,
+    reset,
+    hush,
+  )
+where
 
 import Control.Monad (mapM_)
 import Data.HashMap.Strict (HashMap)
@@ -40,8 +59,6 @@ import Sound.RTG.TimedMonad
     TIO,
     TimedMonad (..),
   )
-import Sound.RTG.UnSafe (readcps)
-import Sound.RTG.Utils (patternEventDurationSec)
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -60,7 +77,7 @@ type PatternId = Int
 -- Analogous to the /fiber/ of a /fiber bundle/.
 data SequencerPattern = SequencerPattern
   { getOutputPattern :: !OutputPattern,
-    status :: !PatternStatus
+    getPatternStatus :: !PatternStatus
   }
 
 type OutputPattern = [(Event, Maybe [Output])]
@@ -90,23 +107,40 @@ data SequencerMode = Solo !Int | Global deriving (Show)
 
 -- * Sequencer Interface
 
--- | Run a pattern in the sequencer following the Tidal Cycles idiom.
-d1, d2, d3, d4, d5, d6, d7, d8 :: (Rhythmic a) => [SampleName] -> a -> IO PatternPool
-d1 samples = addPattern Running 1 (map (\s -> [Osc s]) samples)
-d2 samples = addPattern Running 2 (map (\s -> [Osc s]) samples)
-d3 samples = addPattern Running 3 (map (\s -> [Osc s]) samples)
-d4 samples = addPattern Running 4 (map (\s -> [Osc s]) samples)
-d5 samples = addPattern Running 5 (map (\s -> [Osc s]) samples)
-d6 samples = addPattern Running 6 (map (\s -> [Osc s]) samples)
-d7 samples = addPattern Running 7 (map (\s -> [Osc s]) samples)
-d8 samples = addPattern Running 8 (map (\s -> [Osc s]) samples)
+-- | Run a pattern in the sequencer.
+-- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternPool
+p samples patternId = addPattern Running patternId (map (\s -> [Osc s]) samples)
 
 -- | Entry point for a pattern execution. Adds the pattern to the pool.
 -- TODO: Add argument to modify event matching strategy for output values.
 addPattern :: (Rhythmic a) => PatternStatus -> PatternId -> [[Output]] -> a -> IO PatternPool
-addPattern st id outputs pttrn = inSequencer $ do
+addPattern patternStatus id outputs pttrn = inSequencer $ do
   let newSequencerPattern = toOutputPattern pttrn outputs
-  addPatternToPool id $ SequencerPattern {getOutputPattern = newSequencerPattern, status = st}
+  addPatternToPool id $
+    SequencerPattern
+      { getOutputPattern = newSequencerPattern,
+        getPatternStatus = patternStatus
+      }
+
+status :: IO String
+status = inSequencer $ sequencerStatus
+
+querie :: IO [PatternId]
+querie = inSequencer $ queriePatterns
+
+active :: IO [PatternId]
+active = inSequencer $ runningPatterns
+
+idle :: IO [PatternId]
+idle = inSequencer $ idlePatterns
+
+setcps :: CPS -> IO SequencerState
+setcps = updateSequencerCPS
+
+setbpm :: BPC -> BPM -> IO SequencerState
+setbpm bpc bpm =
+  let newcps = (fromIntegral bpm / 60) / fromIntegral bpc
+   in updateSequencerCPS newcps
 
 solo :: PatternId -> IO SequencerState
 solo patternId = inSequencer $ updateSequencerMode (Solo patternId)
@@ -166,14 +200,16 @@ inSequencer action = do
   runSequencer
   pure returnValue
 
--- | Initializes the 'patternPoolStore' and the 'sequencerStateStore'.
+-- | Initializes the 'patternPoolStore' to an empty 'PatternPool',
+-- and the 'sequencerStateStore' to global mode, none playback thread and
+-- a default cycles-per-second value.
 storeInit :: IO ()
 storeInit = do
   [maybePoolStore, maybeThreadStore] <- mapM lookupStore [0, 1]
   case (maybePoolStore, maybeThreadStore) of
-    (Nothing, Nothing) -> resetPatternPool >> writeStore sequencerStateStore (Global, Nothing)
+    (Nothing, Nothing) -> resetPatternPool >> writeStore sequencerStateStore (Global, Nothing, defaultCPS)
     (Nothing, _) -> resetPatternPool
-    (_, Nothing) -> writeStore sequencerStateStore (Global, Nothing)
+    (_, Nothing) -> writeStore sequencerStateStore (Global, Nothing, defaultCPS)
     (_, _) -> pure ()
 
 -- | Querie the environment's shared state and (re-)trigger execution.
@@ -181,7 +217,7 @@ runSequencer :: IO ()
 runSequencer = do
   gp <- globalPattern
   mode <- getSequencerMode
-  cps <- readcps
+  cps <- getSequencerCPS
   let len = length gp
       dur = if len /= 0 then cpsToTimeStamp cps len else 0
   case mode of
@@ -215,32 +251,69 @@ sequencerStateStore = Store 1
 -- | A 'SequencerState' its a 'Maybe (Ref TIO ())' and a 'SequencerMode'.
 -- A 'Ref TIO ()' is a Timed IO Monad ('TIO') reference to the sequencer running thread.
 -- 'Nothing' in this field means the sequencer is not running.
-type SequencerState = (SequencerMode, Maybe (Ref TIO ()))
+type SequencerState = (SequencerMode, Maybe (Ref TIO ()), CPS)
+
+-- | Cycles Per Second
+type CPS = Rational
+
+-- | Beats Per Cycle
+type BPC = Int
+
+-- | Beats Per Minuto
+type BPM = Int
+
+defaultCPS :: CPS
+defaultCPS = 0.5
 
 updateSequencerThread :: Maybe (Ref TIO ()) -> IO SequencerState
 updateSequencerThread currentlyPlaying = updateStore sequencerStateStore $
-  \(mode, _) -> pure (mode, currentlyPlaying)
+  \(mode, _, cps) -> pure (mode, currentlyPlaying, cps)
 
 updateSequencerMode :: SequencerMode -> IO SequencerState
 updateSequencerMode mode = updateStore sequencerStateStore $
-  \(_, currentlyPlaying) -> pure (mode, currentlyPlaying)
+  \(_, currentlyPlaying, cps) -> pure (mode, currentlyPlaying, cps)
+
+updateSequencerCPS :: CPS -> IO SequencerState
+updateSequencerCPS newcps = updateStore sequencerStateStore $
+  \(mode, currentlyPlaying, _) -> pure (mode, currentlyPlaying, newcps)
 
 getSequencerThread :: IO (Maybe (Ref TIO ()))
 getSequencerThread = do
-  (_, currentlyPlaying) <- readStore sequencerStateStore
+  (_, currentlyPlaying, _) <- readStore sequencerStateStore
   pure currentlyPlaying
 
 getSequencerMode :: IO SequencerMode
 getSequencerMode = do
-  (mode, _) <- readStore sequencerStateStore
+  (mode, _, _) <- readStore sequencerStateStore
   pure mode
 
-playStatus :: IO String
-playStatus = do
-  withStore sequencerStateStore $ \(mode, currentlyPlaying) -> do
+getSequencerCPS :: IO CPS
+getSequencerCPS = do
+  (_, _, cps) <- readStore sequencerStateStore
+  pure cps
+
+sequencerStatus :: IO String
+sequencerStatus = do
+  withStore sequencerStateStore $ \(mode, currentlyPlaying, cps) -> do
+    let floatCPS :: Float
+        floatCPS = fromRational cps
     case currentlyPlaying of
-      Nothing -> pure $ "Nothing is playing in " ++ show mode ++ " mode"
-      Just _ -> pure $ "Just playing in " ++ show mode ++ " mode"
+      Nothing ->
+        pure $
+          "Nothing is playing in "
+            ++ show mode
+            ++ " mode"
+            ++ " at "
+            ++ show floatCPS
+            ++ " cycles-per-second."
+      Just _ ->
+        pure $
+          "Just playing in "
+            ++ show mode
+            ++ " mode"
+            ++ " at "
+            ++ show floatCPS
+            ++ " cycles-per-second."
 
 -- * Output Fuctionality
 
@@ -310,7 +383,7 @@ globalPattern = withStore patternPoolStore $
   \patternPool -> do
     let patternLengthsMap = Map.map (length . getOutputPattern) patternPool
         leastCommonMultiple = Map.foldl' lcm 1 patternLengthsMap
-        runningPatterns = Map.filter ((== Running) . status) patternPool
+        runningPatterns = Map.filter ((== Running) . getPatternStatus) patternPool
         alignedOutputPatterns =
           Map.map (alignPattern leastCommonMultiple . getOutputPattern) runningPatterns
         gp = Map.foldl' (matchOutputEvents) [] alignedOutputPatterns
@@ -363,8 +436,11 @@ getPatternPool = readStore patternPoolStore
 queriePatterns :: IO [PatternId]
 queriePatterns = withStore patternPoolStore $ pure . Map.keys
 
-activePatterns :: IO [PatternId]
-activePatterns = withStore patternPoolStore $ pure . Map.keys . Map.filter ((== Running) . status)
+runningPatterns :: IO [PatternId]
+runningPatterns = withStore patternPoolStore $ pure . Map.keys . Map.filter ((== Running) . getPatternStatus)
+
+idlePatterns :: IO [PatternId]
+idlePatterns = withStore patternPoolStore $ pure . Map.keys . Map.filter ((== Idle) . getPatternStatus)
 
 -- | Store and return the result of an update operation on the stored value.
 updateStore :: Store a -> (a -> IO a) -> IO a
@@ -386,22 +462,22 @@ removePattern id = updateStore patternPoolStore $ pure . Map.delete id
 stopPattern :: PatternId -> IO PatternPool
 stopPattern id =
   updateStore patternPoolStore $
-    pure . Map.adjust (\sequencerPattern -> sequencerPattern {status = Idle}) id
+    pure . Map.adjust (\sequencerPattern -> sequencerPattern {getPatternStatus = Idle}) id
 
 activatePattern :: PatternId -> IO PatternPool
 activatePattern id =
   updateStore patternPoolStore $
-    pure . Map.adjust (\sequencerPattern -> sequencerPattern {status = Running}) id
+    pure . Map.adjust (\sequencerPattern -> sequencerPattern {getPatternStatus = Running}) id
 
 activateAllPatterns :: IO PatternPool
 activateAllPatterns =
   updateStore patternPoolStore $
-    pure . Map.map (\sequencerPattern -> sequencerPattern {status = Running})
+    pure . Map.map (\sequencerPattern -> sequencerPattern {getPatternStatus = Running})
 
 stopAllPatterns :: IO PatternPool
 stopAllPatterns =
   updateStore patternPoolStore $
-    pure . Map.map (\sequencerPattern -> sequencerPattern {status = Idle})
+    pure . Map.map (\sequencerPattern -> sequencerPattern {getPatternStatus = Idle})
 
 -- * Conversion
 

@@ -2,11 +2,10 @@
 module Sound.RTG
   ( module Euterpea.Music,
     module Sound.RTG.Euclidean,
-module Sound.RTG.RhythmicPattern,
+    module Sound.RTG.RhythmicPattern,
     module Sound.RTG.Sequencer,
     module Sound.RTG.Structure,
     module Sound.RTG.TimePatterns,
-    module Sound.RTG.UnSafe,
     help,
   )
 where
@@ -17,7 +16,6 @@ import Sound.RTG.RhythmicPattern (Rhythmic (..))
 import Sound.RTG.Sequencer
 import Sound.RTG.Structure
 import Sound.RTG.TimePatterns
-import Sound.RTG.UnSafe
 
 help :: IO ()
 help =
