@@ -135,12 +135,12 @@ idle :: IO [PatternId]
 idle = inSequencer $ idlePatterns
 
 setcps :: CPS -> IO SequencerState
-setcps = updateSequencerCPS
+setcps cps = inSequencer $ updateSequencerCPS cps
 
 setbpm :: BPC -> BPM -> IO SequencerState
 setbpm bpc bpm =
   let newcps = (fromIntegral bpm / 60) / fromIntegral bpc
-   in updateSequencerCPS newcps
+   in setcps newcps
 
 solo :: PatternId -> IO SequencerState
 solo patternId = inSequencer $ updateSequencerMode (Solo patternId)
