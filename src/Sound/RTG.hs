@@ -2,36 +2,22 @@
 module Sound.RTG
   ( module Euterpea.Music,
     module Sound.RTG.Euclidean,
-    module Sound.RTG.Polygon,
-    module Sound.RTG.ReactivePattern,
-    module Sound.RTG.Bjorklund,
-    module Sound.RTG.PerfectBalance,
-    module Sound.RTG.Play,
-    module Sound.RTG.RhythmicPattern,
+module Sound.RTG.RhythmicPattern,
+    module Sound.RTG.Sequencer,
+    module Sound.RTG.Structure,
     module Sound.RTG.TimePatterns,
-    module Sound.RTG.Zip,
-    module Sound.RTG.TemporalMonad,
     module Sound.RTG.UnSafe,
+    help,
   )
 where
 
 import Euterpea.Music hiding (Primitive (..))
-import Sound.RTG.Bjorklund
-import Sound.RTG.Event
-import Sound.RTG.Euclidean
-import Sound.RTG.PerfectBalance
-import Sound.RTG.Play
-import Sound.RTG.PlayScale
-import Sound.RTG.Polygon
-import Sound.RTG.ReactivePattern
-import Sound.RTG.RhythmicPattern
+import Sound.RTG.Euclidean (e')
+import Sound.RTG.RhythmicPattern (Rhythmic (..))
 import Sound.RTG.Sequencer
 import Sound.RTG.Structure
-import Sound.RTG.TemporalMonad
 import Sound.RTG.TimePatterns
-import Sound.RTG.TimedMonad
 import Sound.RTG.UnSafe
-import Sound.RTG.Zip
 
 help :: IO ()
 help =
