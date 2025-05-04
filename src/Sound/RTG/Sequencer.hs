@@ -6,15 +6,15 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 --
--- The execution model of the sequencer follows the form of a /fiber bundle/,
+-- The execution model of the sequencer follows an analogy with a /fiber bundle/,
 -- where the 'PatternPool' is the /bundle/, the 'SequencerPattern'
--- is the /fiber/, and the 'globalPattern' the /base space/.
--- So that transformations on the bundle are projected into the base, which
+-- is the /fiber/, and the 'globalPattern' is the /base space/.
+-- Transformations on the bundle are projected into the base, which
 -- is the pattern to be executed.
 --
--- Some parts of this module are (very) unsafe due to the use of 'Foreign.Store',
--- whose documentation is rather opaque about its implementation quirks.
--- Modify with care, as a 'Store' is not thread safe.
+-- The implementation depends on the `foreign-store` package, which is explicit
+-- about the fact that a 'Store' is not thread safe. Care is taken
+-- for state updates to be done only within the main thread.
 module Sound.RTG.Sequencer
   ( p,
     start,
@@ -109,7 +109,7 @@ data SequencerMode = Solo !Int | Global deriving (Show)
 
 -- | Run a pattern in the sequencer.
 -- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternPool
-p samples patternId = addPattern Running patternId (map (\s -> [Osc s]) samples)
+p patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
 
 -- | Entry point for a pattern execution. Adds the pattern to the pool.
 -- TODO: Add argument to modify event matching strategy for output values.
