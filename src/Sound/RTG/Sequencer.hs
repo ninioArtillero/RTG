@@ -31,7 +31,7 @@ import Foreign.Store
     writeStore,
   )
 import qualified Sound.Osc.Fd as Osc
-import Sound.RTG.Event (Event (..), isOnset, zipValuesWithOnsets)
+import Sound.RTG.Event (Event (..), isOnset, pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
 import Sound.RTG.TimedMonad
@@ -399,8 +399,9 @@ activateAllPatterns =
     pure . Map.map (\sequencerPattern -> sequencerPattern {status = Running})
 
 stopAllPatterns :: IO PatternPool
-stopAllPatterns = updateStore patternPoolStore $
-  pure . Map.map (\sequencerPattern -> sequencerPattern {status = Idle})
+stopAllPatterns =
+  updateStore patternPoolStore $
+    pure . Map.map (\sequencerPattern -> sequencerPattern {status = Idle})
 
 -- * Conversion
 
@@ -409,7 +410,7 @@ stopAllPatterns = updateStore patternPoolStore $
 toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
 toOutputPattern pattern outputs =
   let eventPattern = rhythm pattern
-   in zipValuesWithOnsets eventPattern outputs
+   in pairValuesWithOnsets eventPattern outputs
 
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
 cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
