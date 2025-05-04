@@ -17,6 +17,7 @@ module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm) where
 import Data.Group (Group, invert)
 import Sound.RTG.Event (Event, fixOnset, swapEvent)
 import Sound.RTG.Zip (euclideanZip)
+import Sound.RTG.List (rotateLeft)
 
 -- TODO: Avoid exposing the data constructor (helps decouple implementation).
 
@@ -93,15 +94,18 @@ class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   -- | Sequence. Plays each pattern every other cycle.
   -- TODO: needs to account for cycle/cycle speed
   (|>) :: (Rhythmic b) => a -> b -> RhythmicPattern
-  r1 |> r2 = Rhythm $ (getRhythm . toRhythm) r1 ++ (getRhythm . toRhythm) r2
+  r1 |> r2 = Rhythm $ rhythm r1 ++ rhythm r2
 
-  -- | Add up
+  -- | Add up / Superposition
   --
   -- prop> x <+> x = x
   --
   -- prop> x <+> co x = toRhythm $ replicate (length x) Onset
   (<+>) :: (Rhythmic b) => a -> b -> RhythmicPattern
   r1 <+> r2 = fixOnset <$> toRhythm r1 <*> toRhythm r2
+
+  rotate :: Int -> a -> RhythmicPattern
+  rotate n x = Rhythm $ rotateLeft n $ rhythm x
 
 -- TODO
 --
@@ -125,6 +129,7 @@ infixl 5 <+>
 -- Check this ideas after reading Toussaint chapters 20 and 21
 
 -- | Access the binary pattern underlying a rhythmic type
+-- TODO: Include in Rhythmic typle class?
 rhythm :: (Rhythmic a) => a -> [Event]
 rhythm = getRhythm . toRhythm
 
