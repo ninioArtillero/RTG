@@ -36,7 +36,7 @@ module Sound.RTG.Sequencer
   )
 where
 
-import Control.Monad (mapM_)
+import Control.Monad (forever, mapM_)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
 import Data.Maybe (fromMaybe)
@@ -50,6 +50,7 @@ import Foreign.Store
     writeStore,
   )
 import qualified Sound.Osc.Fd as Osc
+import Sound.RTG.Async (withAsync)
 import Sound.RTG.Event (Event (..), isOnset, pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
@@ -57,8 +58,11 @@ import Sound.RTG.TimedMonad
   ( Micro (..),
     MonadRef (..),
     TIO,
+    TRef (TRef),
     TimedMonad (..),
+    dur,
   )
+import Prelude hiding (read)
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -114,7 +118,7 @@ p patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
 -- | Entry point for a pattern execution. Adds the pattern to the pool.
 -- TODO: Add argument to modify event matching strategy for output values.
 addPattern :: (Rhythmic a) => PatternStatus -> PatternId -> [[Output]] -> a -> IO PatternPool
-addPattern patternStatus id outputs pttrn = inSequencer $ do
+addPattern patternStatus id outputs pttrn = inSequencer True $ do
   let newSequencerPattern = toOutputPattern pttrn outputs
   addPatternToPool id $
     SequencerPattern
@@ -123,19 +127,19 @@ addPattern patternStatus id outputs pttrn = inSequencer $ do
       }
 
 status :: IO String
-status = inSequencer $ sequencerStatus
+status = inSequencer False $ sequencerStatus
 
 querie :: IO [PatternId]
-querie = inSequencer $ queriePatterns
+querie = inSequencer False $ queriePatterns
 
 active :: IO [PatternId]
-active = inSequencer $ runningPatterns
+active = inSequencer False $ runningPatterns
 
 idle :: IO [PatternId]
-idle = inSequencer $ idlePatterns
+idle = inSequencer False $ idlePatterns
 
 setcps :: CPS -> IO SequencerState
-setcps cps = inSequencer $ updateSequencerCPS cps
+setcps cps = inSequencer True $ updateSequencerCPS cps
 
 setbpm :: BPC -> BPM -> IO SequencerState
 setbpm bpc bpm =
@@ -143,36 +147,36 @@ setbpm bpc bpm =
    in setcps newcps
 
 solo :: PatternId -> IO SequencerState
-solo patternId = inSequencer $ updateSequencerMode (Solo patternId)
+solo patternId = inSequencer True $ updateSequencerMode (Solo patternId)
 
 unsolo :: IO SequencerState
-unsolo = inSequencer $ updateSequencerMode Global
+unsolo = inSequencer True $ updateSequencerMode Global
 
 stop :: PatternId -> IO PatternPool
-stop id = inSequencer $ stopPattern id
+stop id = inSequencer True $ stopPattern id
 
 -- | Set all patterns to 'Idle'.
 stopAll :: IO PatternPool
-stopAll = inSequencer $ stopAllPatterns
+stopAll = inSequencer True $ stopAllPatterns
 
 start :: PatternId -> IO PatternPool
-start id = inSequencer $ activatePattern id
+start id = inSequencer True $ activatePattern id
 
 -- | Set all pattern to 'Running'.
 startAll :: IO PatternPool
-startAll = inSequencer $ activateAllPatterns
+startAll = inSequencer True $ activateAllPatterns
 
 -- | Removes a pattern from both the pool.
 kill :: PatternId -> IO PatternPool
-kill id = inSequencer $ removePattern id
+kill id = inSequencer True $ removePattern id
 
 -- | Clear the pool.
 clear :: IO ()
-clear = inSequencer $ do resetPatternPool
+clear = inSequencer True $ do resetPatternPool
 
 -- | Reset the sequencer with the current state.
 reset :: IO ()
-reset = inSequencer $ pure ()
+reset = inSequencer True $ pure ()
 
 -- | Kill playing thread.
 hush :: IO ()
@@ -193,11 +197,11 @@ hush = run go
 -- | Wrapper for operations that depend on the sequencer state.
 -- Executes the given action and returns its value, running the
 -- sequencer with the action's side effects.
-inSequencer :: IO a -> IO a
-inSequencer action = do
+inSequencer :: Bool -> IO a -> IO a
+inSequencer update action = do
   storeInit
   returnValue <- action
-  runSequencer
+  runSequencer update
   pure returnValue
 
 -- | Initializes the 'patternPoolStore' to an empty 'PatternPool',
@@ -213,33 +217,36 @@ storeInit = do
     (_, _) -> pure ()
 
 -- | Querie the environment's shared state and (re-)trigger execution.
-runSequencer :: IO ()
-runSequencer = do
-  gp <- globalPattern
-  mode <- getSequencerMode
-  cps <- getSequencerCPS
-  let len = length gp
-      dur = if len /= 0 then cpsToTimeStamp cps len else 0
-  case mode of
-    Global -> run $ sequenceOutputPattern dur gp
-    Solo patternId -> do
-      sp <- soloPattern patternId
-      case sp of
-        Nothing -> do
-          putStrLn $
-            unlines
-              [ "Pattern missing!",
-                "Use 'queriePatterns' to show available patterns to 'solo',",
-                "'unsolo' the sequencer or play 'd" ++ show patternId ++ "'."
-              ]
-          -- Run a silent pattern if the soloed pattern is not found.
-          run $ sequenceOutputPattern 0 []
-        Just pttrn -> do
-          activatePattern patternId
-          run $
-            sequenceOutputPattern dur $
-              let outputPattern = getOutputPattern pttrn
-               in alignPattern (lcm len $ length outputPattern) outputPattern
+runSequencer :: Bool -> IO ()
+runSequencer update =
+  if not update
+    then pure ()
+    else do
+      gp <- globalPattern
+      (mode, currentlyPlaying, cps) <- getSequencerState
+      let len = length gp
+          eventDur = if len /= 0 then cpsToTimeStamp cps len else 0
+          cycleDur = cpsToTimeStamp cps 1
+      case mode of
+        Global -> run $ sequenceOutputPattern eventDur gp
+        Solo patternId -> do
+          sp <- soloPattern patternId
+          case sp of
+            Nothing -> do
+              putStrLn $
+                unlines
+                  [ "Pattern missing!",
+                    "Use 'queriePatterns' to show available patterns to 'solo',",
+                    "'unsolo' the sequencer or play 'd" ++ show patternId ++ "'."
+                  ]
+              -- Run a silent pattern if the soloed pattern is not found.
+              run $ sequenceOutputPattern 0 []
+            Just pttrn -> do
+              activatePattern patternId
+              run $
+                sequenceOutputPattern eventDur $
+                  let outputPattern = getOutputPattern pttrn
+                   in alignPattern (lcm len $ length outputPattern) outputPattern
 
 -- * Sequencer State
 
@@ -277,6 +284,9 @@ updateSequencerCPS :: CPS -> IO SequencerState
 updateSequencerCPS newcps = updateStore sequencerStateStore $
   \(mode, currentlyPlaying, _) -> pure (mode, currentlyPlaying, newcps)
 
+getSequencerState :: IO SequencerState
+getSequencerState = readStore sequencerStateStore
+
 getSequencerThread :: IO (Maybe (Ref TIO ()))
 getSequencerThread = do
   (_, currentlyPlaying, _) <- readStore sequencerStateStore
@@ -292,6 +302,7 @@ getSequencerCPS = do
   (_, _, cps) <- readStore sequencerStateStore
   pure cps
 
+-- TODO: add multiple lines of output to visually divide information.
 sequencerStatus :: IO String
 sequencerStatus = do
   withStore sequencerStateStore $ \(mode, currentlyPlaying, cps) -> do
@@ -328,30 +339,37 @@ sequencerStatus = do
 -- The 'Micro' parameter corresponds to the duration of each event
 -- and it is derived from the global cps value and the pattern length.
 sequenceOutputPattern :: Micro -> OutputPattern -> TIO ()
-sequenceOutputPattern dur sp = do
+sequenceOutputPattern eventDur op = do
   wasPlaying <- lift $ getSequencerThread
-  if dur == 0 || null sp
+  if eventDur == 0 || null op
     then case wasPlaying of
       Nothing -> pure ()
       Just thread -> do
         freeze thread
+        -- read thread
         _ <- lift $ updateSequencerThread Nothing
         pure ()
     else case wasPlaying of
       Nothing -> do
-        thread <- fork $ patternOutput dur sp
+        thread <- fork $ patternOutput eventDur op
         _ <- lift $ updateSequencerThread (Just thread)
         pure ()
       Just oldThread -> do
-        freeze oldThread
-        delay dur -- NOTE: the swap time matches the event time
-        newThread <- fork (patternOutput dur sp)
-        _ <- lift $ updateSequencerThread (Just newThread)
-        pure ()
+          freeze oldThread
+          newThread <- fork $ patternOutput eventDur op
+          _ <- lift $ updateSequencerThread (Just newThread)
+          -- delay dur -- NOTE: the swap time matches the event time
+          -- _ <- fork $ sequenceOutputPattern dur op Nothing
+          -- NOTE: Create a recursive call within a new internal thread.
+          -- lift . withAsync (run $ patternOutput dur op) $
+          --  \(TRef callTimeStamp (TRef (timeStamp, _))) -> do
+          -- updateSequencerThread newThread
+          -- run $ sequenceOutputPattern dur op (Just newThread)
+          pure ()
 
 -- TODO: un-cycle this and manage looping using a recursive call in 'sequenceOutputPattern'
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
-patternOutput dur sp = mapM_ (eventOutput dur . snd) $ cycle sp
+patternOutput d sp = forever $ mapM_ (eventOutput d . snd) sp
 
 -- | Generates an event playback by the given duration inside the Timed IO Monad ('TIO').
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
@@ -364,7 +382,7 @@ eventOutput dur (Just outputs) = mapM_ (\x -> instantOut dur x >> delay dur) out
 -- | Output of single values in the Timed IO Monad ('TIO').
 -- TODO: Note output is messing up time. For the mean time I'll focus on Osc output.
 instantOut :: Micro -> Output -> TIO ()
-instantOut dur (Osc sample) = lift $ sendSuperDirtSample sample
+instantOut _ (Osc sample) = lift $ sendSuperDirtSample sample
 instantOut dur (Note pitch) =
   let Micro m = dur
       microsecs = fromIntegral m
