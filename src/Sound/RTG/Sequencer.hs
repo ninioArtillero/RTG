@@ -201,7 +201,7 @@ hush = inSequencer False $ run go
 
 -- * Sequencer Operation
 
--- | Wrapper for operations that depend on the sequencer state.
+-- | Wrapper for operations that querie or modify the sequencer state.
 -- Executes the given action and returns its value, running the
 -- sequencer with the action's side effects.
 -- NOTE: Because the sequencer must be runned after the updating action
@@ -225,18 +225,24 @@ storeInit :: IO ()
 storeInit = do
   [maybePoolStore, maybeThreadStore] <- mapM lookupStore [0, 1]
   case (maybePoolStore, maybeThreadStore) of
-    (Nothing, Nothing) -> resetPatternPool >> (writeStore sequencerStateStore $ SequencerState Global Nothing defaultCPS 0)
+    (Nothing, Nothing) -> do
+      resetPatternPool
+      writeStore sequencerStateStore $
+        SequencerState Global Nothing defaultCPS 0 []
     (Nothing, _) -> resetPatternPool
-    (_, Nothing) -> writeStore sequencerStateStore $ SequencerState Global Nothing defaultCPS 0
+    (_, Nothing) ->
+      writeStore sequencerStateStore $
+        SequencerState Global Nothing defaultCPS 0 []
     (_, _) -> pure ()
 
--- | Querie the environment's shared state and (re-)trigger execution.
+-- | Querie the environment's shared state and (re-)trigger execution
+-- according to the 'SequencerMode'.
 runSequencer :: IO ()
 runSequencer = do
   gp <- globalPattern
-  oldSS <- getSequencerState
-  let cps = getCPS oldSS
-      mode = getMode oldSS
+  sequencerState <- getSequencerState
+  let cps = getCPS sequencerState
+      mode = getMode sequencerState
       len = length gp
       eventDur = if len /= 0 then cpsToTimeStamp cps len else 0
       cycleDur = cpsToTimeStamp cps 1
@@ -275,7 +281,8 @@ data SequencerState = SequencerState
   { getMode :: !SequencerMode,
     getThread :: !(Maybe (Ref TIO ())),
     getCPS :: !CPS,
-    getCounter :: !Counter
+    getCounter :: !Counter,
+    getOutput :: !OutputPattern
   }
 
 -- | Cycles Per Second
@@ -326,6 +333,10 @@ updateSequencerCounter :: IO SequencerState
 updateSequencerCounter = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getCounter = getCounter sequencerState + 1}
 
+updateSequencerOutputPattern :: OutputPattern -> IO SequencerState
+updateSequencerOutputPattern outputPattern = updateStore sequencerStateStore $
+  \sequencerState -> pure $ sequencerState {getOutput = outputPattern}
+
 getSequencerState :: IO SequencerState
 getSequencerState = readStore sequencerStateStore
 
@@ -343,6 +354,11 @@ getSequencerCPS :: IO CPS
 getSequencerCPS = do
   sequencerState <- readStore sequencerStateStore
   pure $ getCPS sequencerState
+
+getSequencerOutputPattern :: IO OutputPattern
+getSequencerOutputPattern = do
+  sequencerState <- readStore sequencerStateStore
+  pure $ getOutput sequencerState
 
 getSequencerCounter :: IO Counter
 getSequencerCounter = do
@@ -379,12 +395,12 @@ sequenceOutputPattern eventDur op = do
         pure ()
     else case wasPlaying of
       Nothing -> do
-        thread <- fork $ patternOutput eventDur op
+        thread <- fork . forever $ patternOutput eventDur op
         _ <- lift $ updateSequencerThread (Just thread)
         pure ()
       Just oldThread -> do
         freeze oldThread
-        newThread <- fork $ patternOutput eventDur op
+        newThread <- fork . forever $ patternOutput eventDur op
         _ <- lift $ updateSequencerThread (Just newThread)
         -- delay dur -- NOTE: the swap time matches the event time
         -- _ <- fork $ sequenceOutputPattern dur op Nothing
@@ -395,9 +411,17 @@ sequenceOutputPattern eventDur op = do
         -- run $ sequenceOutputPattern dur op (Just newThread)
         pure ()
 
+-- NOTE: WIP
+swapOutputPattern :: Micro -> OutputPattern -> TIO ()
+swapOutputPattern eventDur newOutputPattern = do
+  currentOutputPattern <- lift getSequencerOutputPattern
+  patternOutput eventDur currentOutputPattern
+  lift $ updateSequencerOutputPattern newOutputPattern
+  patternOutput eventDur newOutputPattern
+
 -- TODO: un-cycle this and manage looping using a recursive call in 'sequenceOutputPattern'
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
-patternOutput d sp = forever $ mapM_ (eventOutput d . snd) sp
+patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
 
 -- | Generates an event playback by the given duration inside the Timed IO Monad ('TIO').
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
