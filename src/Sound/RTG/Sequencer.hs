@@ -6,6 +6,8 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 --
+-- A sequencer designed to run on @ghci@.
+--
 -- The execution model of the sequencer follows an analogy with a /fiber bundle/,
 -- where the 'PatternPool' is the /bundle/, the 'SequencerPattern'
 -- is the /fiber/, and the 'globalPattern' is the /base space/.
