@@ -127,7 +127,12 @@ addPattern patternStatus id outputs pttrn = inSequencer True $ do
       }
 
 status :: IO ()
-status = inSequencer False $ sequencerStatus
+status = inSequencer False $ do
+  sequencerStatus
+  patternsInPool <- queriePatterns
+  putStrLn $ "Patterns in pool: " ++ show patternsInPool
+  activePatterns <- runningPatterns
+  putStrLn $ "Active patterns: " ++ show patternsInPool
 
 querie :: IO [PatternId]
 querie = inSequencer False $ queriePatterns
@@ -345,7 +350,7 @@ getSequencerCounter = do
 -- TODO: add multiple lines of output to visually divide information.
 sequencerStatus :: IO ()
 sequencerStatus = do
-  withStore sequencerStateStore $ putStrLn . show
+  withStore sequencerStateStore $ print
 
 -- * Output Fuctionality
 
