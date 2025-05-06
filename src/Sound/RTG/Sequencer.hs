@@ -388,6 +388,7 @@ sequencerStatus = do
 sequenceOutputPattern :: Micro -> OutputPattern -> TIO ()
 sequenceOutputPattern eventDur op = do
   maybeThread <- lift $ getSequencerThread
+  -- Manage edge case: null duration or pattern.
   if eventDur == 0 || null op
     then case maybeThread of
       Nothing -> pure ()
@@ -397,6 +398,7 @@ sequenceOutputPattern eventDur op = do
         _ <- lift $ updateSequencerThread Nothing
         _ <- lift $ updateSequencerEventDuration 0
         pure ()
+    -- Spark a looping thread and/or just update the values it references.
     else case maybeThread of
       Nothing -> do
         _ <- lift $ updateSequencerOutputPattern op
