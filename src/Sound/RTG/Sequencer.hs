@@ -423,14 +423,24 @@ patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
 patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
 
 -- | Generates an event playback by the given duration in the Timed IO Monad.
+--
+-- NOTE: An interesting expansion of patterns was triggered when an event in the
+-- sequencer output pattern had a /non-sigleton/ output list. It was a bug introduced
+-- in here by the following definition:
+-- @mapM_ (\x -> instantOut dur x >> delay dur) outputs@
+-- The result was that each event triggered its output values in succession rather
+-- that simultaneosly as specified. As a consecuence, the full cycle duration was
+-- expanded by
+-- \[ \sum_{e_i=1}^{\n}  extra(e_i) \times dur \]
+-- where \(n\) is the number of events with more than one output,
+-- \(e_i\) ranges over such events and \(extra(e_i)\) is the length of the output
+-- list tail of the event.
+-- TODO: Implement a /hand-fan/ function that accoplishes this intensionally.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
 eventOutput dur Nothing = delay dur
--- TODO: HERE may lie the cause of the weird expansion of pattern duration.
--- The list output is no simultaneous! As it should given they are associated
--- to the same event.
-eventOutput dur (Just outputs) = mapM_ (\x -> instantOut dur x >> delay dur) outputs
+eventOutput dur (Just outputs) = mapM_ (instantOut dur) outputs >> delay dur
 
--- | Output of single values in the Timed IO Monad ('TIO').
+-- | Output of single values as /instantaneous/ actions in the Timed IO Monad ('TIO').
 -- TODO: Note output is messing up time. For the mean time I'll focus on Osc output.
 instantOut :: Micro -> Output -> TIO ()
 instantOut _ (Osc sample) = lift $ sendSuperDirtSample sample

@@ -189,7 +189,8 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [ ] Soloing many patterns together
 - [ ] Global pattern operations and transformations
 - [x] Fix pattern update timing (per cycle to avoid jumps)
-- [ ] Fix pattern resizing -> add feature
+- [x] Fix pattern resizing
+  - [ ] Add hand-fan feature
 - [ ] Make sequencer inform of current pattern length, balance and evenness.
 - [ ] Implement pattern sync alternatives
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
