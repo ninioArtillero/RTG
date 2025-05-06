@@ -39,8 +39,8 @@ module Sound.RTG.Sequencer
 where
 
 import Control.Monad (forever, mapM_, when)
-import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as Map
+import Data.IntMap.Strict (IntMap)
+import qualified Data.IntMap.Strict as Map
 import Data.Maybe (fromMaybe)
 import Euterpea (Pitch, PitchClass (..), note, play)
 import Foreign.Store
@@ -51,8 +51,6 @@ import Foreign.Store
     withStore,
     writeStore,
   )
-import qualified Sound.Osc.Fd as Osc
-import Sound.RTG.Async (withAsync)
 import Sound.RTG.Event (Event (..), isOnset, pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
@@ -64,7 +62,6 @@ import Sound.RTG.TimedMonad
     TimedMonad (..),
     dur,
   )
-import Prelude hiding (read)
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -74,7 +71,7 @@ import Prelude hiding (read)
 -- | A map containing all currently running patterns.
 -- Analogous to the /bundle/ of a /fiber bundle/.
 -- TODO: Change to newtype to define custom show instance.
-type PatternPool = HashMap PatternId SequencerPattern
+type PatternPool = IntMap SequencerPattern
 
 -- | Pattern keys in a 'PatternPool' are 'Int'.
 type PatternId = Int
