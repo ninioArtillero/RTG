@@ -69,6 +69,7 @@ library
         Sound.RTG.Euclidean
         Sound.RTG.HotSwap
         Sound.RTG.OscMessages
+        Sound.RTG.PatternPool
         Sound.RTG.PerfectBalance
         Sound.RTG.Play
         Sound.RTG.PlayScale
