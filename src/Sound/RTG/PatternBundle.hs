@@ -1,3 +1,14 @@
+-- |
+-- Module      : PatternBundle
+-- Description : A pattern map and its elementary operations.
+-- Copyright   : (c) Xavier Góngora, 2025
+-- License     : GPL-3
+-- Maintainer  : ixbalanque@protonmail.ch
+-- Stability   : experimental
+--
+-- The 'PatternBundle' follows an analogy with a /fiber bundle/,
+-- where the 'PatternBundle' is the /bundle/, the 'SequencerPattern'
+-- is the /fiber/, and an 'OutputPattern' is the /base space/.
 module Sound.RTG.PatternBundle where
 
 import Data.IntMap.Strict (IntMap)
@@ -24,6 +35,7 @@ data SequencerPattern = SequencerPattern
     getPatternStatus :: !PatternStatus
   }
 
+-- | Patterns excecuted 'Sound.RTG.Sequencer.inSequencer'.
 type OutputPattern = [(Event, Maybe [Output])]
 
 data PatternStatus = Idle | Running deriving (Eq)
@@ -49,7 +61,8 @@ isNote _ = False
 
 -- * PatternBundle Proyection
 
--- | The global pattern obtained from merging all running patterns in the bundle.
+-- | A proyection of the bundle into a single pattern
+-- obtained from merging all 'Running' patterns in the bundle.
 -- Analogous to the /base space/ of a /fiber bundle/. The 'globalPattern' is the means
 -- to play the patterns contained in the 'PatternBundle'. The /merging/ proceduce it
 -- implements is analogous to a /projection/.

@@ -8,17 +8,15 @@
 --
 -- A sequencer designed to run on @ghci@.
 --
--- The execution model of the sequencer follows an analogy with a /fiber bundle/,
--- where the 'PatternBundle' is the /bundle/, the 'SequencerPattern'
--- is the /fiber/, and the 'globalPattern' is the /base space/.
--- Transformations on the bundle are projected into the base, which
--- is the pattern to be executed.
+-- It plays an 'OutputPattern' derived from the 'PatternBundle' build during
+-- the interactive session.
 --
 -- The implementation depends on the `foreign-store` package, which is explicit
 -- about the fact that a 'Store' is not thread safe. Care is taken
 -- for state updates to be done only within the main thread.
 module Sound.RTG.Sequencer
-  ( p,
+  ( -- * Sequencer API
+    p,
     start,
     startAll,
     stop,
@@ -35,6 +33,30 @@ module Sound.RTG.Sequencer
     idle,
     reset,
     hush,
+
+    -- * Sequencer Entry-Point
+    inSequencer,
+
+    -- * Sequencer State Operations
+    getSequencerState,
+    updateSequencerCPS,
+    updateSequencerCounter,
+    updateSequencerMode,
+    updateSequencerEventDuration,
+    updateSequencerOutputPattern,
+
+    -- * Pattern Bundle State Operations
+    getPatternBundle,
+    queriePatterns,
+    runningPatterns,
+    idlePatterns,
+    resetPatternBundle,
+    addPatternToBundle,
+    removePattern,
+    activatePattern,
+    stopPattern,
+    activateAllPatterns,
+    stopAllPatterns,
   )
 where
 
@@ -74,18 +96,19 @@ data SequencerState = SequencerState
     getEventDuration :: !Micro
   }
 
+-- The sequencer playing mode.
 data SequencerMode = Solo !Int | Global deriving (Show)
 
--- | Cycles Per Second
+-- | Cycles Per Second.
 type CPS = Rational
 
--- | Beats Per Cycle
+-- | Beats Per Cycle.
 type BPC = Int
 
--- | Beats Per Minuto
+-- | Beats Per Minute.
 type BPM = Int
 
--- | Cycle Counter
+-- | Cycle Counter.
 type Counter = Int
 
 instance Show SequencerState where
@@ -197,13 +220,16 @@ hush = inSequencer False $ run go
 
 -- * Sequencer Operation
 
--- | Wrapper for operations that querie or modify the sequencer state.
--- Executes the given action and returns its value, running the
--- sequencer with the action's side effects.
--- NOTE: Because the sequencer must be runned after the updating action
+-- | Wrapper for all sequencer operations. Executes the given action and returns
+-- its value, running the sequencer with the action's side effects in between.
+-- Its boolean argument means wether the action updates the state, to avoid
+-- querying operations from re-triggering the sequencer, and print the current
+-- state in such cases.
+--
+-- NOTE: Because the sequencer must be ran after the updating action,
 -- and the return value of this action is printed afterwards (by ghci automatic 'show'),
 -- we coherse the return values of all sequencer actions
--- that return an updated sequencer state to '()' at the top level functions.
+-- that return an updated sequencer state to '()' at the API functions.
 inSequencer :: Bool -> IO a -> IO a
 inSequencer update action = do
   storeInit
@@ -273,64 +299,78 @@ sequencerStateStore = Store 1
 defaultCPS :: CPS
 defaultCPS = 0.5
 
+-- | Set the sequencer to a new thread.
 updateSequencerThread :: Maybe (Ref TIO ()) -> IO SequencerState
 updateSequencerThread newThread = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getThread = newThread}
 
+-- | Set the sequencer playing mode.
 updateSequencerMode :: SequencerMode -> IO SequencerState
 updateSequencerMode newmode = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getMode = newmode}
 
+-- | Sets the sequencer cycles per second.
 updateSequencerCPS :: CPS -> IO SequencerState
 updateSequencerCPS newcps = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getCPS = newcps}
 
+-- | Updates the sequencer cycle count by 1.
 updateSequencerCounter :: IO SequencerState
 updateSequencerCounter = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getCounter = getCounter sequencerState + 1}
 
+-- | Set the sequencer output pattern.
 updateSequencerOutputPattern :: OutputPattern -> IO SequencerState
 updateSequencerOutputPattern outputPattern = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getOutput = outputPattern}
 
+-- | Set the sequencer event duration.
 updateSequencerEventDuration :: Micro -> IO SequencerState
 updateSequencerEventDuration eventDur = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getEventDuration = eventDur}
 
+-- | Returns the whole sequencer current state.
 getSequencerState :: IO SequencerState
 getSequencerState = readStore sequencerStateStore
 
+-- | Returns the thread where the sequencer is running at.
 getSequencerThread :: IO (Maybe (Ref TIO ()))
 getSequencerThread = do
   sequencerState <- readStore sequencerStateStore
   pure $ getThread sequencerState
 
+-- | Returns the sequencer playing mode.
 getSequencerMode :: IO SequencerMode
 getSequencerMode = do
   sequencerState <- readStore sequencerStateStore
   pure $ getMode sequencerState
 
+-- | Returns the sequencer cycles per second.
 getSequencerCPS :: IO CPS
 getSequencerCPS = do
   sequencerState <- readStore sequencerStateStore
   pure $ getCPS sequencerState
 
+-- | Returns the sequencer output pattern.
 getSequencerOutputPattern :: IO OutputPattern
 getSequencerOutputPattern = do
   sequencerState <- readStore sequencerStateStore
   pure $ getOutput sequencerState
 
+-- | Returns sequencer cycle counter.
 getSequencerCounter :: IO Counter
 getSequencerCounter = do
   sequencerState <- readStore sequencerStateStore
   pure $ getCounter sequencerState
 
+-- | Returns the sequencer event duration. This value is derived from the
+-- the output pattern length and the cycles per second the sequencer runs at.
 getSequencerEventDuration :: IO Micro
 getSequencerEventDuration = do
   sequencerState <- readStore sequencerStateStore
   pure $ getEventDuration sequencerState
 
--- TODO: add multiple lines of output to visually divide information.
+-- | Prints the sequencer state using its custom show function.
 sequencerStatus :: IO ()
 sequencerStatus = do
   withStore sequencerStateStore $ print
@@ -372,18 +412,18 @@ sequenceOutputPattern eventDur op = do
         _ <- lift $ updateSequencerEventDuration eventDur
         pure ()
 
--- | Runs the sequencer's 'OutputPattern'.
+-- | Runs the sequencer's state output pattern in the Timed IO Monad.
 runOutputPattern :: TIO ()
 runOutputPattern = do
   outputPattern <- lift getSequencerOutputPattern
   eventDur <- lift getSequencerEventDuration
   patternOutput eventDur outputPattern
 
--- | A whole pattern output action inside the Timed IO MOnad ('TIO').
+-- | A whole pattern output action in the Timed IO Monad.
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
 patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
 
--- | Generates an event playback by the given duration inside the Timed IO Monad ('TIO').
+-- | Generates an event playback by the given duration in the Timed IO Monad.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
 eventOutput dur Nothing = delay dur
 -- TODO: HERE may lie the cause of the weird expansion of pattern duration.
@@ -405,12 +445,12 @@ instantOut dur (Note pitch) =
 -- * PatternBundle Proyection
 
 -- | The global pattern obtained from merging all running patterns in the bundle.
--- Analogous to the /base space/ of a /fiber bundle/. The 'globalPattern' is the means
--- to play the patterns contained in the 'PatternBundle'. The /merging/ proceduce it
--- implements is analogous to a /projection/.
+-- It is the means to play all the patterns simultaneously.
+-- The /merging/ procedure is implemented by the bundle /projection/.
 globalPattern :: IO OutputPattern
 globalPattern = withStore patternBundleStore (pure . proyection)
 
+-- | Extracts a single patern from the bundle.
 soloPattern :: PatternId -> IO (Maybe SequencerPattern)
 soloPattern id = withStore patternBundleStore (pure . fiber id)
 
@@ -425,15 +465,19 @@ soloPattern id = withStore patternBundleStore (pure . fiber id)
 patternBundleStore :: Store PatternBundle
 patternBundleStore = Store 0
 
+-- | Returns the stored pattern bundle.
 getPatternBundle :: IO PatternBundle
 getPatternBundle = readStore patternBundleStore
 
+-- | Returns the keys of al patterns in the bundle.
 queriePatterns :: IO [PatternId]
 queriePatterns = withStore patternBundleStore $ pure . bundleKeys
 
+-- | Returns all 'Running' patterns in the pattern bundle.
 runningPatterns :: IO [PatternId]
 runningPatterns = withStore patternBundleStore $ pure . runningPatternKeys
 
+-- | Returns all 'Idle' patterns in the pattern bundle.
 idlePatterns :: IO [PatternId]
 idlePatterns = withStore patternBundleStore $ pure . idlePatternKeys
 
@@ -441,7 +485,7 @@ idlePatterns = withStore patternBundleStore $ pure . idlePatternKeys
 updateStore :: Store a -> (a -> IO a) -> IO a
 updateStore store update = storeAction store . withStore store $ update
 
--- | Store an empty 'PatternBundle' in the 'patternBundleStore'.
+-- | Empties the pattern bundle.
 resetPatternBundle :: IO ()
 resetPatternBundle = writeStore patternBundleStore $ emptyBundle
 
@@ -454,21 +498,25 @@ addPatternToBundle id pattern =
 removePattern :: PatternId -> IO PatternBundle
 removePattern id = updateStore patternBundleStore $ pure . remove id
 
+-- | Set a pattern in the bundle to 'Idle' state.
 stopPattern :: PatternId -> IO PatternBundle
 stopPattern id =
   updateStore patternBundleStore $
     pure . disable id
 
+-- | Set a pattern in the bundle to 'Running' state.
 activatePattern :: PatternId -> IO PatternBundle
 activatePattern id =
   updateStore patternBundleStore $
     pure . enable id
 
+-- | Set all patterns in the bundle to 'Running' state.
 activateAllPatterns :: IO PatternBundle
 activateAllPatterns =
   updateStore patternBundleStore $
     pure . enableAll
 
+-- | Set all patterns in the bundle to 'Idle' state.
 stopAllPatterns :: IO PatternBundle
 stopAllPatterns =
   updateStore patternBundleStore $
