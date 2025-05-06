@@ -222,7 +222,7 @@ hush = inSequencer False $ run go
 
 -- | Wrapper for all sequencer operations. Executes the given action and returns
 -- its value, running the sequencer with the action's side effects in between.
--- Its boolean argument means wether the action updates the state, to avoid
+-- Its boolean argument means whether the action updates the state, to avoid
 -- querying operations from re-triggering the sequencer, and print the current
 -- state in such cases.
 --
