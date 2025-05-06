@@ -185,9 +185,10 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 
 - [x] Asynchronous evaluation of patterns
 - [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
-- [ ] Soloing many pattern together
+- [x] Add cps to sequencer
+- [ ] Soloing many patterns together
 - [ ] Global pattern operations and transformations
-- [ ] Fix pattern update timing (avoid jumps)
+- [x] Fix pattern update timing (per cycle to avoid jumps)
 - [ ] Fix pattern resizing -> add feature
 - [ ] Make sequencer inform of current pattern length, balance and evenness.
 - [ ] Implement pattern sync alternatives
@@ -200,7 +201,6 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [ ] Geometrically informed continuous morphing between two arbitrary rhythms
 - [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
 - [x] Fix haddocks (see Polygon module for example module header)
-- [ ] Change pattern implementation to Sequences (container type)?
 - [x] Use HashMaps for sequences.
 - [ ] Implement tests for bjorklund / LH specifications
 - [x] Preserve Sequencer State between `ghci` reloads.
