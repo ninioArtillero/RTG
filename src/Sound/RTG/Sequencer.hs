@@ -222,7 +222,7 @@ hush = inSequencer False $ run go
 
 -- | Wrapper for all sequencer operations. Executes the given action and returns
 -- its value, running the sequencer with the action's side effects in between.
--- Its boolean argument means whether the action updates the state, to avoid
+-- Its boolean argument signals whether the action updates the state, to avoid
 -- querying operations from re-triggering the sequencer, and print the current
 -- state in such cases.
 --
@@ -257,22 +257,21 @@ storeInit = do
         SequencerState Global Nothing defaultCPS 0 [] 0
     (_, _) -> pure ()
 
--- | Querie the environment's shared state and (re-)trigger execution
--- according to the 'SequencerMode'.
+-- | Querie the sequencer cps and the global pattern to (re-)trigger execution
+-- according to the 'SequencerMode'. Here the sequencer event duration is calculated.
 runSequencer :: IO ()
 runSequencer = do
   gp <- globalPattern
   sequencerState <- getSequencerState
   let cps = getCPS sequencerState
       mode = getMode sequencerState
-      len = length gp
-      eventDur = if len /= 0 then cpsToTimeStamp cps len else 0
-      cycleDur = cpsToTimeStamp cps 1
+      globalLength = length gp
+      eventDur = if globalLength /= 0 then cpsToTimeStamp cps globalLength else 0
   case mode of
     Global -> run $ sequenceOutputPattern eventDur gp
     Solo patternId -> do
-      sp <- soloPattern patternId
-      case sp of
+      maybeOutputPattern <- soloPattern patternId
+      case maybeOutputPattern of
         Nothing -> do
           putStrLn $
             unlines
@@ -282,12 +281,10 @@ runSequencer = do
               ]
           -- Run a silent pattern if the soloed pattern is not found.
           run $ sequenceOutputPattern 0 []
-        Just pttrn -> do
+        Just op -> do
+          -- Avoid soloing an idle pattern by default.
           activatePattern patternId
-          run $
-            sequenceOutputPattern eventDur $
-              let outputPattern = getOutputPattern pttrn
-               in alignPattern (lcm len $ length outputPattern) outputPattern
+          run $ sequenceOutputPattern eventDur op
 
 -- * Sequencer State
 
@@ -383,11 +380,11 @@ sequencerStatus = do
 -- correct timing.
 
 -- | Sequence an 'OutputPattern' in the Timed IO Monad 'TIO'
--- by updating the sequencer state.
--- The playback loop runs on a forked thread.
--- This function is called at 'runSequencer' to /play/ an 'OutputPattern'.
--- The 'Micro' parameter corresponds to the duration of each event
--- and it is derived from the global cps value and the pattern length.
+-- by updating the sequencer output pattern, running thread and event duration.
+-- Loops the playback forever on a forked thread.
+-- This function is called at 'runSequencer' to /play/ an 'OutputPattern', which
+-- calculates the 'Micro' parameter, corresponding to the duration of each event,
+-- from the sequencer cps value and the global pattern length.
 sequenceOutputPattern :: Micro -> OutputPattern -> TIO ()
 sequenceOutputPattern eventDur op = do
   maybeThread <- lift $ getSequencerThread
@@ -450,9 +447,19 @@ instantOut dur (Note pitch) =
 globalPattern :: IO OutputPattern
 globalPattern = withStore patternBundleStore (pure . proyection)
 
--- | Extracts a single patern from the bundle.
-soloPattern :: PatternId -> IO (Maybe SequencerPattern)
-soloPattern id = withStore patternBundleStore (pure . fiber id)
+-- | Extracts a single patern from the bundle and aligns it with the global pattern
+-- length
+soloPattern :: PatternId -> IO (Maybe OutputPattern)
+soloPattern id = withStore patternBundleStore $ \patternBundle -> do
+  gp <- globalPattern
+  let maybeSequencerPattern = fiber id patternBundle
+  pure $
+    fmap
+      ( \sequencerPattern ->
+          let op = getOutputPattern sequencerPattern
+           in alignPattern (length gp) op
+      )
+      maybeSequencerPattern
 
 -- * PatternBundle State
 
