@@ -65,6 +65,7 @@ library
         Sound.RTG
         Sound.RTG.Async
         Sound.RTG.Bjorklund
+        Sound.RTG.BundleTransformations
         Sound.RTG.Event
         Sound.RTG.Euclidean
         Sound.RTG.HotSwap

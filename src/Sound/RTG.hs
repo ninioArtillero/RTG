@@ -12,7 +12,8 @@ where
 
 import Euterpea.Music hiding (Primitive (..))
 import Sound.RTG.Euclidean (e')
-import Sound.RTG.RhythmicPattern (Rhythmic (..))
+import Sound.RTG.BundleTransformations
+import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
   ( active,
     clear,
@@ -35,6 +36,7 @@ import Sound.RTG.Sequencer
 import Sound.RTG.Structure
 import Sound.RTG.TimePatterns
 
+-- TODO: Update instructions to new API.
 help :: IO ()
 help =
   putStrLn $
