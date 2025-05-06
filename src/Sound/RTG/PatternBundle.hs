@@ -1,10 +1,10 @@
-module Sound.RTG.PatternPool where
+module Sound.RTG.PatternBundle where
 
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as Map
-import Data.Maybe
-import Euterpea hiding (Note, Rest)
-import Sound.RTG.Event
+import Data.Maybe (fromMaybe)
+import Euterpea (Pitch)
+import Sound.RTG.Event (Event (..), isOnset)
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -12,9 +12,9 @@ import Sound.RTG.Event
 -- | A map containing all currently running patterns.
 -- Analogous to the /bundle/ of a /fiber bundle/.
 -- TODO: Change to newtype to define custom show instance.
-type PatternPool = IntMap SequencerPattern
+type PatternBundle = IntMap SequencerPattern
 
--- | Pattern keys in a 'PatternPool' are 'Int'.
+-- | Pattern keys in a 'PatternBundle' are 'Int'.
 type PatternId = Int
 
 -- | Events with output data.
@@ -47,24 +47,24 @@ isNote :: Output -> Bool
 isNote (Note _) = True
 isNote _ = False
 
--- * PatternPool Proyection
+-- * PatternBundle Proyection
 
--- | The global pattern obtained from merging all running patterns in the pool.
+-- | The global pattern obtained from merging all running patterns in the bundle.
 -- Analogous to the /base space/ of a /fiber bundle/. The 'globalPattern' is the means
--- to play the patterns contained in the 'PatternPool'. The /merging/ proceduce it
+-- to play the patterns contained in the 'PatternBundle'. The /merging/ proceduce it
 -- implements is analogous to a /projection/.
-proyection :: PatternPool -> OutputPattern
-proyection patternPool =
-  let patternLengthsMap = Map.map (length . getOutputPattern) patternPool
+proyection :: PatternBundle -> OutputPattern
+proyection patternBundle =
+  let patternLengthsMap = Map.map (length . getOutputPattern) patternBundle
       leastCommonMultiple = Map.foldl' lcm 1 patternLengthsMap
-      runningPatterns = Map.filter ((== Running) . getPatternStatus) patternPool
+      runningPatterns = Map.filter ((== Running) . getPatternStatus) patternBundle
       alignedOutputPatterns =
         Map.map (alignPattern leastCommonMultiple . getOutputPattern) runningPatterns
       gp = Map.foldl' (matchOutputEvents) [] alignedOutputPatterns
    in gp
 
-fiber :: PatternId -> PatternPool -> Maybe SequencerPattern
-fiber id patternPool = Map.lookup id patternPool
+fiber :: PatternId -> PatternBundle -> Maybe SequencerPattern
+fiber id patternBundle = Map.lookup id patternBundle
 
 {-@ alignPattern :: Integral a => n:a
                  -> {pttrn : OutputPattern | n `mod` (length pttrn) == 0 }
@@ -91,48 +91,48 @@ matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
         then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
         else (Rest, Nothing)
 
--- * Modify the Pool
+-- * Modify the Bundle
 
-poolKeys :: PatternPool -> [PatternId]
-poolKeys = Map.keys
+bundleKeys :: PatternBundle -> [PatternId]
+bundleKeys = Map.keys
 
-runningPatternKeys :: PatternPool -> [PatternId]
+runningPatternKeys :: PatternBundle -> [PatternId]
 runningPatternKeys = Map.keys . Map.filter ((== Running) . getPatternStatus)
 
-idlePatternKeys :: PatternPool -> [PatternId]
+idlePatternKeys :: PatternBundle -> [PatternId]
 idlePatternKeys = Map.keys . Map.filter ((== Idle) . getPatternStatus)
 
-emptyPool :: PatternPool
-emptyPool = Map.empty
+emptyBundle :: PatternBundle
+emptyBundle = Map.empty
 
-insert :: PatternId -> SequencerPattern -> PatternPool -> PatternPool
+insert :: PatternId -> SequencerPattern -> PatternBundle -> PatternBundle
 insert = Map.insert
 
-remove :: PatternId -> PatternPool -> PatternPool
+remove :: PatternId -> PatternBundle -> PatternBundle
 remove = Map.delete
 
-disable :: PatternId -> PatternPool -> PatternPool
+disable :: PatternId -> PatternBundle -> PatternBundle
 disable =
   Map.adjust
     ( \sequencerPattern ->
         sequencerPattern {getPatternStatus = Idle}
     )
 
-enable :: PatternId -> PatternPool -> PatternPool
+enable :: PatternId -> PatternBundle -> PatternBundle
 enable =
   Map.adjust
     ( \sequencerPattern ->
         sequencerPattern {getPatternStatus = Running}
     )
 
-enableAll :: PatternPool -> PatternPool
+enableAll :: PatternBundle -> PatternBundle
 enableAll =
   Map.map
     ( \sequencerPattern ->
         sequencerPattern {getPatternStatus = Running}
     )
 
-disableAll :: PatternPool -> PatternPool
+disableAll :: PatternBundle -> PatternBundle
 disableAll =
   Map.map
     ( \sequencerPattern ->
