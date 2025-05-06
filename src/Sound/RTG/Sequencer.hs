@@ -9,7 +9,7 @@
 -- A sequencer designed to run on @ghci@.
 --
 -- The execution model of the sequencer follows an analogy with a /fiber bundle/,
--- where the 'PatternPool' is the /bundle/, the 'SequencerPattern'
+-- where the 'PatternBundle' is the /bundle/, the 'SequencerPattern'
 -- is the /fiber/, and the 'globalPattern' is the /base space/.
 -- Transformations on the bundle are projected into the base, which
 -- is the pattern to be executed.
@@ -50,7 +50,7 @@ import Foreign.Store
   )
 import Sound.RTG.Event (pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
-import Sound.RTG.PatternPool
+import Sound.RTG.PatternBundle
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
 import Sound.RTG.TimedMonad
   ( Micro (..),
@@ -110,15 +110,15 @@ instance Show SequencerState where
 -- * Sequencer Interface
 
 -- | Run a pattern in the sequencer.
--- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternPool
+-- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternBundle
 p patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
 
--- | Entry point for a pattern execution. Adds the pattern to the pool.
+-- | Entry point for a pattern execution. Adds the pattern to the bundle.
 -- TODO: Add argument to modify event matching strategy for output values.
-addPattern :: (Rhythmic a) => PatternStatus -> PatternId -> [[Output]] -> a -> IO PatternPool
+addPattern :: (Rhythmic a) => PatternStatus -> PatternId -> [[Output]] -> a -> IO PatternBundle
 addPattern patternStatus id outputs pttrn = inSequencer True $ do
   let newSequencerPattern = toOutputPattern pttrn outputs
-  addPatternToPool id $
+  addPatternToBundle id $
     SequencerPattern
       { getOutputPattern = newSequencerPattern,
         getPatternStatus = patternStatus
@@ -127,10 +127,10 @@ addPattern patternStatus id outputs pttrn = inSequencer True $ do
 status :: IO ()
 status = inSequencer False $ do
   sequencerStatus
-  patternsInPool <- queriePatterns
-  putStrLn $ "Patterns in pool: " ++ show patternsInPool
+  patternsInBundle <- queriePatterns
+  putStrLn $ "Patterns in bundle: " ++ show patternsInBundle
   activePatterns <- runningPatterns
-  putStrLn $ "Active patterns: " ++ show patternsInPool
+  putStrLn $ "Active patterns: " ++ show patternsInBundle
 
 querie :: IO [PatternId]
 querie = inSequencer False $ queriePatterns
@@ -155,27 +155,27 @@ solo patternId = inSequencer True $ updateSequencerMode (Solo patternId) >> pure
 unsolo :: IO ()
 unsolo = inSequencer True $ updateSequencerMode Global >> pure ()
 
-stop :: PatternId -> IO PatternPool
+stop :: PatternId -> IO PatternBundle
 stop id = inSequencer True $ stopPattern id
 
 -- | Set all patterns to 'Idle'.
-stopAll :: IO PatternPool
+stopAll :: IO PatternBundle
 stopAll = inSequencer True $ stopAllPatterns
 
-start :: PatternId -> IO PatternPool
+start :: PatternId -> IO PatternBundle
 start id = inSequencer True $ activatePattern id
 
 -- | Set all pattern to 'Running'.
-startAll :: IO PatternPool
+startAll :: IO PatternBundle
 startAll = inSequencer True $ activateAllPatterns
 
--- | Removes a pattern from both the pool.
-kill :: PatternId -> IO PatternPool
+-- | Removes a pattern from both the bundle.
+kill :: PatternId -> IO PatternBundle
 kill id = inSequencer True $ removePattern id
 
--- | Clear the pool.
+-- | Clear the bundle.
 clear :: IO ()
-clear = inSequencer True $ do resetPatternPool
+clear = inSequencer True $ do resetPatternBundle
 
 -- | Reset the sequencer with the current state.
 reset :: IO ()
@@ -214,18 +214,18 @@ inSequencer update action = do
     print sequencerState
   pure returnValue
 
--- | Initializes the 'patternPoolStore' to an empty 'PatternPool',
+-- | Initializes the 'patternBundleStore' to an empty 'PatternBundle',
 -- and the 'sequencerStateStore' to global mode, none playback thread and
 -- a default cycles-per-second value.
 storeInit :: IO ()
 storeInit = do
-  [maybePoolStore, maybeThreadStore] <- mapM lookupStore [0, 1]
-  case (maybePoolStore, maybeThreadStore) of
+  [maybeBundleStore, maybeThreadStore] <- mapM lookupStore [0, 1]
+  case (maybeBundleStore, maybeThreadStore) of
     (Nothing, Nothing) -> do
-      resetPatternPool
+      resetPatternBundle
       writeStore sequencerStateStore $
         SequencerState Global Nothing defaultCPS 0 [] 0
-    (Nothing, _) -> resetPatternPool
+    (Nothing, _) -> resetPatternBundle
     (_, Nothing) ->
       writeStore sequencerStateStore $
         SequencerState Global Nothing defaultCPS 0 [] 0
@@ -402,76 +402,76 @@ instantOut dur (Note pitch) =
    in lift $ do
         play $ note secs pitch -- too slow to catch up?
 
--- * PatternPool Proyection
+-- * PatternBundle Proyection
 
--- | The global pattern obtained from merging all running patterns in the pool.
+-- | The global pattern obtained from merging all running patterns in the bundle.
 -- Analogous to the /base space/ of a /fiber bundle/. The 'globalPattern' is the means
--- to play the patterns contained in the 'PatternPool'. The /merging/ proceduce it
+-- to play the patterns contained in the 'PatternBundle'. The /merging/ proceduce it
 -- implements is analogous to a /projection/.
 globalPattern :: IO OutputPattern
-globalPattern = withStore patternPoolStore (pure . proyection)
+globalPattern = withStore patternBundleStore (pure . proyection)
 
 soloPattern :: PatternId -> IO (Maybe SequencerPattern)
-soloPattern id = withStore patternPoolStore (pure . fiber id)
+soloPattern id = withStore patternBundleStore (pure . fiber id)
 
--- * PatternPool State
+-- * PatternBundle State
 
--- $patternpoolstate
--- The 'PatternPool' is stored in the 'patternPoolStore', so here whe define custom
+-- $patternbundlestate
+-- The 'PatternBundle' is stored in the 'patternBundleStore', so here whe define custom
 -- 'Store' operations to manipulate it.
 -- 'Store's are used for the sequencer state to persist @ghci@ reloads.
 
--- | The 'Store' index for the'PatternPool'.
-patternPoolStore :: Store PatternPool
-patternPoolStore = Store 0
+-- | The 'Store' index for the'PatternBundle'.
+patternBundleStore :: Store PatternBundle
+patternBundleStore = Store 0
 
-getPatternPool :: IO PatternPool
-getPatternPool = readStore patternPoolStore
+getPatternBundle :: IO PatternBundle
+getPatternBundle = readStore patternBundleStore
 
 queriePatterns :: IO [PatternId]
-queriePatterns = withStore patternPoolStore $ pure . poolKeys
+queriePatterns = withStore patternBundleStore $ pure . bundleKeys
 
 runningPatterns :: IO [PatternId]
-runningPatterns = withStore patternPoolStore $ pure . runningPatternKeys
+runningPatterns = withStore patternBundleStore $ pure . runningPatternKeys
 
 idlePatterns :: IO [PatternId]
-idlePatterns = withStore patternPoolStore $ pure . idlePatternKeys
+idlePatterns = withStore patternBundleStore $ pure . idlePatternKeys
 
 -- | Store and return the result of an update operation on the stored value.
 updateStore :: Store a -> (a -> IO a) -> IO a
 updateStore store update = storeAction store . withStore store $ update
 
--- | Store an empty 'PatternPool' in the 'patternPoolStore'.
-resetPatternPool :: IO ()
-resetPatternPool = writeStore patternPoolStore $ emptyPool
+-- | Store an empty 'PatternBundle' in the 'patternBundleStore'.
+resetPatternBundle :: IO ()
+resetPatternBundle = writeStore patternBundleStore $ emptyBundle
 
--- | Add or update a pattern in the pattern pool.
-addPatternToPool :: PatternId -> SequencerPattern -> IO PatternPool
-addPatternToPool id pattern =
-  updateStore patternPoolStore $ pure . insert id pattern
+-- | Add or update a pattern in the pattern bundle.
+addPatternToBundle :: PatternId -> SequencerPattern -> IO PatternBundle
+addPatternToBundle id pattern =
+  updateStore patternBundleStore $ pure . insert id pattern
 
--- | Remove a pattern from the pool.
-removePattern :: PatternId -> IO PatternPool
-removePattern id = updateStore patternPoolStore $ pure . remove id
+-- | Remove a pattern from the bundle.
+removePattern :: PatternId -> IO PatternBundle
+removePattern id = updateStore patternBundleStore $ pure . remove id
 
-stopPattern :: PatternId -> IO PatternPool
+stopPattern :: PatternId -> IO PatternBundle
 stopPattern id =
-  updateStore patternPoolStore $
+  updateStore patternBundleStore $
     pure . disable id
 
-activatePattern :: PatternId -> IO PatternPool
+activatePattern :: PatternId -> IO PatternBundle
 activatePattern id =
-  updateStore patternPoolStore $
+  updateStore patternBundleStore $
     pure . enable id
 
-activateAllPatterns :: IO PatternPool
+activateAllPatterns :: IO PatternBundle
 activateAllPatterns =
-  updateStore patternPoolStore $
+  updateStore patternBundleStore $
     pure . enableAll
 
-stopAllPatterns :: IO PatternPool
+stopAllPatterns :: IO PatternBundle
 stopAllPatterns =
-  updateStore patternPoolStore $
+  updateStore patternBundleStore $
     pure . disableAll
 
 -- * Conversion
