@@ -228,11 +228,11 @@ storeInit = do
     (Nothing, Nothing) -> do
       resetPatternPool
       writeStore sequencerStateStore $
-        SequencerState Global Nothing defaultCPS 0 []
+        SequencerState Global Nothing defaultCPS 0 [] 0
     (Nothing, _) -> resetPatternPool
     (_, Nothing) ->
       writeStore sequencerStateStore $
-        SequencerState Global Nothing defaultCPS 0 []
+        SequencerState Global Nothing defaultCPS 0 [] 0
     (_, _) -> pure ()
 
 -- | Querie the environment's shared state and (re-)trigger execution
@@ -282,7 +282,8 @@ data SequencerState = SequencerState
     getThread :: !(Maybe (Ref TIO ())),
     getCPS :: !CPS,
     getCounter :: !Counter,
-    getOutput :: !OutputPattern
+    getOutput :: !OutputPattern,
+    getEventDuration :: !Micro
   }
 
 -- | Cycles Per Second
@@ -298,20 +299,22 @@ type BPM = Int
 type Counter = Int
 
 instance Show SequencerState where
-  show st =
-    let cps = getCPS st
-        mode = getMode st
-        counter = getCounter st
-        playStatus = case getThread st of
+  show (SequencerState mode thread cps counter output eventDurMicro) =
+    let playStatus = case thread of
           Nothing -> "IDLE"
           Just _ -> "RUNNING"
+        outputLength = length $ output
         floatCPS :: Float
         floatCPS = fromRational cps
+        eventDurSec :: Rational
+        eventDurSec = microToSec eventDurMicro
      in unlines $
           [ "Sequencer is " ++ playStatus ++ ".",
             "Set to " ++ show floatCPS ++ " cycles per second.",
             "In " ++ show mode ++ " mode.",
-            "Cycle counter: " ++ show counter ++ "."
+            "Cycle counter: " ++ show counter ++ ".",
+            "Pattern length: " ++ show outputLength,
+            "Event duration: " ++ show eventDurSec
           ]
 
 defaultCPS :: CPS
@@ -336,6 +339,10 @@ updateSequencerCounter = updateStore sequencerStateStore $
 updateSequencerOutputPattern :: OutputPattern -> IO SequencerState
 updateSequencerOutputPattern outputPattern = updateStore sequencerStateStore $
   \sequencerState -> pure $ sequencerState {getOutput = outputPattern}
+
+updateSequencerEventDuration :: Micro -> IO SequencerState
+updateSequencerEventDuration eventDur = updateStore sequencerStateStore $
+  \sequencerState -> pure $ sequencerState {getEventDuration = eventDur}
 
 getSequencerState :: IO SequencerState
 getSequencerState = readStore sequencerStateStore
@@ -365,6 +372,11 @@ getSequencerCounter = do
   sequencerState <- readStore sequencerStateStore
   pure $ getCounter sequencerState
 
+getSequencerEventDuration :: IO Micro
+getSequencerEventDuration = do
+  sequencerState <- readStore sequencerStateStore
+  pure $ getEventDuration sequencerState
+
 -- TODO: add multiple lines of output to visually divide information.
 sequencerStatus :: IO ()
 sequencerStatus = do
@@ -377,49 +389,44 @@ sequencerStatus = do
 -- managing computation time drifts explicitly and get (approximately)
 -- correct timing.
 
--- | Sequence an 'OutputPattern' in the Timed IO Monad 'TIO'.
--- The playback is in a loop and runs on a forked thread.
+-- | Sequence an 'OutputPattern' in the Timed IO Monad 'TIO'
+-- by updating the sequencer state.
+-- The playback loop runs on a forked thread.
 -- This function is called at 'runSequencer' to /play/ an 'OutputPattern'.
 -- The 'Micro' parameter corresponds to the duration of each event
 -- and it is derived from the global cps value and the pattern length.
 sequenceOutputPattern :: Micro -> OutputPattern -> TIO ()
 sequenceOutputPattern eventDur op = do
-  wasPlaying <- lift $ getSequencerThread
+  maybeThread <- lift $ getSequencerThread
   if eventDur == 0 || null op
-    then case wasPlaying of
+    then case maybeThread of
       Nothing -> pure ()
       Just thread -> do
-        freeze thread
-        -- read thread
+        -- freeze thread
+        _ <- lift $ updateSequencerOutputPattern []
         _ <- lift $ updateSequencerThread Nothing
+        _ <- lift $ updateSequencerEventDuration 0
         pure ()
-    else case wasPlaying of
+    else case maybeThread of
       Nothing -> do
-        thread <- fork . forever $ patternOutput eventDur op
+        _ <- lift $ updateSequencerOutputPattern op
+        _ <- lift $ updateSequencerEventDuration eventDur
+        thread <- fork . forever $ runOutputPattern
         _ <- lift $ updateSequencerThread (Just thread)
         pure ()
-      Just oldThread -> do
-        freeze oldThread
-        newThread <- fork . forever $ patternOutput eventDur op
-        _ <- lift $ updateSequencerThread (Just newThread)
-        -- delay dur -- NOTE: the swap time matches the event time
-        -- _ <- fork $ sequenceOutputPattern dur op Nothing
-        -- NOTE: Create a recursive call within a new internal thread.
-        -- lift . withAsync (run $ patternOutput dur op) $
-        --  \(TRef callTimeStamp (TRef (timeStamp, _))) -> do
-        -- updateSequencerThread newThread
-        -- run $ sequenceOutputPattern dur op (Just newThread)
+      Just runningThread -> do
+        _ <- lift $ updateSequencerOutputPattern op
+        _ <- lift $ updateSequencerEventDuration eventDur
         pure ()
 
--- NOTE: WIP
-swapOutputPattern :: Micro -> OutputPattern -> TIO ()
-swapOutputPattern eventDur newOutputPattern = do
-  currentOutputPattern <- lift getSequencerOutputPattern
-  patternOutput eventDur currentOutputPattern
-  lift $ updateSequencerOutputPattern newOutputPattern
-  patternOutput eventDur newOutputPattern
+-- | Runs the sequencer's 'OutputPattern'.
+runOutputPattern :: TIO ()
+runOutputPattern = do
+  outputPattern <- lift getSequencerOutputPattern
+  eventDur <- lift getSequencerEventDuration
+  patternOutput eventDur outputPattern
 
--- TODO: un-cycle this and manage looping using a recursive call in 'sequenceOutputPattern'
+-- | A whole pattern output action inside the Timed IO MOnad ('TIO').
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
 patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
 
@@ -560,3 +567,6 @@ toOutputPattern pattern outputs =
 
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
 cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
+
+microToSec :: (Fractional a) => Micro -> a
+microToSec (Micro n) = fromIntegral n / 10 ^ 6
