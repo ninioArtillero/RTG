@@ -40,7 +40,7 @@ module Sound.RTG.Sequencer
     resume,
     fanOutput,
     fanBundle,
-      )
+  )
 where
 
 import Control.Monad (forever, mapM_, when)
@@ -318,7 +318,7 @@ defaultSequencerState =
   SequencerState
     { getMode = Global,
       getThread = Nothing,
-      getCPS = 0,
+      getCPS = 0.5,
       getCounter = 0,
       getOutput = [],
       getEventDuration = 0
@@ -570,8 +570,13 @@ toOutputPattern pattern outputs =
   let eventPattern = rhythm pattern
    in pairValuesWithOnsets eventPattern outputs
 
+-- | TODO: Consider specializing this function to CPS and use newtypes to enforce
+-- correct values. Alternative: create a LH spec.
 cpsToTimeStamp :: (RealFrac a, Integral b) => a -> b -> Micro
-cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
+cpsToTimeStamp cps pttrnLen
+  | cps <= 0 = error "Sequencer.cpsToTimeStamp: non-positive cps value. "
+  | pttrnLen <= 0 = error "Sequencer.cpsToTimeStamp: non-positive pattern length. "
+  | otherwise = Micro . round $ 1 / (toRational cps * fromIntegral pttrnLen) * 10 ^ 6
 
 microToSec :: (Fractional a) => Micro -> a
 microToSec (Micro n) = fromIntegral n / 10 ^ 6
