@@ -241,17 +241,20 @@ reset = inSequencer True $ pure ()
 resume :: IO ()
 resume = inSequencer True $ updateSequencerMode Global >> pure ()
 
--- | This functions implements a fixed bug from 'eventOutput', which produced an
+-- | Implements a fixed bug from 'eventOutput', which produced an
 -- interesting expansion of patterns when an event in the sequencer output pattern
--- had a /non-sigleton/ output list. It was caused by this definition:
--- @mapM_ (\x -> instantOut dur x >> delay dur) outputs@
--- The result was that each event triggered its output values in succession rather
--- that simultaneosly as specified.
+-- had a /non-sigleton/ output list. It was caused by the following definition,
+-- which added a duration between each /simultaneous/ output value.
+--
+-- @eventOutput (Just outputs) = mapM_ (\x -> instantOut dur x >> delay dur) outputs@
+--
+-- The result was that each event triggered its output values in succession.
+-- /This functions does just that/.
 -- As a consecuence, the full cycle duration is expanded by
--- \[ \sum_{e_i=1}^{\n}  extra(e_i) \times dur \]
--- where \(n\) is the number of events with more than one output,
--- \(e_i\) ranges over such events and \(extra(e_i)\) is the length of the output
--- list tail of the event.
+-- \[ d \sum_{i=1}^{n}  tail(e_i) \]
+-- where \(d\) is the event duration, \(n\) is the number of events with more than
+-- one output, \(e_i\) ranges over such events and \(tail(e_i)\) is the tail length
+-- of the event's output list.
 fanOutput :: IO ()
 fanOutput = inSequencer True $ do
   updateSequencerMode Transform
