@@ -7,6 +7,8 @@
 -- Stability   : experimental
 module Sound.RTG.List where
 
+import qualified Data.List as List
+
 backDiff :: [a] -> [a] -> [a]
 backDiff xs ys
   | lx > ly = drop ly xs
@@ -25,10 +27,11 @@ frontDiff xs ys
 
 rotateLeft :: Int -> [a] -> [a]
 rotateLeft _ [] = []
-rotateLeft n xs =
+rotateLeft 0 list = list
+rotateLeft n list =
   if n >= 0
-    then zipWith const (drop n (cycle xs)) xs
-    else rotateRight (negate n) xs
+    then zipWith const (drop n (cycle list)) list
+    else rotateRight (negate n) list
 
 rotateRight :: Int -> [a] -> [a]
 rotateRight _ [] = []
@@ -46,20 +49,14 @@ listSum = zipWith (+)
 
 -- | Rotate a list so that it starts with a non-identity element
 startPosition :: (Eq a, Monoid a) => [a] -> [a]
-startPosition [] = []
-startPosition pttrn@(x : xs)
-  | null (dropIdentities pttrn) = []
-  | x == mempty = startPosition $ rotateLeft 1 pttrn
-  | otherwise = pttrn
+startPosition list = rotateLeft (position list) list
 
 -- | Steps away from the first onset
 position :: (Eq a, Monoid a) => [a] -> Int
-position xs
-  | null xs = 0
-  | let [x] = take 1 xs in x /= mempty = 0
-  | otherwise = 1 + position (drop 1 xs)
+position = length . takeWhile (== mempty)
 
--- | Drops all identity elements from the beginning of the list
-dropIdentities :: (Eq a, Monoid a) => [a] -> [a]
-dropIdentities [] = []
-dropIdentities pttrn@(x : xs) = if x == mempty then dropIdentities xs else pttrn
+
+groupWithMempty :: (Eq a, Monoid a) => [a] -> [[a]]
+groupWithMempty = List.groupBy nextIsMempty . startPosition
+  where
+    nextIsMempty _ y = y == mempty
