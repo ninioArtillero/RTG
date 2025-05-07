@@ -11,18 +11,21 @@ module Sound.RTG
 where
 
 import Euterpea.Music hiding (Primitive (..))
-import Sound.RTG.Euclidean (e')
 import Sound.RTG.BundleTransformations
+import Sound.RTG.Euclidean (e')
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
   ( active,
     clear,
+    fanOutput,
+    fanBundle,
     hush,
     idle,
     kill,
     p,
     querie,
     reset,
+    resume,
     setbpm,
     setcps,
     solo,

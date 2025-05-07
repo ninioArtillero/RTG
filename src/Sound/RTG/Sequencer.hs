@@ -16,6 +16,8 @@
 -- for state updates to be done only within the main thread.
 module Sound.RTG.Sequencer
   ( -- * Sequencer API
+
+    -- ** Sequencer Operations
     p,
     start,
     startAll,
@@ -33,6 +35,11 @@ module Sound.RTG.Sequencer
     idle,
     reset,
     hush,
+
+    -- ** Sequencer Transformations
+    resume,
+    fanOutput,
+    fanBundle,
 
     -- * Sequencer Entry-Point
     inSequencer,
@@ -70,6 +77,8 @@ import Foreign.Store
     withStore,
     writeStore,
   )
+import Sound.RTG.BundleTransformations
+import qualified Sound.RTG.BundleTransformations as Bundle
 import Sound.RTG.Event (pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.PatternBundle
@@ -81,6 +90,8 @@ import Sound.RTG.TimedMonad
     TRef (TRef),
     TimedMonad (..),
   )
+
+-- TODO: Change to lambda-case or use 'maybe' to ease reading.
 
 -- * Data Types
 
@@ -97,7 +108,7 @@ data SequencerState = SequencerState
   }
 
 -- The sequencer playing mode.
-data SequencerMode = Solo !Int | Global deriving (Show)
+data SequencerMode = Solo !Int | Global | Transform deriving (Show)
 
 -- | Cycles Per Second.
 type CPS = Rational
@@ -132,6 +143,8 @@ instance Show SequencerState where
 
 -- * Sequencer Interface
 
+-- ** Play
+
 -- | Run a pattern in the sequencer.
 -- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternBundle
 p patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
@@ -146,6 +159,8 @@ addPattern patternStatus id outputs pttrn = inSequencer True $ do
       { getOutputPattern = newSequencerPattern,
         getPatternStatus = patternStatus
       }
+
+-- ** Querie
 
 status :: IO ()
 status = inSequencer False $ do
@@ -163,6 +178,8 @@ active = inSequencer False $ runningPatterns
 
 idle :: IO [PatternId]
 idle = inSequencer False $ idlePatterns
+
+-- ** Playback Functions
 
 setcps :: CPS -> IO ()
 setcps cps = inSequencer True $ updateSequencerCPS cps >> pure ()
@@ -200,10 +217,6 @@ kill id = inSequencer True $ removePattern id
 clear :: IO ()
 clear = inSequencer True $ do resetPatternBundle
 
--- | Reset the sequencer with the current state.
-reset :: IO ()
-reset = inSequencer True $ pure ()
-
 -- | Kill playing thread.
 hush :: IO ()
 hush = inSequencer False $ run go
@@ -217,6 +230,38 @@ hush = inSequencer False $ run go
           freeze thread
           _ <- lift $ updateSequencerThread Nothing
           pure ()
+
+-- | Reset the sequencer with the current state.
+reset :: IO ()
+reset = inSequencer True $ pure ()
+
+-- ** Transform
+
+-- | Resume the global pattern.
+resume :: IO ()
+resume = inSequencer True $ updateSequencerMode Global >> pure ()
+
+-- | This functions implements a fixed bug from 'eventOutput', which produced an
+-- interesting expansion of patterns when an event in the sequencer output pattern
+-- had a /non-sigleton/ output list. It was caused by this definition:
+-- @mapM_ (\x -> instantOut dur x >> delay dur) outputs@
+-- The result was that each event triggered its output values in succession rather
+-- that simultaneosly as specified.
+-- As a consecuence, the full cycle duration is expanded by
+-- \[ \sum_{e_i=1}^{\n}  extra(e_i) \times dur \]
+-- where \(n\) is the number of events with more than one output,
+-- \(e_i\) ranges over such events and \(extra(e_i)\) is the length of the output
+-- list tail of the event.
+fanOutput :: IO ()
+fanOutput = inSequencer True $ do
+  updateSequencerMode Transform
+  transformSequencerOutput Bundle.handFan
+  pure ()
+
+fanBundle :: IO PatternBundle
+fanBundle = inSequencer True $ do
+  updateSequencerMode Transform
+  transformSequencerBundle $ Bundle.liftB Bundle.handFan
 
 -- * Sequencer Operation
 
@@ -249,12 +294,9 @@ storeInit = do
   case (maybeBundleStore, maybeThreadStore) of
     (Nothing, Nothing) -> do
       resetPatternBundle
-      writeStore sequencerStateStore $
-        SequencerState Global Nothing defaultCPS 0 [] 0
+      writeStore sequencerStateStore defaultSequencerState
     (Nothing, _) -> resetPatternBundle
-    (_, Nothing) ->
-      writeStore sequencerStateStore $
-        SequencerState Global Nothing defaultCPS 0 [] 0
+    (_, Nothing) -> writeStore sequencerStateStore defaultSequencerState
     (_, _) -> pure ()
 
 -- | Querie the sequencer cps and the global pattern to (re-)trigger execution
@@ -262,13 +304,16 @@ storeInit = do
 runSequencer :: IO ()
 runSequencer = do
   gp <- globalPattern
-  sequencerState <- getSequencerState
-  let cps = getCPS sequencerState
-      mode = getMode sequencerState
+  st <- getSequencerState
+  let cps = getCPS st
+      mode = getMode st
       globalLength = length gp
-      eventDur = if globalLength /= 0 then cpsToTimeStamp cps globalLength else 0
+      globalEventDur = if globalLength /= 0 then cpsToTimeStamp cps globalLength else 0
+      -- Time and output transformations use the current states.
+      currentOutput = getOutput st
+      currentEventDur = getEventDuration st
   case mode of
-    Global -> run $ sequenceOutputPattern eventDur gp
+    Global -> run $ sequenceOutputPattern globalEventDur gp
     Solo patternId -> do
       maybeOutputPattern <- soloPattern patternId
       case maybeOutputPattern of
@@ -284,17 +329,26 @@ runSequencer = do
         Just op -> do
           -- Avoid soloing an idle pattern by default.
           activatePattern patternId
-          run $ sequenceOutputPattern eventDur op
+          run $ sequenceOutputPattern globalEventDur op
+    Transform -> run $ sequenceOutputPattern currentEventDur currentOutput
 
 -- * Sequencer State
+
+defaultSequencerState :: SequencerState
+defaultSequencerState =
+  SequencerState
+    { getMode = Global,
+      getThread = Nothing,
+      getCPS = 0,
+      getCounter = 0,
+      getOutput = [],
+      getEventDuration = 0
+    }
 
 -- | Contains the shared global 'SequencerState'.
 sequencerStateStore :: Store SequencerState
 -- sequencerStateStore = unsafePerformIO $ newStore $ Nothing
 sequencerStateStore = Store 1
-
-defaultCPS :: CPS
-defaultCPS = 0.5
 
 -- | Set the sequencer to a new thread.
 updateSequencerThread :: Maybe (Ref TIO ()) -> IO SequencerState
@@ -423,19 +477,6 @@ patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
 patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
 
 -- | Generates an event playback by the given duration in the Timed IO Monad.
---
--- NOTE: An interesting expansion of patterns was triggered when an event in the
--- sequencer output pattern had a /non-sigleton/ output list. It was a bug introduced
--- in here by the following definition:
--- @mapM_ (\x -> instantOut dur x >> delay dur) outputs@
--- The result was that each event triggered its output values in succession rather
--- that simultaneosly as specified. As a consecuence, the full cycle duration was
--- expanded by
--- \[ \sum_{e_i=1}^{\n}  extra(e_i) \times dur \]
--- where \(n\) is the number of events with more than one output,
--- \(e_i\) ranges over such events and \(extra(e_i)\) is the length of the output
--- list tail of the event.
--- TODO: Implement a /hand-fan/ function that accoplishes this intensionally.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
 eventOutput dur Nothing = delay dur
 eventOutput dur (Just outputs) = mapM_ (instantOut dur) outputs >> delay dur
@@ -555,3 +596,21 @@ cpsToTimeStamp cps pttrnLen = Micro . round $ 1 / (toRational cps * fromIntegral
 
 microToSec :: (Fractional a) => Micro -> a
 microToSec (Micro n) = fromIntegral n / 10 ^ 6
+
+-- * Sequencer Transformations
+
+transformSequencerBundle :: (PatternBundle -> PatternBundle) -> IO PatternBundle
+transformSequencerBundle f = updateStore patternBundleStore $ pure . f
+
+transformSequencerOutput :: (OutputPattern -> OutputPattern) -> IO SequencerState
+transformSequencerOutput f = updateStore sequencerStateStore $ \st -> do
+  let newOutput = f (getOutput st)
+  pure $ st {getOutput = newOutput}
+
+-- * Sequencer Time Transformations
+
+adjustCPSToEventDur :: Micro -> [a] -> IO SequencerState
+adjustCPSToEventDur eventDur [] = getSequencerState
+adjustCPSToEventDur eventDur outputPattern =
+  let cycleDur = microToSec eventDur * fromIntegral (length outputPattern)
+   in updateSequencerCPS $ 1 / cycleDur

@@ -1,20 +1,15 @@
 module Sound.RTG.BundleTransformations where
 
 import Sound.RTG.PatternBundle
-import Sound.RTG.Sequencer (updateSequencerCPS)
 
-lift :: (OutputPattern -> OutputPattern) -> PatternBundle -> PatternBundle
-lift t =
+liftB :: (OutputPattern -> OutputPattern) -> PatternBundle -> PatternBundle
+liftB t =
   fmap
     ( \sequencerPattern ->
         sequencerPattern
           { getOutputPattern = t $ getOutputPattern sequencerPattern
           }
     )
-
--- | Expand the sequencer time.
-expandCycle :: Integral a => a -> OutputPattern -> IO ()
-expandCycle eventDur outputPattern = undefined
 
 handFan :: OutputPattern -> OutputPattern
 handFan =
