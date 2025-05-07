@@ -40,31 +40,7 @@ module Sound.RTG.Sequencer
     resume,
     fanOutput,
     fanBundle,
-
-    -- * Sequencer Entry-Point
-    inSequencer,
-
-    -- * Sequencer State Operations
-    getSequencerState,
-    updateSequencerCPS,
-    updateSequencerCounter,
-    updateSequencerMode,
-    updateSequencerEventDuration,
-    updateSequencerOutputPattern,
-
-    -- * Pattern Bundle State Operations
-    getPatternBundle,
-    queriePatterns,
-    runningPatterns,
-    idlePatterns,
-    resetPatternBundle,
-    addPatternToBundle,
-    removePattern,
-    activatePattern,
-    stopPattern,
-    activateAllPatterns,
-    stopAllPatterns,
-  )
+      )
 where
 
 import Control.Monad (forever, mapM_, when)
