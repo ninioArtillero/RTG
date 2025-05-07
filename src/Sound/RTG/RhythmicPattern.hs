@@ -12,17 +12,27 @@
 --
 -- A 'RhythmicPattern' is a event list in a newtype wrapper.
 -- Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
-module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm) where
+module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2, asList) where
 
 import Data.Group (Group, invert)
 import Sound.RTG.Event (Event, fixOnset, swapEvent)
-import Sound.RTG.Zip (euclideanZip)
 import Sound.RTG.List (rotateLeft)
+import Sound.RTG.Zip (euclideanZip)
 
 -- TODO: Avoid exposing the data constructor (helps decouple implementation).
 
 -- | Rhythm wrapper to define a new custom instances for lists
 newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq, Show, Functor)
+
+-- | Apply list functions to a rhythm.
+asList :: ([a] -> b) -> Rhythm a -> b
+asList f (Rhythm list) = f list
+
+liftR :: ([a] -> [b]) -> (Rhythm a -> Rhythm b)
+liftR f (Rhythm r) = Rhythm (f r)
+
+liftR2 :: ([a] -> [b] -> [c]) -> (Rhythm a -> Rhythm b -> Rhythm c)
+liftR2 f (Rhythm r1) (Rhythm r2) = Rhythm (f r1 r2)
 
 -- | Two general posibilities for the applicative instances: ZipList or regular list
 instance Applicative Rhythm where
@@ -57,7 +67,10 @@ type Meter = Int
 
 -- | The interface for rhythmic pattern types.
 -- It lifts instances to rhythmic patterns.
-class (Semigroup a, Monoid a, Group a) => Rhythmic a where
+-- TODO: I've removed the unneeded Group constraints
+-- because Rhythmic Pattern group operations were used in all cases
+-- but 'inv', which I've changed to use them.
+class Rhythmic a where
   -- | Minimal complete definition
   toRhythm :: a -> RhythmicPattern
 
@@ -67,7 +80,7 @@ class (Semigroup a, Monoid a, Group a) => Rhythmic a where
   --
   -- prop> inv x & x = mempty
   inv :: a -> RhythmicPattern
-  inv = toRhythm . invert
+  inv = invert . toRhythm
 
   -- | Default group operation
   (&) :: (Rhythmic b) => a -> b -> RhythmicPattern
