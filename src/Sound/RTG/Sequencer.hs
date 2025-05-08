@@ -38,12 +38,14 @@ module Sound.RTG.Sequencer
 
     -- ** Sequencer Transformations
     resume,
+    action,
     fanOutput,
     fanBundle,
   )
 where
 
 import Control.Monad (forever, mapM_, when)
+import Data.Char (toUpper)
 import Euterpea (note, play)
 import Foreign.Store
   ( Store (..),
@@ -58,7 +60,7 @@ import qualified Sound.RTG.BundleTransformations as Bundle
 import Sound.RTG.Event (pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.PatternBundle
-import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
+import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic, rhythm)
 import Sound.RTG.TimedMonad
   ( Micro (..),
     MonadRef (..),
@@ -103,7 +105,7 @@ instance Show SequencerState where
     let playStatus = case thread of
           Nothing -> "IDLE"
           Just _ -> "RUNNING"
-        outputLength = length $ output
+        outputLength = length output
         floatCPS :: Float
         floatCPS = fromRational cps
         eventDurSec :: Rational
@@ -111,7 +113,7 @@ instance Show SequencerState where
      in unlines $
           [ "Sequencer is " ++ playStatus ++ ".",
             "Set to " ++ show floatCPS ++ " cycles per second.",
-            "In " ++ show mode ++ " mode.",
+            "In " ++ (map toUpper . show) mode ++ " mode.",
             "Cycle counter: " ++ show counter ++ ".",
             "Pattern length: " ++ show outputLength,
             "Event duration: " ++ show eventDurSec
@@ -239,8 +241,13 @@ fanOutput = inSequencer True $ do
 
 fanBundle :: IO PatternBundle
 fanBundle = inSequencer True $ do
+  -- NOTE: Should this be out of Transform mode?
+  -- This modifies the bundle state in a non-revertible way.
   updateSequencerMode Transform
   transformSequencerBundle $ Bundle.liftB Bundle.handFan
+
+action :: (Rhythmic a) => a -> IO PatternBundle
+action rhythm = inSequencer True $ transformSequencerBundle $ fibreProduct rhythm
 
 -- * Sequencer Operation
 
@@ -304,7 +311,7 @@ runSequencer = do
                 "'unsolo' the sequencer or play 'd" ++ show patternId ++ "'."
               ]
           -- Run a silent pattern if the soloed pattern is not found.
-          run $ sequenceOutputPattern 0 []
+          run $ sequenceOutputPattern 0 mempty
         Just op -> do
           -- Avoid soloing an idle pattern by default.
           activatePattern patternId
@@ -320,7 +327,7 @@ defaultSequencerState =
       getThread = Nothing,
       getCPS = 0.5,
       getCounter = 0,
-      getOutput = [],
+      getOutput = mempty,
       getEventDuration = 0
     }
 
@@ -427,7 +434,7 @@ sequenceOutputPattern eventDur op = do
       Nothing -> pure ()
       Just thread -> do
         -- freeze thread
-        _ <- lift $ updateSequencerOutputPattern []
+        _ <- lift $ updateSequencerOutputPattern mempty
         _ <- lift $ updateSequencerThread Nothing
         _ <- lift $ updateSequencerEventDuration 0
         pure ()
@@ -449,7 +456,7 @@ runOutputPattern :: TIO ()
 runOutputPattern = do
   outputPattern <- lift getSequencerOutputPattern
   eventDur <- lift getSequencerEventDuration
-  patternOutput eventDur outputPattern
+  patternOutput eventDur (getRhythm outputPattern)
 
 -- | A whole pattern output action in the Timed IO Monad.
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
@@ -471,13 +478,13 @@ instantOut dur (Note pitch) =
    in lift $ do
         play $ note secs pitch -- too slow to catch up?
 
--- * PatternBundle Proyection
+-- * PatternBundle Projection
 
 -- | The global pattern obtained from merging all running patterns in the bundle.
 -- It is the means to play all the patterns simultaneously.
 -- The /merging/ procedure is implemented by the bundle /projection/.
 globalPattern :: IO OutputPattern
-globalPattern = withStore patternBundleStore (pure . proyection)
+globalPattern = withStore patternBundleStore (pure . projection)
 
 -- | Extracts a single patern from the bundle and aligns it with the global pattern
 -- length
@@ -568,7 +575,7 @@ stopAllPatterns =
 toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
 toOutputPattern pattern outputs =
   let eventPattern = rhythm pattern
-   in pairValuesWithOnsets eventPattern outputs
+   in Rhythm $ pairValuesWithOnsets eventPattern outputs
 
 -- | TODO: Consider specializing this function to CPS and use newtypes to enforce
 -- correct values. Alternative: create a LH spec.

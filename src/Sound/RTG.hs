@@ -16,9 +16,10 @@ import Sound.RTG.Euclidean (e')
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
   ( active,
+    action,
     clear,
-    fanOutput,
     fanBundle,
+    fanOutput,
     hush,
     idle,
     kill,

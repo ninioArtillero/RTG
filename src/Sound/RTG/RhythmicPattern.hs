@@ -12,7 +12,7 @@
 --
 -- A 'RhythmicPattern' is a event list in a newtype wrapper.
 -- Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
-module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2, asList) where
+module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2) where
 
 import Data.Group (Group, invert)
 import Sound.RTG.Event (Event, fixOnset, swapEvent)
@@ -22,11 +22,7 @@ import Sound.RTG.Zip (euclideanZip)
 -- TODO: Avoid exposing the data constructor (helps decouple implementation).
 
 -- | Rhythm wrapper to define a new custom instances for lists
-newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq, Show, Functor)
-
--- | Apply list functions to a rhythm.
-asList :: ([a] -> b) -> Rhythm a -> b
-asList f (Rhythm list) = f list
+newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq, Show, Functor, Foldable)
 
 liftR :: ([a] -> [b]) -> (Rhythm a -> Rhythm b)
 liftR f (Rhythm r) = Rhythm (f r)

@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 -- |
 -- Module      : PatternBundle
 -- Description : A pattern map and its elementary operations.
@@ -16,6 +18,7 @@ import qualified Data.IntMap.Strict as Map
 import Data.Maybe (fromMaybe)
 import Euterpea (Pitch)
 import Sound.RTG.Event (Event (..), isOnset)
+import Sound.RTG.RhythmicPattern
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -36,7 +39,11 @@ data SequencerPattern = SequencerPattern
   }
 
 -- | Patterns excecuted 'Sound.RTG.Sequencer.inSequencer'.
-type OutputPattern = [(Event, Maybe [Output])]
+type OutputPattern = Rhythm (Event, Maybe [Output])
+
+-- | Recover the event list using the rhythmic interface.
+instance Rhythmic OutputPattern where
+  toRhythm = liftR (map fst)
 
 data PatternStatus = Idle | Running deriving (Eq)
 
@@ -59,22 +66,28 @@ isNote :: Output -> Bool
 isNote (Note _) = True
 isNote _ = False
 
--- * PatternBundle Proyection
+-- * PatternBundle Projection
 
--- | A proyection of the bundle into a single pattern
+-- | A projection of the bundle into a single pattern
 -- obtained from merging all 'Running' patterns in the bundle.
 -- Analogous to the /base space/ of a /fiber bundle/. The 'globalPattern' is the means
 -- to play the patterns contained in the 'PatternBundle'. The /merging/ proceduce it
 -- implements is analogous to a /projection/.
-proyection :: PatternBundle -> OutputPattern
-proyection patternBundle =
+projection :: PatternBundle -> OutputPattern
+projection patternBundle =
   let patternLengthsMap = Map.map (length . getOutputPattern) patternBundle
       leastCommonMultiple = Map.foldl' lcm 1 patternLengthsMap
       runningPatterns = Map.filter ((== Running) . getPatternStatus) patternBundle
       alignedOutputPatterns =
         Map.map (alignPattern leastCommonMultiple . getOutputPattern) runningPatterns
-      gp = Map.foldl' (matchOutputEvents) [] alignedOutputPatterns
-   in gp
+      -- NOTE: For some reason it is necessary to accumulate on the bare output list.
+      -- Otherwise, the globalPattern at the sequencer turns reduces to one of is fibers.
+      -- The other functionality seems to be unaffected.
+      -- See BUG comment bellow. Intended version (which type checks):
+      -- gp = Map.foldl' matchOutputEvents (mempty :: OutputPattern) alignedOutputPatterns
+      gp = Map.foldl' (\acc x -> matchOutputEvents acc (getRhythm x)) [] alignedOutputPatterns
+   in -- gp
+      Rhythm gp
 
 fiber :: PatternId -> PatternBundle -> Maybe SequencerPattern
 fiber id patternBundle = Map.lookup id patternBundle
@@ -84,17 +97,20 @@ fiber id patternBundle = Map.lookup id patternBundle
                  -> {pttrn' : OutputPattern | length pttrn' == n}@-}
 
 -- | Align a 'OutputPattern' to a finer grain (/i.e./ to a bigger discrete chromatic universe).
+-- TODO: Refactor projection logic in here
 alignPattern :: (Integral a) => a -> OutputPattern -> OutputPattern
 alignPattern grain pttrn =
   let factor = (fromIntegral grain) `div` (length pttrn)
-   in concat $ map (\x -> x : replicate (factor - 1) (Rest, Nothing)) pttrn
+   in liftR (concat . map (: replicate (factor - 1) (Rest, Nothing))) pttrn
 
+-- TODO: Correct this type when running LH if BUG can't be resolved.
 {-@ matchOutputEvents :: pttrn : OutputPattern
                       -> {pttrn' : OutputPattern | length pttrn == length pttrn'}
                       -> {pttrn'' : OutputPattern | length pttrn == length pttrn''} @-}
 
 -- | Join the outputs of matching events. Expects patterns of the same length.
-matchOutputEvents :: OutputPattern -> OutputPattern -> OutputPattern
+-- TODO: Refactor function f to Event module top level.
+matchOutputEvents :: [(Event, Maybe [Output])] -> [(Event, Maybe [Output])] -> [(Event, Maybe [Output])]
 matchOutputEvents [] pttrn' = pttrn' -- NOTE: Should empty cases be handled here?
 matchOutputEvents pttrn [] = pttrn
 matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
@@ -104,7 +120,25 @@ matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
         then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
         else (Rest, Nothing)
 
--- * Modify the Bundle
+{-
+-- BUG: This bug was introduced when OutputPattern was refactored to use the
+-- 'Rhythm' wrapper to derive its default Semigroup instance.
+-- The compiler (currently tested with ghc-9.10.1) seems to be confused about
+-- this version of the code which lifts the local function.
+-- I'ld prefer this version as its type signature better documents its behavior.
+matchOutputEvents :: OutputPattern -> OutputPattern -> OutputPattern
+matchOutputEvents mempty pttrn' = pttrn' -- NOTE: Should empty cases be handled here?
+matchOutputEvents pttrn mempty = pttrn -- The compiler throws a warning that this is redundant.
+matchOutputEvents pttrn pttrn' = (liftR2 . zipWith) f pttrn pttrn'
+  where
+    f :: (Event, Maybe [Output]) -> (Event, Maybe [Output]) -> (Event, Maybe [Output])
+    f (event, outputs) (event', outputs') =
+      if isOnset event || isOnset event'
+        then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
+        else (Rest, Nothing)
+-}
+
+-- * Elementary Bundle Operations
 
 bundleKeys :: PatternBundle -> [PatternId]
 bundleKeys = Map.keys
