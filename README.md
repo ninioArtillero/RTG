@@ -188,10 +188,13 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [x] Add cps to sequencer
 - [ ] Soloing many patterns together
 - [ ] Global pattern operations and transformations
+  - [x] Pattern action / product on fibers
+  - [ ] Take advantage of mnng
 - [x] Fix pattern update timing (per cycle to avoid jumps)
 - [x] Fix pattern resizing
-  - [ ] Add hand-fan feature
-- [ ] Make sequencer inform of current pattern length, balance and evenness.
+  - [x] Add hand-fan feature
+- [x] Make sequencer inform of current pattern length
+  - [ ] Report balance and evenness.
 - [ ] Implement pattern sync alternatives
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
 - [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
@@ -206,8 +209,9 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [ ] Implement tests for bjorklund / LH specifications
 - [x] Preserve Sequencer State between `ghci` reloads.
 - [ ] Elaborate graph of execution model
-- [ ] Breakdown `Sequencer` module. Execution, PatterPool, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
-- [ ] Fix implementation for simultaneous events.
+- [ ] Breakdown `Sequencer` module. Execution, PatterBundle, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
+  - [x] PatternBundle
+- [x] Fix implementation for simultaneous events.
 - [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
 - [ ] Fix Nix installation.
 
