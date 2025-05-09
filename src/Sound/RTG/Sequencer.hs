@@ -19,6 +19,7 @@ module Sound.RTG.Sequencer
 
     -- ** Sequencer Operations
     p,
+    a,
     start,
     startAll,
     stop,
@@ -123,9 +124,15 @@ instance Show SequencerState where
 
 -- ** Play
 
--- | Run a pattern in the sequencer.
--- p :: Rhythmic a => [SampleName] -> PatternID -> a -> IO PatternBundle
-p patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
+-- | Run a pattern in the sequencer, playing the given samples simultaneously on it.
+p :: (Rhythmic a) => PatternId -> [SampleName] -> a -> IO PatternBundle
+p patternId samples = addPattern Running patternId [map (\s -> Osc s) samples]
+
+-- | Run a pattern in the sequencer by matching samples sequentially.
+-- This is an alternative event matching strategy, originally introduced as a bug
+-- for the intended behavior of 'p' (which is now documented).
+a :: (Rhythmic a) => PatternId -> [SampleName] -> a -> IO PatternBundle
+a patternId samples = addPattern Running patternId (map (\s -> [Osc s]) samples)
 
 -- | Entry point for a pattern execution. Adds the pattern to the bundle.
 -- TODO: Add argument to modify event matching strategy for output values.
