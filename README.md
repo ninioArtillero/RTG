@@ -187,6 +187,7 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 - [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
 - [x] Add cps to sequencer
 - [ ] Soloing many patterns together
+- [ ] Add rhythmic pattern field to sequencer pattern: allow recovering the pattern.
 - [ ] Global pattern operations and transformations
   - [x] Pattern action / product on fibers
   - [ ] Take advantage of mnng
