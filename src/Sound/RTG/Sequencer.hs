@@ -249,16 +249,13 @@ handFanT = inSequencer True $ do
 
 handFanB :: IO PatternBundle
 handFanB = inSequencer True $ do
-  -- NOTE: Should this be out of Transform mode?
-  -- This modifies the bundle state in a non-revertible way.
-  -- updateSequencerMode Transform
+  updateSequencerMode Global
   transformSequencerBundle $ Bundle.liftB Bundle.handFan
 
 actionB :: (Rhythmic a) => a -> IO PatternBundle
-actionB rhythm =
-  inSequencer True $
-    transformSequencerBundle $
-      Bundle.fibreProduct rhythm
+actionB rhythm = inSequencer True $ do
+  updateSequencerMode Global
+  transformSequencerBundle $ Bundle.fibreProduct rhythm
 
 actionT :: (Rhythmic a) => a -> IO ()
 actionT rhythm = inSequencer True $ do
