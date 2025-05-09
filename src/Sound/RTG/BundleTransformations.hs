@@ -28,6 +28,9 @@ handFan =
 fibreProduct :: (Rhythmic a) => a -> PatternBundle -> PatternBundle
 fibreProduct = liftB . (<>) . rhythmToOutputPattern
 
+outputProduct :: (Rhythmic a) => a -> OutputPattern -> OutputPattern
+outputProduct = (<>) . rhythmToOutputPattern
+
 -- | Lifts a rhythmic type into a sequencer pattern.
 rhythmToSequencerPattern :: (Rhythmic a) => a -> SequencerPattern
 rhythmToSequencerPattern r = SequencerPattern (rhythmToOutputPattern r) Idle

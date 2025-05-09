@@ -1,6 +1,6 @@
 -- | Main API
 module Sound.RTG
-  ( --module Euterpea.Music, -- TODO: make this exports explicit
+  ( -- module Euterpea.Music, -- TODO: make this exports explicit
     module Sound.RTG.Euclidean,
     module Sound.RTG.RhythmicPattern,
     module Sound.RTG.Sequencer,
@@ -16,11 +16,12 @@ import Sound.RTG.Euclidean (e)
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
   ( a,
-    action,
+    actionT,
+    actionB,
     active,
     clear,
-    fanBundle,
-    fanOutput,
+    handFanT,
+    handFanB,
     hush,
     idle,
     kill,

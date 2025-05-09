@@ -39,9 +39,10 @@ module Sound.RTG.Sequencer
 
     -- ** Sequencer Transformations
     resume,
-    action,
-    fanOutput,
-    fanBundle,
+    actionT,
+    actionB,
+    handFanT,
+    handFanB,
   )
 where
 
@@ -56,7 +57,6 @@ import Foreign.Store
     withStore,
     writeStore,
   )
-import Sound.RTG.BundleTransformations
 import qualified Sound.RTG.BundleTransformations as Bundle
 import Sound.RTG.Event (pairValuesWithOnsets)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
@@ -240,21 +240,30 @@ resume = inSequencer True $ updateSequencerMode Global >> pure ()
 -- where \(d\) is the event duration, \(n\) is the number of events with more than
 -- one output, \(e_i\) ranges over such events and \(tail(e_i)\) is the tail length
 -- of the event's output list.
-fanOutput :: IO ()
-fanOutput = inSequencer True $ do
+handFanT :: IO ()
+handFanT = inSequencer True $ do
   updateSequencerMode Transform
   transformSequencerOutput Bundle.handFan
   pure ()
 
-fanBundle :: IO PatternBundle
-fanBundle = inSequencer True $ do
+handFanB :: IO PatternBundle
+handFanB = inSequencer True $ do
   -- NOTE: Should this be out of Transform mode?
   -- This modifies the bundle state in a non-revertible way.
-  updateSequencerMode Transform
+  -- updateSequencerMode Transform
   transformSequencerBundle $ Bundle.liftB Bundle.handFan
 
-action :: (Rhythmic a) => a -> IO PatternBundle
-action rhythm = inSequencer True $ transformSequencerBundle $ fibreProduct rhythm
+actionB :: (Rhythmic a) => a -> IO PatternBundle
+actionB rhythm =
+  inSequencer True $
+    transformSequencerBundle $
+      Bundle.fibreProduct rhythm
+
+actionT :: (Rhythmic a) => a -> IO ()
+actionT rhythm = inSequencer True $ do
+  updateSequencerMode Transform
+  transformSequencerOutput $ Bundle.outputProduct rhythm
+  pure ()
 
 -- * Sequencer Operation
 
