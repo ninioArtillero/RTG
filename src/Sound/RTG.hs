@@ -12,7 +12,7 @@ where
 
 -- import Euterpea.Music hiding (Primitive (..))
 import Sound.RTG.BundleTransformations
-import Sound.RTG.Euclidean (e')
+import Sound.RTG.Euclidean (e)
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
   ( a,
