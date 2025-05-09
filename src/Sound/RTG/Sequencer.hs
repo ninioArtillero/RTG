@@ -115,8 +115,9 @@ instance Show SequencerState where
           [ "Sequencer is " ++ playStatus ++ ".",
             "Set to " ++ show floatCPS ++ " cycles per second.",
             "In " ++ (map toUpper . show) mode ++ " mode.",
-            "Cycle counter: " ++ show counter ++ ".",
+            "Cycle counter: " ++ show counter ++ ".\n",
             "Pattern length: " ++ show outputLength,
+            "Pattern: " ++ (show output),
             "Event duration: " ++ show eventDurSec
           ]
 
