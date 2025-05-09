@@ -17,7 +17,7 @@
 -- In Mathematics and computation in music: 5th international conference, MCM 2015;
 -- proceedings, 97–108. Lecture notes in computer science 9110. London, UK.
 -- https://doi.org/10.1007/978-3-319-20603-5.
-module Sound.RTG.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms) where
+module Sound.RTG.Polygon (disjointPolygonRhythm, irreducibleBalancedDisplacedPolyrhythms, perfectlyBalancedRhythms, equivNecklace) where
 
 import qualified Data.List as List (subsequences)
 import qualified Data.Set as Set

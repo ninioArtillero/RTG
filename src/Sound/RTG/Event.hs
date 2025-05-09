@@ -16,10 +16,12 @@ module Sound.RTG.Event
     onsetCount,
     pairValuesWithOnsets,
     matchValuesWithOnsets,
+    eventsToTimePattern
   )
 where
 
 import Data.Group (Group (..))
+import Data.List (elemIndices)
 
 -- | Events are either onsets or rests.
 data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
@@ -79,6 +81,13 @@ ioisToEvents =
           else error "Sound.RTG.Event.ioisToEvents: There was a non-positive IOI"
     )
     []
+
+-- | Covert a rhythmic pattern into a time pattern.
+eventsToTimePattern :: (Eq a, Monoid a) => [a] -> [Rational]
+eventsToTimePattern events = map (/ eventCount) onsetIndexes
+  where
+    eventCount = fromIntegral $ length events
+    onsetIndexes = map fromIntegral $ elemIndices mempty events
 
 onsetCount :: (Num a) => [Event] -> a
 onsetCount = foldl' (\acc x -> case x of Rest -> acc; Onset -> acc + 1) 0

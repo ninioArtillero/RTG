@@ -15,14 +15,34 @@
 module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2) where
 
 import Data.Group (Group, invert)
-import Sound.RTG.Event (Event, fixOnset, swapEvent)
+import Sound.RTG.Event (Event, eventsToTimePattern, fixOnset, swapEvent)
 import Sound.RTG.List (rotateLeft)
+import Sound.RTG.PerfectBalance (balance, evenness)
+import Sound.RTG.Polygon (equivNecklace)
 import Sound.RTG.Zip (euclideanZip)
 
 -- TODO: Avoid exposing the data constructor (helps decouple implementation).
 
 -- | Rhythm wrapper to define a new custom instances for lists
-newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Eq, Show, Functor, Foldable)
+newtype Rhythm a = Rhythm {getRhythm :: [a]} deriving (Functor, Foldable)
+
+instance (Monoid a, Eq a, Show a) => Show (Rhythm a) where
+  show rhythm =
+    unlines $
+      [ show $ getRhythm rhythm,
+        "Evennes = " ++ show (rhythmEvenness rhythm),
+        "Balance = " ++ show (rhythmBalance rhythm)
+      ]
+
+rhythmEvenness :: (Monoid a, Eq a) => Rhythm a -> Double
+rhythmEvenness (Rhythm xs) = evenness . eventsToTimePattern $ xs
+
+rhythmBalance :: (Monoid a, Eq a) => Rhythm a -> Double
+rhythmBalance (Rhythm xs) = balance . eventsToTimePattern $ xs
+
+-- | Two rhythms are considerd equal if one is a rotation of the other.
+instance (Ord a) => Eq (Rhythm a) where
+  Rhythm xs == Rhythm ys = xs `equivNecklace` ys
 
 liftR :: ([a] -> [b]) -> (Rhythm a -> Rhythm b)
 liftR f (Rhythm r) = Rhythm (f r)
@@ -44,11 +64,16 @@ instance (Semigroup a) => Semigroup (Rhythm a) where
   Rhythm pttrn1 <> Rhythm pttrn2 = Rhythm $ pttrn1 `euclideanZip` pttrn2
 
 -- TODO: ¿Lista vacía, relación de equivalencia o lista infinita?
+-- También podría set [mempty], requiriendo el contexto de Monoid.
+-- Lo que tendría más sentido considerando que estamos modelanto ritmos.
 -- Depende de la operación. Depende de la operación.
-instance (Semigroup a, Monoid a) => Monoid (Rhythm a) where
+instance (Semigroup a) => Monoid (Rhythm a) where
   mempty = Rhythm []
 
-instance (Semigroup a, Monoid a, Group a) => Group (Rhythm a) where
+-- TODO: Change invert operation to be a circle center reflection. Can this be
+-- a group operation?
+-- NOTE: Cannot be a proper group unless there's a way to "cancel" events.
+instance (Group a) => Group (Rhythm a) where
   invert = fmap invert
 
 type RhythmicPattern = Rhythm Event
@@ -63,9 +88,10 @@ type Meter = Int
 
 -- | The interface for rhythmic pattern types.
 -- It lifts instances to rhythmic patterns.
--- TODO: I've removed the unneeded Group constraints
+-- NOTE: I've removed the unneeded Group constraints
 -- because Rhythmic Pattern group operations were used in all cases
 -- but 'inv', which I've changed to use them.
+-- TODO: Decide wether to extract the operations to the top level.
 class Rhythmic a where
   -- | Minimal complete definition
   toRhythm :: a -> RhythmicPattern
@@ -139,6 +165,7 @@ infixl 5 <+>
 
 -- | Access the binary pattern underlying a rhythmic type
 -- TODO: Include in Rhythmic typle class?
+-- TODO: Change name... too much rhythm stuff.
 rhythm :: (Rhythmic a) => a -> [Event]
 rhythm = getRhythm . toRhythm
 
