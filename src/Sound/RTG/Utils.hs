@@ -30,3 +30,9 @@ patternEventDurationSec cps patternLength = secondsPerCycle / eventsPerCycle
   where
     secondsPerCycle = 1 / cps
     eventsPerCycle = fromIntegral patternLength
+
+interpolate :: (Fractional a, Integral n) => a -> a -> n -> [a]
+interpolate x y n =
+  if n > 0
+    then x : map (\index -> x + ((fromIntegral index) / (fromIntegral n - 1)) * (y - x)) [1 .. n - 1]
+    else error "Utils.interpolate: negative list length"

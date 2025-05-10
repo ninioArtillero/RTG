@@ -55,8 +55,43 @@ startPosition list = rotateLeft (position list) list
 position :: (Eq a, Monoid a) => [a] -> Int
 position = length . takeWhile (== mempty)
 
-
+-- | Groups each non-empty value with the empty values after it.
 groupWithMempty :: (Eq a, Monoid a) => [a] -> [[a]]
 groupWithMempty = List.groupBy nextIsMempty . startPosition
   where
     nextIsMempty _ y = y == mempty
+
+-- | Factors out superflous empty values (like 'Sound.RTG.Rest') from a list.
+compact :: (Eq a, Monoid a) => [a] -> [a]
+compact [] = []
+compact xs =
+  let isolatedEvents = groupWithMempty xs
+      eventDurations = map length isolatedEvents
+      listGCD = foldr1 gcd eventDurations
+      divisions = map (`div` listGCD) eventDurations
+   in concat $ zipWith (take) divisions isolatedEvents
+
+-- | Resize a list's length to a given number if the length divides it.
+-- Otherwise return the list unaltered.
+resize :: (Monoid a) => Int -> [a] -> [a]
+resize _ [] = []
+resize n xs =
+  if n > 0 && modulus == 0
+    then concatMap (: replicate (division - 1) mempty) xs
+    else xs
+  where
+    len = length xs
+    (division, modulus) = n `divMod` len
+
+-- | A reflection at the center of the circle, i.e. 180 degree rotation.
+-- Lists represent a /discrete universe/ wrapped around the circle.
+-- Impair lists need to be doubled in size to ocuppy the proper positions.
+-- TODO: Use to implement rhythmic pattern inverse.
+centerReflection :: (Monoid a) => [a] -> [a]
+centerReflection xs =
+  if modulus == 0
+    then rotateLeft (division) xs
+    else rotateLeft (2 * division) $ resize (2 * len) xs
+  where
+    len = length xs
+    (division, modulus) = len `divMod` 2
