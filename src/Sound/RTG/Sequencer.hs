@@ -15,9 +15,8 @@
 -- about the fact that a 'Store' is not thread safe. Care is taken
 -- for state updates to be done only within the main thread.
 module Sound.RTG.Sequencer
-  ( -- * Sequencer API
-
-    -- ** Sequencer Operations
+  ( -- * Sequencer Operations
+    -- ** Play
     p,
     a,
     start,
@@ -26,19 +25,21 @@ module Sound.RTG.Sequencer
     stopAll,
     solo,
     unsolo,
+    hush,
+    -- ** Configure
+    reset,
+    resume,
     setcps,
     setbpm,
     kill,
     clear,
+    -- ** Querie
     status,
     querie,
     active,
     idle,
-    reset,
-    hush,
 
-    -- ** Sequencer Transformations
-    resume,
+    -- * Transformations
     actionT,
     actionB,
     handFanT,
