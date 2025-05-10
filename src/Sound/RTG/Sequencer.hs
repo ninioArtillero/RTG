@@ -471,6 +471,9 @@ runOutputPattern = do
   outputPattern <- lift getSequencerOutputPattern
   eventDur <- lift getSequencerEventDuration
   patternOutput eventDur (getRhythm outputPattern)
+  -- NOTE: Might return the updated couter for other use.
+  lift updateSequencerCounter
+  pure ()
 
 -- | A whole pattern output action in the Timed IO Monad.
 patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
@@ -583,13 +586,6 @@ stopAllPatterns =
     pure . disableAll
 
 -- * Conversion
-
--- | Convert a rhythmic pattern into an 'OutputPattern'
--- TODO: Add a switch for changing the event matching strategy.
-toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
-toOutputPattern pattern outputs =
-  let eventPattern = rhythm pattern
-   in Rhythm $ pairValuesWithOnsets eventPattern outputs
 
 -- | TODO: Consider specializing this function to CPS and use newtypes to enforce
 -- correct values. Alternative: create a LH spec.

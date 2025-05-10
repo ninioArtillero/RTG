@@ -17,7 +17,7 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as Map
 import Data.Maybe (fromMaybe)
 import Euterpea (Pitch)
-import Sound.RTG.Event (Event (..), isOnset)
+import Sound.RTG.Event (Event (..), isOnset, pairValuesWithOnsets)
 import Sound.RTG.RhythmicPattern
 
 -- TODO: This module still depends on Event constructors.
@@ -185,3 +185,12 @@ disableAll =
     ( \sequencerPattern ->
         sequencerPattern {getPatternStatus = Idle}
     )
+
+-- * Conversion
+
+-- | Convert a rhythmic pattern into an 'OutputPattern'
+-- TODO: Add a switch for changing the event matching strategy.
+toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
+toOutputPattern pattern outputs =
+  let eventPattern = rhythm pattern
+   in Rhythm $ pairValuesWithOnsets eventPattern outputs
