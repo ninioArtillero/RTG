@@ -85,7 +85,7 @@ projection patternBundle =
       -- The other functionality seems to be unaffected.
       -- See BUG comment bellow. Intended version (which type checks):
       -- gp = Map.foldl' matchOutputEvents (mempty :: OutputPattern) alignedOutputPatterns
-      gp = Map.foldl' (\acc x -> matchOutputEvents acc (getRhythm x)) [] alignedOutputPatterns
+      gp = Map.foldl' (\acc x -> joinEventOutputs acc (getRhythm x)) [] alignedOutputPatterns
    in -- gp
       Rhythm gp
 
@@ -109,16 +109,17 @@ alignPattern grain pttrn =
                       -> {pttrn'' : OutputPattern | length pttrn == length pttrn''} @-}
 
 -- | Join the outputs of matching events. Expects patterns of the same length.
--- TODO: Refactor function f to Event module top level.
-matchOutputEvents :: [(Event, Maybe [Output])] -> [(Event, Maybe [Output])] -> [(Event, Maybe [Output])]
-matchOutputEvents [] pttrn' = pttrn' -- NOTE: Should empty cases be handled here?
-matchOutputEvents pttrn [] = pttrn
-matchOutputEvents pttrn pttrn' = zipWith f pttrn pttrn'
-  where
-    f (event, outputs) (event', outputs') =
-      if isOnset event || isOnset event'
-        then (Onset, Just $ (fromMaybe [] outputs) ++ (fromMaybe [] outputs'))
-        else (Rest, Nothing)
+joinEventOutputs ::
+  [(Event, Maybe [Output])] ->
+  [(Event, Maybe [Output])] ->
+  [(Event, Maybe [Output])]
+joinEventOutputs [] pttrn' = pttrn'
+joinEventOutputs pttrn [] = pttrn
+-- Uses the Semigroup instace of (Event, Maybe [a]).
+-- Previous implementation threw away outputs if both events where Rest.
+-- So far they are note supposed to be able to do anything, but might prove
+-- usefull to implement cool functionality for "ghost" outputs.
+joinEventOutputs pttrn pttrn' = zipWith (<>) pttrn pttrn'
 
 {-
 -- BUG: This bug was introduced when OutputPattern was refactored to use the
