@@ -15,7 +15,7 @@ module Sound.RTG.Event
     ioisToEvents,
     onsetCount,
     pairValuesWithOnsets,
-    matchValuesWithOnsets,
+    matchValuesToOnsets,
     eventsToTimePattern,
   )
 where
@@ -97,17 +97,16 @@ onsetCount = foldl' (\acc x -> case x of Rest -> acc; Onset -> acc + 1) 0
 pairValuesWithOnsets :: [Event] -> [a] -> [(Event, Maybe a)]
 pairValuesWithOnsets [] _ = []
 pairValuesWithOnsets events [] = zip events (repeat Nothing)
-pairValuesWithOnsets (x : xs) values@(y : ys) =
-  if isOnset x
-    then (Onset, Just y) : pairValuesWithOnsets xs (drop 1 . cycle $ values)
-    else (Rest, Nothing) : pairValuesWithOnsets xs (cycle $ values)
+pairValuesWithOnsets events values = zip events arrangedValues
+  where
+    arrangedValues = matchValuesToOnsets events values
 
 -- | Arrange a value list to match a rhyhtmic pattern.
 -- Values wrap if necessary to match every onset.
-matchValuesWithOnsets :: [Event] -> [a] -> [Maybe a]
-matchValuesWithOnsets [] _ = []
-matchValuesWithOnsets events [] = map (const Nothing) events
-matchValuesWithOnsets (x : xs) values@(y : ys) =
+matchValuesToOnsets :: [Event] -> [a] -> [Maybe a]
+matchValuesToOnsets [] _ = []
+matchValuesToOnsets events [] = map (const Nothing) events
+matchValuesToOnsets (x : xs) values@(y : ys) =
   if isOnset x
-    then Just y : matchValuesWithOnsets xs (drop 1 . cycle $ values)
-    else Nothing : matchValuesWithOnsets xs (cycle $ values)
+    then Just y : matchValuesToOnsets xs (drop 1 . cycle $ values)
+    else Nothing : matchValuesToOnsets xs (cycle $ values)
