@@ -119,6 +119,7 @@ joinEventOutputs pttrn [] = pttrn
 -- Previous implementation threw away outputs if both events where Rest.
 -- So far they are note supposed to be able to do anything, but might prove
 -- usefull to implement cool functionality for "ghost" outputs.
+-- NOTE: Depends on the || semigroup instance of events.
 joinEventOutputs pttrn pttrn' = zipWith (<>) pttrn pttrn'
 
 {-
