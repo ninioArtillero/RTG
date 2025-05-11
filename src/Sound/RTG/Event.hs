@@ -21,7 +21,7 @@ module Sound.RTG.Event
 where
 
 import Data.Group (Group (..))
-import Data.List (elemIndices)
+import Data.List (findIndices)
 
 -- | Events are either onsets or rests.
 data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
@@ -87,7 +87,7 @@ eventsToTimePattern :: (Eq a, Monoid a) => [a] -> [Rational]
 eventsToTimePattern events = map (/ eventCount) onsetIndexes
   where
     eventCount = fromIntegral $ length events
-    onsetIndexes = map fromIntegral $ elemIndices mempty events
+    onsetIndexes = map fromIntegral $ findIndices (/= mempty) events
 
 onsetCount :: (Num a) => [Event] -> a
 onsetCount = foldl' (\acc x -> case x of Rest -> acc; Onset -> acc + 1) 0

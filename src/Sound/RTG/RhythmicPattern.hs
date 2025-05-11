@@ -12,7 +12,8 @@
 --
 -- A 'RhythmicPattern' is a event list in a newtype wrapper.
 -- Types with a 'Rhythmic' instance can be converted to a 'RhythmicPattern'.
-module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2) where
+module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, liftR2,
+                                 rhythmBalance, rhythmEvenness) where
 
 import Data.Group (Group, invert)
 import Sound.RTG.Event (Event, eventsToTimePattern, fixOnset, swapEvent)

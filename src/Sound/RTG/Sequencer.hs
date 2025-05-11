@@ -66,7 +66,13 @@ import Sound.RTG.Event (pairValuesWithOnsets)
 import Sound.RTG.List (contract)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.PatternBundle
-import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic, rhythm)
+import Sound.RTG.RhythmicPattern
+  ( Rhythm (..),
+    Rhythmic,
+    rhythm,
+    rhythmBalance,
+    rhythmEvenness,
+  )
 import Sound.RTG.TimedMonad
   ( Micro (..),
     MonadRef (..),
@@ -114,16 +120,18 @@ instance Show SequencerState where
         outputLength = length output
         floatCPS :: Float
         floatCPS = fromRational cps
-        eventDurSec :: Rational
-        eventDurSec = microToSec eventDurMicro
+        eventDurMiliSec :: Float
+        eventDurMiliSec = microToSec eventDurMicro * 10 ^ 3
      in unlines $
-          [ "Sequencer is " ++ playStatus ++ ".",
-            "Set to " ++ show floatCPS ++ " cycles per second.",
-            "In " ++ (map toUpper . show) mode ++ " mode.",
-            "Cycle counter: " ++ show counter ++ ".\n",
-            "Pattern length: " ++ show outputLength,
-            "Pattern: " ++ (show $ rhythm output),
-            "Event duration: " ++ show eventDurSec
+          [ "Sequencer is " ++ playStatus ++ ",",
+            "in " ++ (map toUpper . show) mode ++ " mode.",
+            "Cycle duration: " ++ show (1 / floatCPS) ++ " s",
+            "Cycle counter: " ++ show counter ++ "\n",
+            "Output length: " ++ show outputLength,
+            "Output pattern: " ++ (show $ rhythm output),
+            "Event duration: " ++ show eventDurMiliSec ++ " ms",
+            "Evenness = " ++ show (rhythmEvenness output),
+            "Balance = " ++ show (rhythmBalance output)
           ]
 
 -- * Sequencer Interface
