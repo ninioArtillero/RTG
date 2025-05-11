@@ -196,6 +196,7 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
   - [x] Add hand-fan feature
 - [x] Make sequencer inform of current pattern length
   - [ ] Report balance and evenness.
+- [ ] Make sequencer state updates atomic (STM).
 - [ ] Implement pattern sync alternatives
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
 - [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
