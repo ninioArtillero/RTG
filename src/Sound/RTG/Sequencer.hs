@@ -16,6 +16,7 @@
 -- for state updates to be done only within the main thread.
 module Sound.RTG.Sequencer
   ( -- * Sequencer Operations
+
     -- ** Play
     p,
     a,
@@ -26,6 +27,7 @@ module Sound.RTG.Sequencer
     solo,
     unsolo,
     hush,
+
     -- ** Configure
     reset,
     resume,
@@ -33,6 +35,7 @@ module Sound.RTG.Sequencer
     setbpm,
     kill,
     clear,
+
     -- ** Querie
     status,
     querie,
@@ -118,7 +121,7 @@ instance Show SequencerState where
             "In " ++ (map toUpper . show) mode ++ " mode.",
             "Cycle counter: " ++ show counter ++ ".\n",
             "Pattern length: " ++ show outputLength,
-            "Pattern: " ++ (show output),
+            "Pattern: " ++ (show $ rhythm output),
             "Event duration: " ++ show eventDurSec
           ]
 
