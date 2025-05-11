@@ -16,7 +16,7 @@ module Sound.RTG.RhythmicPattern (Rhythmic (..), Rhythm (..), rhythm, liftR, lif
 
 import Data.Group (Group, invert)
 import Sound.RTG.Event (Event, eventsToTimePattern, fixOnset, swapEvent)
-import Sound.RTG.List (rotateLeft)
+import Sound.RTG.List (rotateLeft, centerReflection)
 import Sound.RTG.PerfectBalance (balance, evenness)
 import Sound.RTG.Polygon (equivNecklace)
 import Sound.RTG.Zip (euclideanZip)
@@ -70,11 +70,12 @@ instance (Semigroup a) => Semigroup (Rhythm a) where
 instance (Semigroup a) => Monoid (Rhythm a) where
   mempty = Rhythm []
 
--- TODO: Change invert operation to be a circle center reflection. Can this be
--- a group operation?
 -- NOTE: Cannot be a proper group unless there's a way to "cancel" events.
+-- NOTE: With center reflexion we have the property (invert . invert) x == x
+-- NOTE: Previous operation, fmap invert, would need a reduction operation
+-- as different list sizes would produce a different inverse.
 instance (Group a) => Group (Rhythm a) where
-  invert = fmap invert
+  invert = liftR centerReflection
 
 type RhythmicPattern = Rhythm Event
 
@@ -101,8 +102,8 @@ class Rhythmic a where
   -- prop> x & inv x = mempty
   --
   -- prop> inv x & x = mempty
-  inv :: a -> RhythmicPattern
-  inv = invert . toRhythm
+  reflex :: a -> RhythmicPattern
+  reflex = invert . toRhythm
 
   -- | Default group operation
   (&) :: (Rhythmic b) => a -> b -> RhythmicPattern

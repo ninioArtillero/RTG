@@ -68,6 +68,7 @@ pttrn1 `centerNarrowZip` pttrn2 =
 -- this could be exploited. For example, use all and choose the one
 -- with the least rests.
 -- TODO: choose finite lists... may be I need stronger types (GADTs?).
+-- TODO: refactor using euclideanZipWith
 euclideanZip :: (Semigroup a) => [a] -> [a] -> [a]
 pttrn1 `euclideanZip` pttrn2
   | null pttrn1 = pttrn2
