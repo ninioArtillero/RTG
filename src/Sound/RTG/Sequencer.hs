@@ -63,6 +63,7 @@ import Foreign.Store
   )
 import qualified Sound.RTG.BundleTransformations as Bundle
 import Sound.RTG.Event (pairValuesWithOnsets)
+import Sound.RTG.List (contract)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.PatternBundle
 import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic, rhythm)
@@ -331,9 +332,11 @@ runSequencer = do
           -- Run a silent pattern if the soloed pattern is not found.
           run $ sequenceOutputPattern 0 mempty
         Just op -> do
+          let soloEventDur =
+                if length op /= 0 then cpsToTimeStamp cps (length op) else 0
           -- Avoid soloing an idle pattern by default.
           activatePattern patternId
-          run $ sequenceOutputPattern globalEventDur op
+          run $ sequenceOutputPattern soloEventDur op
     Transform -> run $ sequenceOutputPattern currentEventDur currentOutput
 
 -- * Sequencer State
@@ -480,8 +483,19 @@ runOutputPattern = do
   pure ()
 
 -- | A whole pattern output action in the Timed IO Monad.
-patternOutput :: Micro -> [(a, Maybe [Output])] -> TIO ()
-patternOutput eventDur outputPattern = mapM_ (eventOutput eventDur . snd) outputPattern
+patternOutput :: (Eq a, Monoid a) => Micro -> [(a, Maybe [Output])] -> TIO ()
+patternOutput eventDur outputPattern =
+  mapM_
+    ( \((event, outputs), n) ->
+        eventOutput (eventDur * fromIntegral n) outputs
+    )
+    -- We contract the outputPattern to avoid redundant calls to eventOutput.
+    -- NOTE: If rests with non-empty outputs /leak/, they will be treated as onsets
+    -- and result in a performance penalty.
+    -- Currently specified behavior aims for this not to happen, but it is not (yet)
+    -- formally enforced. This must be considered if "ghost output" features are
+    -- implemented later on.
+    $ contract outputPattern
 
 -- | Generates an event playback by the given duration in the Timed IO Monad.
 eventOutput :: Micro -> Maybe [Output] -> TIO ()
@@ -511,6 +525,11 @@ globalPattern = withStore patternBundleStore (pure . projection)
 -- length
 soloPattern :: PatternId -> IO (Maybe OutputPattern)
 soloPattern id = withStore patternBundleStore $ \patternBundle -> do
+  pure $ fiber id patternBundle
+
+{- NOTE: Alignment was needed in soloPattern because the global event duration was
+-- was passed to it by runSequencer. To optimize this now we calculate
+-- the soloed pattern event duration explicitly to call sequenceOutputPattern with it.
   gp <- globalPattern
   let maybeSequencerPattern = fiber id patternBundle
   pure $
@@ -520,6 +539,7 @@ soloPattern id = withStore patternBundleStore $ \patternBundle -> do
            in alignPattern (length gp) op
       )
       maybeSequencerPattern
+-}
 
 -- * PatternBundle State
 

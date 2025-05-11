@@ -45,7 +45,10 @@ rotateRight n xs =
 listSum :: (Num a) => [a] -> [a] -> [a]
 listSum = zipWith (+)
 
--- Functions with Monoid constraint
+-- * With monoid context
+
+-- $monoidconstraint
+-- This functions implement temporal media like behavior on lists.
 
 -- | Rotate a list so that it starts with a non-identity element
 startPosition :: (Eq a, Monoid a) => [a] -> [a]
@@ -60,6 +63,16 @@ groupWithMempty :: (Eq a, Monoid a) => [a] -> [[a]]
 groupWithMempty = List.groupBy nextIsMempty . startPosition
   where
     nextIsMempty _ y = y == mempty
+
+-- | Isolates non-empty values and groups empty values, showing how many
+-- where together.
+contract :: (Eq a, Monoid a) => [a] -> [(a, Int)]
+contract xs =
+  map
+    (\group -> (head group, length group))
+    groupedMemptys
+  where
+    groupedMemptys = List.groupBy (\x y -> x == y && x == mempty) xs
 
 -- | Factors out superflous empty values (like 'Sound.RTG.Rest') from a list.
 compact :: (Eq a, Monoid a) => [a] -> [a]

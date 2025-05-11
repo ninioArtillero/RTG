@@ -18,6 +18,7 @@ import qualified Data.IntMap.Strict as Map
 import Data.Maybe (fromMaybe)
 import Euterpea (Pitch)
 import Sound.RTG.Event (Event (..), isOnset, pairValuesWithOnsets)
+import Sound.RTG.List (compact)
 import Sound.RTG.RhythmicPattern
 
 -- TODO: This module still depends on Event constructors.
@@ -87,10 +88,14 @@ projection patternBundle =
       -- gp = Map.foldl' matchOutputEvents (mempty :: OutputPattern) alignedOutputPatterns
       gp = Map.foldl' (\acc x -> joinEventOutputs acc (getRhythm x)) [] alignedOutputPatterns
    in -- gp
-      Rhythm gp
+      -- Compact the resulting pattern to purge unnecessary rest events.
+      Rhythm $ compact gp
 
-fiber :: PatternId -> PatternBundle -> Maybe SequencerPattern
-fiber id patternBundle = Map.lookup id patternBundle
+fiber :: PatternId -> PatternBundle -> Maybe OutputPattern
+fiber id patternBundle =
+  fmap (liftR compact . getOutputPattern) $
+    Map.lookup id $
+      patternBundle
 
 {-@ alignPattern :: Integral a => n:a
                  -> {pttrn : OutputPattern | n `mod` (length pttrn) == 0 }
