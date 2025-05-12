@@ -181,56 +181,62 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 
 ## TODO
 
-**Current implementation**
+**Base implementation**
 
-- [x] Asynchronous evaluation of patterns
-- [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
-- [x] Add cps to sequencer
-- [ ] Soloing many patterns together
+- [ ] Fix names for clear spec and avoid redundancy.
+- [ ] Revisit euclidianZip in Rhythm Semigroup.
+- [ ] Revisit actionT and other global transformations. Implement ghost events??
+- [ ] Make sequencer state updates atomic (STM).
 - [ ] Add rhythmic pattern field to sequencer pattern: allow recovering the pattern.
+- [ ] Extend patterns beyond cycles (bundle sections might be here).
+- [ ] Soloing many patterns together
+– [ ] Fix MIDI functionality.
+- [ ] Decouple OSC messages from SuperDirt (refine interface for customization).
+- [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
+- [ ] Breakdown `Sequencer` module. Execution, PatterBundle, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
+- [ ] Fix Nix installation.
+
+- [ ] Have _signals_ for parameter control (for morphing)
+- [ ] Implement tests for bjorklund / LH specifications
+- [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
+
+**Transformations and Patterns**
+
+- [ ] Implement pattern actions and transformations at the cycle level.
 - [ ] Global pattern operations and transformations
   - [x] Pattern action / product on fibers
   - [ ] Take advantage of mnng
-- [x] Fix pattern update timing (per cycle to avoid jumps)
-- [x] Fix pattern resizing
   - [x] Add hand-fan feature
-- [x] Make sequencer inform of current pattern length
-  - [ ] Report balance and evenness.
-- [ ] Make sequencer state updates atomic (STM).
-- [ ] Implement pattern sync alternatives
+  - [x] Report balance and evenness.
+- [ ] Implement pattern sync (projection) alternatives.
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
-- [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
 - [ ] Add perfectly balance rhythm library (no efficient algorithm on-sight)
 - [ ] Implement well-formed rhythms (¿3 parameters?)
 - [ ] Continuous morphing of well-formed rhythms using ratio parameter
-- [ ] Have _signals_ for parameter control (for morphing)
 - [ ] Geometrically informed continuous morphing between two arbitrary rhythms
-- [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
-- [x] Fix haddocks (see Polygon module for example module header)
-- [x] Use HashMaps for sequences.
-- [ ] Implement tests for bjorklund / LH specifications
-- [x] Preserve Sequencer State between `ghci` reloads.
 - [ ] Elaborate graph of execution model
-- [ ] Breakdown `Sequencer` module. Execution, PatterBundle, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
   - [x] PatternBundle
+
+**Done**
+
+- [x] Asynchronous evaluation of patterns
+- [x] Make patterns addressable so they can be stopped and updated(¿in global state?)
+- [x] Use HashMaps for sequences. (Now IntMap)
+- [x] Add cps to sequencer
+- [x] Make sequencer inform of current pattern length
+- [x] Preserve Sequencer State between `ghci` reloads.
+- [x] Fix haddocks (see Polygon module for example module header)
+- [x] Fix pattern update timing (per cycle to avoid jumps)
+- [x] Fix pattern resizing
+- [x] Homogenize rhythmic pattern types show function. Each type should be tagged appropriately.
 - [x] Fix implementation for simultaneous events.
-- [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
-- [ ] Fix Nix installation.
 
-**Alternative implementations and further work**
+## Further Work
 
-- [ ] FRP implementations.
+- [ ] FRP implementations of patterns: make pattern composition scalable.
   - [ ] Tidal Cycles pattern representation
   - [ ] AFRP: Yampa, Euterpea MUI library
-- [ ] New interpreter (for `v.0.2.0.0`)
+- [ ] Stand-alone interpreter (for `v.0.2.0.0`?)
   - [ ] Parsing: parsec/megaparsec
-- [ ] Audio
-  - [x] OSC: `hosc`
-  - [x] MIDI: `Euterpea`
-  - [ ] Embed MIDI functionality using `fluidsynth`
-- [ ] Create a minimal sampler for RTG
-
-**Midterm**
-
-- [ ] Expose options to change/modify event streams to make the system modular (regarding changing sound engine or using other digital instrument).
-- [ ] Create a Tidal Cycles module version.
+- [ ] Embed MIDI functionality using `fluidsynth`.
+- [ ] Create a minimal sampler for RTG in SuperCollider.
