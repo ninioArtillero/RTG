@@ -1,7 +1,7 @@
 # Rhythm, Time and Geometry
 
-RTG (Rhythm, Time and Geometry) is a music EDSL for the creation and manipulation of rhythmic patterns
-implementing a geometrically informed API exploring:
+RTG is a music EDSL for the creation and manipulation
+of rhythmic patterns implementing a geometrically informed design to explore:
 
 1. The two way relation between musical rhythm and geometric structure.
 1. Computational abstractions and implementations of musical time.
@@ -16,7 +16,7 @@ of live coding. As part of my PhD research, it addresses the following general q
 > of musical time?
 
 > [!IMPORTANT]
-> The library is in a _experimental_ state.
+> This library is in a _experimental_ state.
 
 ## Related Papers
 
@@ -30,6 +30,7 @@ of live coding. As part of my PhD research, it addresses the following general q
 1. [Install GHCup](https://www.haskell.org/ghcup/) —the recommended tool
    to administer the Haskell tool-chain— to get `cabal` and `ghc`. You may select all
    the default options of the installation script.
+1. Run `ghcup tui` and install (`i`) GHC 9.10.1 and _set it_ (with `s`) afterwards.
 1. Clone this repository.
 1. Run `cabal build` from the root of the repository.
    In case of error, please [open an issue](https://github.com/ninioArtillero/ritmoTG/issues/new/choose) with the output.
@@ -38,27 +39,22 @@ of live coding. As part of my PhD research, it addresses the following general q
 ### Audio dependencies
 
 1. Install SuperDirt (audio engine):
-   1. Install [SuperCollider](https://supercollider.github.io/downloads.html) and,
-      to have all the predefined synths, the [sc3-plugins](https://supercollider.github.io/sc3-plugins/).
-      Both are accessible through the package manager in various Linux distributions.
+   1. Install [SuperCollider](https://supercollider.github.io/downloads.html).
    1. In the SuperCollider IDE (or in a terminal at the `sclang` shell prompt) run:
       `Quarks.checkForUpdates({Quarks.install("SuperDirt", "v1.7.4"); thisProcess.recompile()})`.
 
 ## Usage
 
-### Preparations
+### Setup
 
 - Start SuperDirt: Open SuperCollider (or run `sclang` from a terminal) and run
   (Ctrl+Enter) `SuperDirt.start`. This will load the audio engine and load its standard samples.
-  - Alternatively, or in case of SuperCollider error messages regarding the buffer
-    or late messages, run with the SuperDirt configuration file provided (it contains
-    configuration and optimization options): `sclang superdirt_startup.scd`
 - Open a terminal at the repository root (where _this_ file is located)
   - Run `cabal repl`.
 - Sample names available for pattern functions match those of the `DirtSamples` quark installed by `SuperDirt`.
-  a list of them can be printed by running `~dirt.postSampleInfo;` in SuperCollider.
+  A list of them can be printed by running `~dirt.postSampleInfo;` in SuperCollider.
 
-### Current API
+### Mini tutorial
 
 You can execute a pattern like so:
 
@@ -69,8 +65,8 @@ p 1 ["cp", "bd"] $ clave
 ```
 
 > [!WARNING]
-> To recover silence use the command `hush`.
-> If it fails, quit the interpreter with `:q`.
+> To recover silence, use the command `hush`.
+> If it fails, quit the interpreter using `:q`.
 > Go with care, with current behavior long samples can easily blow things up.
 
 The samples in the list are played simultaneously following the pattern of the given
@@ -80,7 +76,7 @@ command.
 Alternatively, the operator `a` has the same structure, but assigns the samples in
 a sequential fashion to the _onset_ events of the pattern.
 
-Both functions assign a pattern to an index (`PatternID`) in a mapping called a
+Both functions assign a pattern to an index (an integer value aliased as `PatternID`) in a mapping called a
 `PatternBundle`, and upon first invocation they trigger the underlying sequencer.
 
 New patterns are created by combination and transformation. Combination is
@@ -90,25 +86,32 @@ accomplished using the _semigroup_ operator `<>`.
 a 2 ["sn", "blip", "can"] $ bossa <> amiotScale
 ```
 
-This patterns can be transformed applying functions from the `Rhythmic` interface.
+Patterns can be transformed applying functions from the `Rhythmic` interface.
 
 ```haskell
 p 1 ["cp", "bd"] $ reflex $ co clave
 ```
 
-The available transformations are: `rotate`, `reflex`, `rev` and `co`.
-You can also use euclidean rhythms (another type of rhythmic value) and _combine_
-them with other patterns using the `&` operator.
+The available transformations are: `rotate n` (rotation by `n` pulses) , `reflex`
+(center reflection), `rev` (reverse) and `co` (complement). You can also use
+[euclidean rhythms](https://www-cgrl.cs.mcgill.ca/~godfried/teaching/dm-reading-assignments/Euclidean-Rhythms.pdf)
+(another type of rhythmic value) and _combine_ them with other patterns using the `&` operator.
 
 ```haskell
 p 3 ["rm"] $ shiko & (e(3,8) <> e(7,12))
 ```
 
-All timing is managed by the interpreter and there is no buffering (yet),
-so late messages from SuperDirt are expected.
+All timing is managed within the interpreter and there is no buffering (yet),
+so SuperDirt late messages are expected.
 
-Note the sequencer gives continuous feedback on its current state, and its
-_output pattern_ can grow quite large.
+The sequencer gives continuous feedback on its current state, and its
+_output pattern_ can grow quite large depending on pattern combinations.
+Also, there are three playing modes (triggered by some sequencer operations):
+
+- `Global`: all the patterns in the bundle are merged into the output
+- `Solo`: a pattern is selected as output
+- `Transform`: the sequencer stops reading the bundle to allow transformations
+  on its current output.
 
 A pattern can be soloed by index (`solo 3`), and `unsolo`ed to
 go back to the _global_ pattern.
@@ -116,33 +119,37 @@ go back to the _global_ pattern.
 One of the design goals is leveraging combination and transformation at the _bundle_
 level.
 
-You can apply a pattern to the global output pattern.
+You can _apply a pattern_ to the global output pattern.
 
 ```haskell
 actionT $ fiveBalance
 ```
 
-And go back to the original pattern with.
+Entering into `Transform` mode, and go back to the `Global` pattern with.
 
 ```haskell
 resume
 ```
 
 More experimental is the bundle transformation, which applies the given pattern
-to all elements of the bundle before merging them in the output.
+to all elements of the bundle before merging them on the output.
 
 ```haskell
 actionB amitoScale
 ```
 
-At the moment, this transformation modifies the state for good. To recover you'll
-need to execute your previous commands.
+At the moment, this transformation modifies the state for good, so to recover you'll
+need to execute the patterns you had again.
+
+You can `clear` all patterns from the bundle and make then inactive/active using
+`stop i`/`start i` (where `i` is the pattern index).
 
 ## Development
 
 > [!NOTE]
-> The project is being developed with GHC 9.4.8 using regular `cabal` commands.
-> The `run.sh` script and the nix-shell itself are intended for end users.
+> The project is being developed with GHC 9.10.1 using regular `cabal` commands.
+> The `run.sh` script and the nix-shell itself are intended for end users, but
+> is currently down.
 
 ### About the nix-shell environment
 
@@ -182,32 +189,31 @@ nix-build --argstr compiler ghc964 --attr project nix/release.nix
 
 **Base implementation**
 
-- [ ] Fix names for clear spec and avoid redundancy.
-- [ ] Revisit euclidianZip in Rhythm Semigroup.
-- [ ] Revisit actionT and other global transformations. Implement ghost events??
-- [ ] Make sequencer state updates atomic (STM).
-- [ ] Add rhythmic pattern field to sequencer pattern: allow recovering the pattern.
-- [ ] Extend patterns beyond cycles (bundle sections might be here).
+- [ ] Fix names for clear spec and avoid redundancy
+- [ ] Revisit euclidianZip in Rhythm Semigroup
+- [ ] Revisit actionT and other global transformations. Implement ghost events?
+- [ ] Make sequencer state updates atomic (STM)
+- [ ] Add rhythmic pattern field to sequencer pattern: allow recovering the pattern
+- [ ] Extend patterns beyond cycles (bundle sections might be here)
 - [ ] Soloing many patterns together
-      – [ ] Fix MIDI functionality.
-- [ ] Decouple OSC messages from SuperDirt (refine interface for customization).
-- [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages.
-- [ ] Breakdown `Sequencer` module. Execution, PatterBundle, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure.
-- [ ] Fix Nix installation.
-
+- [ ] Fix MIDI functionality
+- [ ] Decouple OSC messages from SuperDirt (refine interface for customization)
+- [ ] Currently timing comes from the Haskell runtime (Timed IO Monad). Get detailed timing using timestamps on OSC messages
+- [ ] Breakdown `Sequencer` module. Execution, PatterBundle, SequencerPattern and Output Values. Abstract over the _Fiber Bundle_ structure
+- [ ] Fix Nix installation
 - [ ] Have _signals_ for parameter control (for morphing)
 - [ ] Implement tests for bjorklund / LH specifications
 - [ ] Add `doctest`/`doctest-extract` for automatic in-documentation property testing (QuickCheck)
 
 **Transformations and Patterns**
 
-- [ ] Implement pattern actions and transformations at the cycle level.
+- [ ] Implement pattern actions and transformations at the cycle level
 - [ ] Global pattern operations and transformations
   - [x] Pattern action / product on fibers
   - [ ] Take advantage of mnng
   - [x] Add hand-fan feature
-  - [x] Report balance and evenness.
-- [ ] Implement pattern sync (projection) alternatives.
+  - [x] Report balance and evenness
+- [ ] Implement pattern sync (projection) alternatives
 - [ ] A syntax to make new scheduled patterns affect current playing patterns
 - [ ] Add perfectly balance rhythm library (no efficient algorithm on-sight)
 - [ ] Implement well-formed rhythms (¿3 parameters?)
