@@ -395,6 +395,7 @@ class (Monad m) => MonadRef m where
 -- Janin, D. 2020 "An equational model of asynchronous concurrent programming".
 -- It turns to be a simplification of the @async@ library for basic concurrency.
 instance MonadRef IO where
+  -- | The monad reference for the IO monad.
   type Ref IO = Async
   fork = async
   read = wait

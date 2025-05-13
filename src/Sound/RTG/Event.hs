@@ -21,7 +21,7 @@ module Sound.RTG.Event
 where
 
 import Data.Group (Group (..))
-import Data.List (findIndices)
+import Data.List (findIndices, foldl')
 
 -- | Events are either onsets or rests.
 data Event = Rest | Onset deriving (Eq, Ord, Enum, Bounded)
