@@ -8,11 +8,12 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 --
--- The implementation of the group instance for euclidean rhythms has the following specification:
+-- The implementation of the group instance for euclidean rhythms
+-- has the following specification:
 --
---   1. @(0,1,0)@ in the identity element
+--   1. @(0,1,0)@ in the identity element ('mempty').
 --   2. @(0,n,0)@ modifies the granularity of another rhythm
---   3. The invers of @(k,n,p)@ is (-k,n,-p)
+--   3. The inverse of @(k,n,p)@ is @(-k,n,-p)@
 --   4. Onset (@k@) and position (@p@) values are converted to their representation /modulo/ $n$
 --   5. Negative values of @n@ mean a change in orientation of the position value @p@,
 --   such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
@@ -128,8 +129,8 @@ instance EuclideanArgument (Integer, Integer, Integer) where
 instance EuclideanArgument (Integer, Integer) where
   arg (x, y) = (x, y, 0)
 
--- | The interface function to construct euclidean rhythms
--- (the value constructor is not exported).
+-- | Construct and euclidean rhythm specified by @(n,k)@ or @(n,k,p)@
+-- integer tuples in the set @[(k,n,p) | n >= 0, k <- [0..n], p <- [0..n]]@.
 e :: (EuclideanArgument a) => a -> Euclidean
 e tripleOrDuple = Euclidean x y z
   where
