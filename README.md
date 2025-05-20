@@ -18,6 +18,9 @@ of live coding. As part of my PhD research, it addresses the following general q
 > [!IMPORTANT]
 > This library is in a _experimental_ state.
 
+Watch some
+[vide demos](https://www.youtube.com/playlist?list=PLyQs-cuHecOif7pDYLvRmrbOyjT0DGPay)!
+
 ## Related Papers
 
 - [Rhythm, Time and Geometry](https://doi.org/10.21428/108765d1.e65cd604) @ Algorithmic Pattern Salon (2023)
