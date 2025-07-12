@@ -32,7 +32,7 @@ import Sound.RTG.OscMessages
     superDirtMessage,
     superDirtPort,
   )
-import Sound.RTG.RhythmicPattern (Rhythm (getRhythm), Rhythmic (toRhythm))
+import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
 
 -- Signal Function
 
@@ -45,7 +45,7 @@ type BPM = Double
 -- Function to convert a binary pattern into a repeating stream of OSC messages
 patternToSF :: (Rhythmic a) => SampleName -> Beat -> BPM -> a -> SF Time [Osc.Message]
 patternToSF sample beat bpm pttrn = proc time -> do
-  let onsetPattern = getRhythm . toRhythm $ pttrn
+  let onsetPattern = rhythm $ pttrn
       patternLength = length onsetPattern
       bps = bpm / 60 -- beats per second
   index <- arr (\(t, i, l, b) -> floor (t * i / b) `mod` l) -< (time, bps, patternLength, beat)

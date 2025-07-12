@@ -31,8 +31,8 @@ import Sound.Osc.Fd
 import Sound.RTG.Event (Event, isOnset)
 import Sound.RTG.OscMessages (superDirtMessage, superDirtPort)
 import Sound.RTG.RhythmicPattern
-  ( Rhythm (..),
-    Rhythmic (..),
+  ( Rhythmic,
+    rhythm,
   )
 import Sound.RTG.Utils (patternEventDurationSec)
 import System.IO.Unsafe (unsafePerformIO)
@@ -96,7 +96,7 @@ patternStream sample pttrn = forkIO $ do
 -- to a variable to be able to stop the thread. These binding are lost when @ghci@ is reloaded.
 playU :: (Rhythmic a) => SampleName -> a -> IO ThreadId
 playU sample pttrn = do
-  threadId <- patternStream sample . getRhythm . toRhythm $ pttrn
+  threadId <- patternStream sample . rhythm $ pttrn
   putStrLn $ "New pattern running at " ++ show threadId
   return threadId
 
