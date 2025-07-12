@@ -37,4 +37,4 @@ rhythmToSequencerPattern r = SequencerPattern (rhythmToOutputPattern r) Idle
 
 -- | Pairs each rhythmic pattern event to a null output.
 rhythmToOutputPattern :: (Rhythmic a) => a -> OutputPattern
-rhythmToOutputPattern r = Rhythm [(e, Nothing) | e <- rhythm r]
+rhythmToOutputPattern r = Pattern [(e, Nothing) | e <- rhythm r]

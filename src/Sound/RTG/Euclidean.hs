@@ -24,7 +24,7 @@ import Data.Group (Group (..))
 import Sound.RTG.Bjorklund (euclideanPattern)
 import Sound.RTG.Event (integralsToEvents)
 import Sound.RTG.List (rotateLeft)
-import Sound.RTG.RhythmicPattern (Rhythm (..), Rhythmic (..))
+import Sound.RTG.RhythmicPattern (Pattern (..), Rhythmic (..))
 
 -- | Euclidean rhythms, in its stardard semantics, are elements of
 -- \(\{ (x,y,z) | x,z >= 0 , y > 0, y >= z \}\).
@@ -117,7 +117,7 @@ instance Group Euclidean where
   invert (Euclidean a b c) = Euclidean (-a) b (-c)
 
 instance Rhythmic Euclidean where
-  toRhythm (Euclidean k n p) = Rhythm . integralsToEvents . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
+  toRhythm (Euclidean k n p) = Pattern . integralsToEvents . rotateLeft (fromIntegral p) $ euclideanPattern (fromIntegral k) (fromIntegral n)
 
 -- | Allow pairs and triplets as arguments to construct Euclidean Rhythms
 class EuclideanArgument a where

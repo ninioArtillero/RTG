@@ -67,11 +67,11 @@ import Sound.RTG.List (contract)
 import Sound.RTG.OscMessages (sendSuperDirtSample)
 import Sound.RTG.PatternBundle
 import Sound.RTG.RhythmicPattern
-  ( Rhythm (..),
-    Rhythmic,
+  ( Pattern (getPattern),
+    Rhythmic (..),
+    patternBalance,
+    patternEvenness,
     rhythm,
-    rhythmBalance,
-    rhythmEvenness,
   )
 import Sound.RTG.TimedMonad
   ( Micro (..),
@@ -130,8 +130,8 @@ instance Show SequencerState where
             "Output length: " ++ show outputLength,
             "Output pattern: " ++ (show $ rhythm output),
             "Event duration: " ++ show eventDurMiliSec ++ " ms",
-            "Evenness = " ++ show (rhythmEvenness output),
-            "Balance = " ++ show (rhythmBalance output)
+            "Evenness = " ++ show (patternEvenness output),
+            "Balance = " ++ show (patternBalance output)
           ]
 
 -- * Sequencer Interface
@@ -485,7 +485,7 @@ runOutputPattern :: TIO ()
 runOutputPattern = do
   outputPattern <- lift getSequencerOutputPattern
   eventDur <- lift getSequencerEventDuration
-  patternOutput eventDur (getRhythm outputPattern)
+  patternOutput eventDur (getPattern outputPattern)
   -- NOTE: Might return the updated couter for other use.
   lift updateSequencerCounter
   pure ()

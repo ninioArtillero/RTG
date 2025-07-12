@@ -39,7 +39,7 @@ import Data.Group (Group (..))
 import qualified Data.Set as Set
 import Sound.RTG.Event (Event, integralsToEvents)
 import Sound.RTG.PerfectBalance (indicatorVector)
-import Sound.RTG.RhythmicPattern (Rhythm (Rhythm), Rhythmic (..))
+import Sound.RTG.RhythmicPattern (Pattern (Pattern), Rhythmic (..))
 import Sound.RTG.Utils (modOne, setNub)
 import Sound.RTG.Zip (euclideanZipWith)
 
@@ -47,7 +47,7 @@ type Time = Rational
 
 -- | Time patterns are ordered lists of 'Rational' values
 -- within the \([0,1)\) interval.
-newtype TimePattern = TimePattern {getPattern :: [Time]}
+newtype TimePattern = TimePattern {getTimePattern :: [Time]}
 
 -- | Equality follows 'TimePattern' specification.
 instance Eq TimePattern where
@@ -66,7 +66,7 @@ timeAsFloats pattern = map fromRational $ queryPattern pattern :: [Float]
 -- It wraps rationals within the number line to the \([0,1)\) interval,
 -- which conceptually represent a /circle/, order the values and remove duplicates.
 queryPattern :: TimePattern -> [Time]
-queryPattern = setNub . map modOne . getPattern
+queryPattern = setNub . map modOne . getTimePattern
 
 instance Semigroup TimePattern where
   (<>) = timePatternProduct
@@ -75,8 +75,8 @@ instance Semigroup TimePattern where
 -- different length using an 'euclideanPattern' distribution.
 timePatternProduct :: TimePattern -> TimePattern -> TimePattern
 timePatternProduct xs ys =
-  let pat1 = getPattern xs
-      pat2 = getPattern ys
+  let pat1 = getTimePattern xs
+      pat2 = getTimePattern ys
    in TimePattern $ euclideanZipWith (\x y -> modOne $ x + y) pat1 pat2
 
 instance Monoid TimePattern where
@@ -91,7 +91,7 @@ reflectCircle :: [Time] -> [Time]
 reflectCircle = map (\n -> if n /= 0 then 1 - n else 0)
 
 instance Rhythmic TimePattern where
-  toRhythm = Rhythm . timeToOnset . queryPattern
+  toRhythm = Pattern . timeToOnset . queryPattern
 
 -- | Uses the 'indicatorVector' to embed the pattern in a discrete chromatic universe.
 timeToOnset :: [Time] -> [Event]

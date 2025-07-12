@@ -21,7 +21,7 @@ import Sound.RTG.OscMessages
   )
 import Sound.RTG.PlayScale (Root, scalePitches)
 import Sound.RTG.RhythmicPattern
-  ( Rhythm (..),
+  ( Pattern (..),
     Rhythmic (..),
     rhythm,
   )

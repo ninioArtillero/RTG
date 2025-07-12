@@ -40,7 +40,7 @@ data SequencerPattern = SequencerPattern
   }
 
 -- | Patterns excecuted 'Sound.RTG.Sequencer.inSequencer'.
-type OutputPattern = Rhythm (Event, Maybe [Output])
+type OutputPattern = Pattern (Event, Maybe [Output])
 
 -- | Recover the event list using the rhythmic interface.
 instance Rhythmic OutputPattern where
@@ -86,10 +86,10 @@ projection patternBundle =
       -- The other functionality seems to be unaffected.
       -- See BUG comment bellow. Intended version (which type checks):
       -- gp = Map.foldl' matchOutputEvents (mempty :: OutputPattern) alignedOutputPatterns
-      gp = Map.foldl' (\acc x -> joinEventOutputs acc (getRhythm x)) [] alignedOutputPatterns
+      gp = Map.foldl' (\acc x -> joinEventOutputs acc (getPattern x)) [] alignedOutputPatterns
    in -- gp
       -- Compact the resulting pattern to purge unnecessary rest events.
-      Rhythm $ compact gp
+      Pattern $ compact gp
 
 fiber :: PatternId -> PatternBundle -> Maybe OutputPattern
 fiber id patternBundle =
@@ -200,4 +200,4 @@ disableAll =
 toOutputPattern :: (Rhythmic a) => a -> [[Output]] -> OutputPattern
 toOutputPattern pattern outputs =
   let eventPattern = rhythm pattern
-   in Rhythm $ pairValuesWithOnsets eventPattern outputs
+   in Pattern $ pairValuesWithOnsets eventPattern outputs
