@@ -6,7 +6,7 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 module Sound.RTG
-   ( -- * Sequencer Operations
+  ( -- * Sequencer Operations
 
     -- ** Play
     p,
@@ -62,10 +62,15 @@ module Sound.RTG
     -- * The Rhythmic Interface
     Rhythmic (..),
     rhythm,
+
+    -- * Structural properties
+    mnng,
+    iois,
   )
 where
 
 import Sound.RTG.Euclidean (e)
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
+import Sound.RTG.Structure
 import Sound.RTG.TimePatterns

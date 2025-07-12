@@ -8,13 +8,13 @@
 module Sound.RTG.Structure (iois, mnng) where
 
 import qualified Data.List as List
+import Sound.RTG.Event (Event (..))
 import Sound.RTG.List
   ( rotateLeft,
     rotateRight,
     startPosition,
   )
 import Sound.RTG.RhythmicPattern (Rhythmic, rhythm)
-import Sound.RTG.Event (Event (..))
 
 -- TODO: This module still depends on Event constructors.
 -- Can it be decoupled?
@@ -30,14 +30,14 @@ import Sound.RTG.Event (Event (..))
 --
 -- >>> mnng bossa
 -- [[1,0,0,1,0,0,1,0,0,1,0,0,1],[0,0,0]]
-
+--
 -- >>> mnng diatonic
 -- [[1,1],[0],[1,0,1],[0],[1,1],[0],[1],[0]]
 --
 -- NOTE: Isochronous rhythms are collapsed to trival pulses (all onset lists)
 --
 -- >>> mnng wholeTone
--- [1,1,1,1,1,1]
+-- [[1,1,1,1,1,1]]
 --
 -- TODO: formulate properties
 -- TODO: optmize recursion
