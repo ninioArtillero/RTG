@@ -40,6 +40,8 @@ module Sound.RTG
     handFanB,
 
     -- * Rhythmic Types
+    TimePattern,
+    Euclidean,
 
     -- ** Time Patterns
     diatonic,
@@ -69,7 +71,7 @@ module Sound.RTG
   )
 where
 
-import Sound.RTG.Euclidean (e)
+import Sound.RTG.Euclidean
 import Sound.RTG.RhythmicPattern (Rhythmic (..), rhythm)
 import Sound.RTG.Sequencer
 import Sound.RTG.Structure

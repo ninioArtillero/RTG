@@ -6,7 +6,9 @@
 -- Maintainer  : ixbalanque@protonmail.ch
 -- Stability   : experimental
 module Sound.RTG.TimePatterns
-  ( -- * Equal tempered twelve tone scale.
+  ( TimePattern,
+
+    -- * Equal tempered twelve tone scale.
     diatonic,
     diminished,
     wholeTone,

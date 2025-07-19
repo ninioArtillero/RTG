@@ -18,7 +18,7 @@
 --   5. Negative values of @n@ mean a change in orientation of the position value @p@,
 --   such that @(k,-n,p) == (k, n, -p)@. TODO: Could change to semantics of TiledMusic for
 --   a negative tile.
-module Sound.RTG.Euclidean (e) where
+module Sound.RTG.Euclidean (Euclidean, e) where
 
 import Data.Group (Group (..))
 import Sound.RTG.Bjorklund (euclideanPattern)
